@@ -1,0 +1,39 @@
+---
+description: Flutter UI 任务 - 主题、适配、对照设计稿与 PRD 第 3 章
+globs: "**/lib/**/*.dart"
+alwaysApply: false
+---
+
+# Flutter UI 处理任务
+
+## 设计对照来源
+
+1. 项目 `projects/{currentProject}/01-需求/requirements.md` **第 3 章**（页面结构、入口出口、区块）。
+2. `projects/{currentProject}/01-需求/references/images/` 设计稿。
+3. `references/docs/` 中颜色文档（渐变、色板）；实现时映射到 `theme.dart` / 组件内 `LinearGradient`。
+
+## 主题与颜色
+
+- 主色、背景、卡片、文字层级集中在 `theme.dart` 或 `app_colors.dart`，避免魔法数字散落。
+- 渐变按钮、大卡片阴影等与产品文档一致时，在注释中标明「见颜色文档 §x」。
+
+## 适配
+
+- 使用 `MediaQuery` / `LayoutBuilder` 处理窄屏；避免写死过大固定宽度。
+- 安全区：`SafeArea` 或 `padding: MediaQuery.paddingOf(context)`。
+- 列表长内容：`ListView` / `CustomScrollView` + 合适 `physics`。
+
+## 交互反馈
+
+- 异步操作：按钮 `onPressed` 期间禁用或显示小型 `CircularProgressIndicator`（与项目统一）。
+- 失败：`SnackBar` 或对话框，文案可读（可展示服务端 `message`）。
+
+## 组件粒度
+
+- 单文件不过长；重复 UI 抽到同页 `widgets/` 或全局 `widgets/`。
+- 保持与现有工程组件命名、间距习惯一致。
+
+## 验收
+
+- 对照 PRD 与关键截图：主要区块齐全、主路径可点通。
+- 无 overflow 黄黑条（常见场景下）；深色模式若 PRD 要求则单独验收。
