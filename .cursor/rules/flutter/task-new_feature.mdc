@@ -1,0 +1,55 @@
+---
+description: Flutter 新功能模块 - pages 目录结构、GetX Controller、路由、index 导出、禁止 Get.context
+globs: "**/lib/pages/**/*.dart"
+alwaysApply: false
+---
+
+# Flutter 新功能开发任务
+
+## 单功能模块目录
+
+在 `lib/pages/{feature_name}/` 下：
+
+```
+pages/{feature_name}/
+├── view.dart           # Stateless/Stateful 或 GetView<Controller>
+├── controller.dart     # GetxController
+├── index.dart          # 对外 export：export view; export controller;
+├── widgets/            # 本页专用子组件（可选）
+├── dialog/             # 本页弹窗（可选）
+└── {sub_feature}/      # 子流程子目录（可选，结构同上）
+```
+
+## 命名
+
+- 目录 `{feature_name}`：**snake_case**（如 `user_login`）。
+- 类名：**大驼峰**（如 `UserLoginView`、`UserLoginController`）。
+
+## 引用约定
+
+- **外部**只 `import 'package:xxx/pages/{feature_name}/index.dart';`
+- **禁止**外部直接 `import` 同模块的 `view.dart` / `controller.dart` 单文件（除非模块内子文件互引）。
+
+## GetX / 状态
+
+- 控制器继承 `GetxController`，响应式字段使用 `.obs`，UI 使用 `Obx(() => ...)`。
+- 页面使用 `GetView<YourController>` 或 `GetBuilder`（按项目统一风格）。
+- 控制器生命周期：`onInit` / `onReady` 拉数；`onClose` 释放资源。
+
+## 路由
+
+- 在 `routes/name.dart` 增加常量，在 `router.dart` 注册 `GoRoute`（或项目等价方式）。
+- 参数通过 `extra` 或路径参数传递，类型在 `models/params` 或路由层定义清楚。
+
+## 严禁
+
+- **禁止**使用 `Get.context!` / `Get.context` 获取 `BuildContext` 用于 `Navigator`、`Theme`、`ScaffoldMessenger` 等。
+- **正确做法**：在 `build(BuildContext context)` 内使用传入的 `context`；或把依赖通过构造函数 / 回调传入子组件。
+
+## 异步与错误
+
+- 使用 `async/await`；接口失败在 Controller 内设置错误状态或 `Get.snackbar`（若项目约定），避免静默失败。
+
+## 完成后
+
+- 自检：新页面可从路由进入；无 `Get.context`；对外仅暴露 `index.dart`。
