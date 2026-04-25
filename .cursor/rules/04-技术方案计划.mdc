@@ -10,7 +10,8 @@ alwaysApply: false
 
 执行本规则前，必须确认：
 1. `projects/{currentProject}/01-需求/requirements.md` 已存在且已通过检测
-2. 用户已明确说"文档通过，生成技术方案"或类似确认指令
+2. `projects/{currentProject}/01-需求/figma-design-plan.md` 已存在
+3. 用户已明确说"文档通过，生成技术方案"或类似确认指令
 
 ---
 
@@ -18,8 +19,9 @@ alwaysApply: false
 
 ### 第一步：深度阅读 PRD
 
-读取 `projects/{currentProject}/01-需求/requirements.md`，重点提取：
+读取 `projects/{currentProject}/01-需求/requirements.md` 与 `projects/{currentProject}/01-需求/figma-design-plan.md`，重点提取：
 - 所有功能模块及其优先级
+- 页面、状态、组件与交互的设计约束
 - 技术约束（Flutter 版本/平台、Kotlin 框架）
 - 性能和安全要求
 - 里程碑规划
@@ -49,7 +51,8 @@ alwaysApply: false
 
 > 版本：v1.0  
 > 创建日期：{今天日期}  
-> 关联需求文档：../01-需求/requirements.md
+> 关联需求文档：../01-需求/requirements.md  
+> 关联设计计划：../01-需求/figma-design-plan.md
 
 ---
 
@@ -113,6 +116,9 @@ alwaysApply: false
 ### 4.3 状态管理方案
 （描述全局状态、局部状态的管理策略）
 
+### 4.4 设计约束引用
+（说明前端页面、状态、组件与交互稿要求如何对齐 `figma-design-plan.md`）
+
 ---
 
 ## 5. 后端模块划分（Kotlin）
@@ -141,6 +147,8 @@ src/
 |------|------|----------|--------|
 | T-F001 | | | 高 |
 | T-F002 | | | 中 |
+
+> 前端任务拆分时，必须覆盖 `figma-design-plan.md` 中的页面、关键状态、组件与交互约束。
 
 ### 6.2 后端任务（Kotlin）
 | 任务 | 描述 | 预估工作量 | 优先级 |

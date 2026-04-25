@@ -9,8 +9,9 @@ alwaysApply: false
 ## 设计对照来源
 
 1. 项目 `projects/{currentProject}/01-需求/requirements.md` **第 3 章**（页面结构、入口出口、区块）。
-2. `projects/{currentProject}/01-需求/references/images/` 设计稿。
-3. `references/docs/` 中颜色文档（渐变、色板）；实现时映射到 `theme.dart` / 组件内 `LinearGradient`。
+2. `projects/{currentProject}/01-需求/figma-design-plan.md`（页面、状态、组件、交互清单）。
+3. `projects/{currentProject}/01-需求/references/images/` 设计稿。
+4. `references/docs/` 中颜色文档（渐变、色板）；实现时映射到 `theme.dart` / 组件内 `LinearGradient`。
 
 ## 主题与颜色
 
@@ -32,6 +33,12 @@ alwaysApply: false
 
 - 单文件不过长；重复 UI 抽到同页 `widgets/` 或全局 `widgets/`。
 - 保持与现有工程组件命名、间距习惯一致。
+- 没有正式 Figma 链接时，也必须按 `figma-design-plan.md` 中定义的页面与状态范围实现，不要只凭单张截图猜补。
+
+## 注释要求
+
+- UI 文件也必须写注释，至少说明页面结构、关键区块职责、交互触发点。
+- 与设计稿或 PRD 强绑定的区块，注释中要说明该区块承载的业务目的。
 
 ## 验收
 
