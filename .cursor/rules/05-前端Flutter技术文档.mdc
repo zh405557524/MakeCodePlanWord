@@ -1,6 +1,6 @@
 ---
-description: 前端Flutter技术文档阶段 - 基于技术方案生成 Flutter 专项文档；对齐本仓库 .cursor/rules/flutter 下规范
-globs: 
+description: 前端Flutter技术文档阶段 - 基于技术方案与参考工程生成 Flutter 专项文档
+globs:
 alwaysApply: false
 ---
 
@@ -10,211 +10,71 @@ alwaysApply: false
 
 执行本规则前，必须确认：
 1. `projects/{currentProject}/02-技术方案/tech-plan.md` 已存在
-2. 用户已触发「生成 Flutter 技术文档」或类似指令
+2. `projects/{currentProject}/01-需求/figma-design-plan.md` 已存在
+3. 用户已触发「生成 Flutter 技术文档」或类似指令
 
----
+## 参考工程
 
-## Flutter 工程规范来源（生成前必读）
+当前 Flutter 文档默认参考工程：
 
-生成 `flutter-tech.md` 时，**须优先读取**工作区内下列规则（与本仓库相对路径一致）：
+- `G:\code\soul\Solfeggio`
 
-| 用途 | 文件路径 |
-|------|----------|
-| 项目根与 `lib/` 通用目录索引 | `.cursor/rules/flutter/08-项目结构目录.mdc` |
-| 新项目标准目录与初始化模板 | `.cursor/rules/flutter/task-project_init.mdc` |
-| 新功能模块结构、路由、Controller、index 导出、禁止 Get.context 等 | `.cursor/rules/flutter/task-new_feature.mdc` |
-| 日常 UI 生成与调优、主题、适配、对照设计稿 | `.cursor/rules/flutter/task-ui_task.mdc` |
+生成文档时优先吸收其真实工程约定：
 
-**使用方式**：
-- **生成 `flutter-tech.md` 时**：综合 `tech-plan.md`、PRD（含 UI/交互章）、`01-需求/references/`，将上述规则中的**目录约定、页面模块形态、路由注册要点、UI 与状态管理约定**提炼进文档。
-- **文件缺失**：在 `flutter-tech.md` 的待办中注明，并仍按下方模板输出可执行结构。
+- `main.dart + Global.init()`
+- `GetX`
+- `GetStorage + Hive`
+- `MaterialApp.router + go_router`
+- `flutter_screenutil`
+- `CustomScaffold`
+- `pages/{feature}/view.dart + controller.dart + index.dart`
 
----
+## 规则来源（生成前必读）
 
-## 执行步骤
+- `.cursor/rules/flutter/08-项目结构目录.mdc`
+- `.cursor/rules/flutter/task-project_init.mdc`
+- `.cursor/rules/flutter/task-new_feature.mdc`
+- `.cursor/rules/flutter/task-ui_task.mdc`
 
-### 第一步：读取输入
+## 输出路径
 
-1. 读取 `projects/{currentProject}/02-技术方案/tech-plan.md`：前端路由、模块、状态管理、API、Flutter 版本与平台。
-2. 按需读取 `projects/{currentProject}/01-需求/requirements.md` 与 `01-需求/references/`。
-3. **读取** `.cursor/rules/flutter/` 下 `08-项目结构目录.mdc`、`task-project_init.mdc`、`task-new_feature.mdc`、`task-ui_task.mdc`（存在则纳入生成内容）。
+- `projects/{currentProject}/03-前端/flutter-tech.md`
 
----
+## UI 事实来源
 
-### 第二步：生成 Flutter 技术文档
+生成 Flutter 技术文档时，UI 与交互事实至少按以下顺序综合判断：
 
-输出到：`projects/{currentProject}/03-前端/flutter-tech.md`
+1. `projects/{currentProject}/01-需求/requirements.md`
+2. `projects/{currentProject}/01-需求/figma-design-plan.md`
+3. `projects/{currentProject}/01-需求/references/images/`
+4. `projects/{currentProject}/01-需求/references/docs/` 中的颜色与视觉文档
 
-**文档模板**（须把「规范引用摘要」与「标准目录」写具体，勿留空壳）：
+## 文档要求
 
-```markdown
-# {项目名称} Flutter 前端技术文档
+生成 `flutter-tech.md` 时必须明确：
 
-> 版本：v1.0  
-> 创建日期：{今天日期}  
-> 关联技术方案：../02-技术方案/tech-plan.md  
-> Flutter 版本：{版本}  
-> 目标平台：{iOS / Android / Web}
+1. 当前 Flutter 最终技术路线
+2. 参考工程对齐点
+3. 项目结构
+4. 启动与全局初始化
+5. 状态管理与数据流
+6. 存储设计（GetStorage / Hive）
+7. 路由配置
+8. UI 基础规范
+9. 页面实现摘要
+10. 编码任务清单
+11. 编码注意事项
 
----
+其中 UI 基础规范、页面实现摘要、编码任务清单必须明确引用 `figma-design-plan.md` 中的页面、状态、组件和交互要求，而不是只按散图兜底。
 
-## 0. 规范引用摘要（执行编码时沿用）
+## 技术口径
 
-> 从已读取的 flutter 规则中摘录与本项目相关的硬性约定（按实际填写）：
+- 默认使用 `GetX`
+- 默认使用 `GetStorage + Hive`
+- 不再沿用 `Riverpod + Drift` 作为主路线
+- 若技术方案与参考工程冲突，优先保持参考工程风格，并在文档中写明
+- 若设计计划与单张参考图存在差异，优先以 `figma-design-plan.md` 约束页面与状态要求，并注明图中现状
 
-- **目录骨架**：与 `task-project_init.mdc`、`08-项目结构目录.mdc` 一致
-- **新页面模块**：`pages/{feature_name}/` 下 `view.dart`、`controller.dart`、`index.dart`，可选 `widgets/`、`dialog/`、子功能子目录；见 `task-new_feature.mdc`
-- **导出与引用**：调用方只 `import` 各模块 `index.dart`，禁止直接 import 模块内单文件
-- **状态管理**：GetX（`.obs` / `Obx` / `GetxController` 等与规则一致）
-- **禁止**：使用 `Get.context` 获取 `BuildContext`，须由 `build` 或参数传入
-- **UI**：主题、适配单位、对照设计稿流程见 `task-ui_task.mdc`
-- **路由**：`RouteName` + `GoRoute` 注册、跳转与参数传递见 `task-new_feature.mdc`
+## 推进规则
 
----
-
-## 1. 项目结构（与 task-project_init / 08 对齐）
-
-```
-lib/
-├── apis/
-│   └── index.dart
-├── components/
-│   └── index.dart
-├── enums/
-│   └── index.dart
-├── models/
-│   ├── params/
-│   ├── responses/
-│   └── index.dart
-├── pages/
-│   ├── main/
-│   └── {feature_name}/
-├── plugins/
-│   └── index.dart
-├── routes/
-│   ├── index.dart
-│   ├── router.dart
-│   ├── name.dart
-│   └── observers.dart
-├── services/
-│   ├── http.dart
-│   ├── storage.dart
-│   ├── event.dart
-│   └── index.dart
-├── store/
-│   └── index.dart
-├── utils/
-│   └── index.dart
-├── widgets/
-│   └── index.dart
-├── global.dart
-├── main.dart
-└── theme.dart
-```
-
----
-
-## 2. 依赖包清单
-
-> 根据技术方案与 `task-project_init.mdc` / 目标工程 `pubspec.yaml` 对齐填写。
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  get: ^4.x.x
-  dio: ^5.x.x
-  # 按项目补充
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.x.x
-```
-
----
-
-## 3. 路由配置
-
-| 路由名常量 | 路径 | 页面类 | 说明 |
-|-----------|------|--------|------|
-| {RouteName.xxx} | {path} | {XxxPage} | {说明} |
-
----
-
-## 4. 模块与编码规范
-
-### 4.1 单功能模块目录（与 task-new_feature 一致）
-
-```
-pages/{feature_name}/
-├── view.dart
-├── controller.dart
-├── index.dart
-├── widgets/
-├── dialog/
-└── {sub_feature}/
-```
-
-### 4.2 网络与服务层
-
-- HTTP：`lib/services/http.dart`（或项目约定）
-- API：`lib/apis/`
-
-### 4.3 状态与 UI
-
-- 见 `task-new_feature.mdc` / `task-ui_task.mdc`
-- UI 对照 `references/images` 与 PRD 第 3 章时在任务清单中标注验收参照
-
----
-
-## 5. 各页面详细设计
-
-（按技术方案展开）
-
-### 页面：{页面名称}
-
-**路由**：`{path}`  
-**文件路径**：`lib/pages/{feature_name}/...`  
-**功能描述**：
-
-**UI 结构**：
-
-**Controller 方法清单**：
-| 方法名 | 说明 |
-|--------|------|
-| ... | ... |
-
-**API / Service**：
-
----
-
-## 6. 编码任务清单
-
-- [ ] T-F001：基础目录与 `global`、`theme`、`routes` 骨架
-- [ ] T-F002：网络层与 `apis`
-- [ ] T-F003：主框架与导航
-- [ ] T-F004：{模块 A} …
-- [ ] T-FN：联调与 UI 走查（对照 `task-ui_task.mdc`）
-
----
-
-## 7. 编码注意事项
-
-- 只通过模块 `index.dart` 对外引用
-- 命名：`{feature_name}` 小写下划线，类名大驼峰
-- `///` 中文文档注释（公共 API）
-- 禁止 `Get.context` 取 `BuildContext`
-- `async/await` + 必要时的 `try/catch`
-- 实际编码时由 Cursor 按需加载 `.cursor/rules/flutter/` 下其他 `task-*.mdc` 或业务复用类规则
-```
-
----
-
-### 第三步：推进提示
-
-文件写入完成后输出：
-
-> Flutter 技术文档已生成：`projects/{currentProject}/03-前端/flutter-tech.md`  
-> 执行编码时请加载 `.cursor/rules/flutter/` 下相关规则。  
-> 下一步可输入：`生成Kotlin技术文档` 或 `开始Flutter编码`。
+- 文档生成完成后，下一步优先进入 Flutter 总体开发计划阶段

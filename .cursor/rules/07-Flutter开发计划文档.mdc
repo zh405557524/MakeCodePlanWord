@@ -1,0 +1,60 @@
+---
+description: Flutter 总体开发计划阶段 - 基于 flutter-tech.md 生成可断点恢复的总体开发计划
+globs:
+alwaysApply: false
+---
+
+# Flutter 总体开发计划规则
+
+## 前置条件
+
+执行本规则前，必须确认：
+1. `projects/{currentProject}/03-前端/flutter-tech.md` 已存在
+2. 用户已明确要求生成 Flutter 开发计划或总体开发计划文档
+
+## 参考工程
+
+总体开发计划默认对齐：
+
+- `G:\code\soul\Solfeggio`
+
+开发顺序与工程口径优先继承其真实模式，不再沿用旧的 `Riverpod + Drift` 计划。
+
+## 目标
+
+输出一份直接给 AI 执行 Flutter 编码的总体开发计划文档，满足：
+
+- 先有整体计划，再拆模块计划
+- 文档可反复执行
+- 文档内明确当前恢复点
+- 中断后能从恢复点继续
+- 总体计划生成后先等待用户审核
+
+## 输出路径
+
+- `projects/{currentProject}/03-前端/flutter-dev-plan.md`
+
+## 文档要求
+
+总体开发计划至少包含：
+
+1. 文档用途
+2. 当前状态与恢复点
+3. 状态枚举与更新规则
+4. 总体开发策略
+5. 总体阶段划分
+6. 详细任务清单
+7. 模块开发文档列表
+8. 编码约束
+9. 执行记录
+
+## 技术口径
+
+- 按 `GetX + GetStorage + Hive + Global.init() + go_router + CustomScaffold`
+- 恢复点与任务必须贴合该技术路线
+- 不写 `Provider / Riverpod / Drift` 风格任务名
+
+## 推进规则
+
+- 总体开发计划生成后必须暂停
+- 等用户明确审核通过后，再进入模块开发文档阶段
