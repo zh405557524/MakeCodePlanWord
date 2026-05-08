@@ -6,6 +6,16 @@ alwaysApply: false
 
 # 需求文档检测规则
 
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 执行前先形成本轮检测计划，再检查 PRD 和原始材料。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+
 ## 目标
 
 检查 PRD 是否达到“可阅读、可评审、可进入下一阶段”的质量。
