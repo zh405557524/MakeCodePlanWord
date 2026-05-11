@@ -435,7 +435,7 @@ Chat -> 输入目标与约束 -> 生成计划草稿 -> 修改草稿 -> 应用草
 
 ### 参考素材
 
-![开屏页](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/26-开屏页面_执行力-开屏页.png)
+![开屏页](references/images/26-开屏页面_执行力-开屏页.png)
 
 ### 页面结构（从上到下）
 
@@ -495,7 +495,7 @@ flowchart TD
 
 ### 参考素材
 
-![底部导航栏](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/31-主页_执行力-底部导航栏.png)
+![底部导航栏](references/images/31-主页_执行力-底部导航栏.png)
 
 ### 页面结构（从上到下）
 
@@ -555,7 +555,7 @@ flowchart TD
 
 ### 参考素材
 
-![Now 页](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/28-主页_执行力-Now 页.png)
+![Now 页](references/images/28-主页_执行力-Now 页.png)
 
 ### 页面结构（从上到下）
 
@@ -659,7 +659,7 @@ flowchart TD
 
 ### 参考素材
 
-![Chat 页](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/27-主页_执行力-Chat 页.png)
+![Chat 页](references/images/27-主页_执行力-Chat 页.png)
 
 ### 页面结构（从上到下）
 
@@ -726,7 +726,7 @@ flowchart TD
 
 ### 参考素材
 
-![Plan 页](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/29-主页_执行力-Plan 页.png)
+![Plan 页](references/images/29-主页_执行力-Plan 页.png)
 
 ### 页面结构（从上到下）
 
@@ -793,9 +793,9 @@ flowchart TD
 
 ### 参考素材
 
-![BattleMap 默认态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/18-计划_计划主页_执行力-作战地图1.png)
+![BattleMap 默认态](references/images/18-计划_计划主页_执行力-作战地图1.png)
 
-![BattleMap 另一布局态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/19-计划_计划主页_执行力-作战地图2.png)
+![BattleMap 另一布局态](references/images/19-计划_计划主页_执行力-作战地图2.png)
 
 ### 页面结构（从上到下）
 
@@ -855,9 +855,9 @@ flowchart TD
 
 ### 参考素材
 
-![TrackDetail 默认态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/16-计划_计划详情_执行力-主线详情1.png)
+![TrackDetail 默认态](references/images/16-计划_计划详情_执行力-主线详情1.png)
 
-![TrackDetail 另一状态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/17-计划_计划详情_执行力-主线详情2.png)
+![TrackDetail 另一状态](references/images/17-计划_计划详情_执行力-主线详情2.png)
 
 ### 页面结构（从上到下）
 
@@ -921,15 +921,15 @@ flowchart TD
 
 ### 参考素材
 
-![PlanEditor 新建默认态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/13-计划_计划编辑_执行力-计划编辑器-新建计划1.png)
+![PlanEditor 新建默认态](references/images/13-计划_计划编辑_执行力-计划编辑器-新建计划1.png)
 
-![PlanEditor 新建展开态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/14-计划_计划编辑_执行力-计划编辑器-新建计划2.png)
+![PlanEditor 新建展开态](references/images/14-计划_计划编辑_执行力-计划编辑器-新建计划2.png)
 
-![PlanEditor 编辑态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/04-计划_计划编辑_执行力-计划编辑器-编辑计划1.png)
+![PlanEditor 编辑态](references/images/04-计划_计划编辑_执行力-计划编辑器-编辑计划1.png)
 
-![PlanEditor 阶段目标态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/07-计划_计划编辑_执行力-计划编辑器-编辑计划4-阶段目标.png)
+![PlanEditor 阶段目标态](references/images/07-计划_计划编辑_执行力-计划编辑器-编辑计划4-阶段目标.png)
 
-![PlanEditor 添加任务弹框态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/09-计划_计划编辑_执行力-计划编辑器-编辑计划6-阶段目标-添加任务弹框.png)
+![PlanEditor 添加任务弹框态](references/images/09-计划_计划编辑_执行力-计划编辑器-编辑计划6-阶段目标-添加任务弹框.png)
 
 ### 页面结构（从上到下）
 
@@ -1005,7 +1005,7 @@ flowchart TD
 
 ### 参考素材
 
-![Profile 页](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/30-主页_执行力-Profile 页.png)
+![Profile 页](references/images/30-主页_执行力-Profile 页.png)
 
 ### 页面结构（从上到下）
 
@@ -1064,9 +1064,9 @@ flowchart TD
 
 ### 参考素材
 
-![UserProfile 默认态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/01-个人页面_执行力-个人信息页.png)
+![UserProfile 默认态](references/images/01-个人页面_执行力-个人信息页.png)
 
-![UserProfile 另一信息态](/G:/work/MakeCodePlanWord/projects/执行力/01-需求/references/images/02-个人页面_执行力-个人信息页1.png)
+![UserProfile 另一信息态](references/images/02-个人页面_执行力-个人信息页1.png)
 
 ### 页面结构（从上到下）
 
