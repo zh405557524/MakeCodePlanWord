@@ -68,6 +68,8 @@ alwaysApply: false
 6. 若有接口或状态流转任务，还需读取：
    - `projects/{currentProject}/04-后端/kotlin-tech.md`
 7. 若技术文档指定参考工程，还需读取参考工程的真实结构和入口文件
+8. 若当前任务包含测试、回归、冒烟或自动化验证，还需读取：
+   - `.cursor/rules/flutter/11-测试规则.mdc`
 
 ---
 
