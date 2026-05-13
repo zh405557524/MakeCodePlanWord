@@ -74,6 +74,7 @@ App Foundation 负责为后续所有 Figma 页面提供统一运行底座。
 - 底座模块必须保证 Splash 和 MainShell 能被无缝承接
 - `theme.dart` 需要预置品牌主色、页面背景、主线渐变和按钮渐变能力
 - `router` 需要预先注册全部公开路由，哪怕页面先占位
+- Notes 相关路由和本地 box 也必须在底座阶段完成预注册，不留到业务页临时补
 
 ---
 
@@ -89,7 +90,7 @@ App Foundation 负责为后续所有 Figma 页面提供统一运行底座。
 存储边界：
 
 - `GetStorage`：安装实例、轻量设置、启动标记
-- `Hive`：计划、任务实例、消息、草稿、资料、同步记录
+- `Hive`：计划、任务实例、消息、草稿、资料、Notes 文件夹、Notes 文件、同步记录
 
 ---
 
@@ -103,6 +104,7 @@ App Foundation 负责为后续所有 Figma 页面提供统一运行底座。
 6. 打开 Hive box 并注册 Store / Service
 7. 建立路由表和通用主题
 8. 提供最小 `CustomScaffold`
+9. 预注册 `Notes / NoteFolder / NoteFile` 公开路由与本地 box
 
 ---
 

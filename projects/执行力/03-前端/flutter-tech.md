@@ -1,7 +1,7 @@
 # 执行力 Flutter 前端技术文档
 
-> 版本：v3.0  
-> 更新时间：2026-04-20  
+> 版本：v3.1  
+> 更新时间：2026-05-12  
 > 设计真源：Figma `执行力设计稿 / 手机版`  
 > 关联产品文档：`../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md`  
 > 关联颜色文档：`../01-需求/references/docs/执行力-颜色文档-v1.1.md`  
@@ -36,7 +36,7 @@
 | 状态管理 | `GetX` | 页面状态归 `GetxController`，全局共享状态归 `GetxService` / Store |
 | 路由 | `go_router` | 使用 `RouteName + GoRoute` 收口 |
 | 轻量存储 | `GetStorage` | 保存安装实例、轻量设置、启动标记 |
-| 结构化数据 | `Hive` | 保存计划、任务实例、聊天消息、用户资料、同步记录 |
+| 结构化数据 | `Hive` | 保存计划、任务实例、聊天消息、用户资料、Notes 数据、同步记录 |
 | 启动流程 | `main.dart + Global.init()` | 先初始化，再进入 Splash / MainShell |
 | 网络 | `dio` | 统一请求头、错误处理和日志 |
 | UI 适配 | `flutter_screenutil` | 以 375 宽设计稿为适配基准 |
@@ -72,13 +72,17 @@
 | `09-PlanEditor-默认` | PlanEditorPage | `/plan/editor`、`/plan/editor/:id` | 隐藏 | `pages/plan_editor/` |
 | `10-Profile` | ProfilePage | `/profile` | 显示 | `pages/profile/` |
 | `11-UserProfile` | UserProfilePage | `/profile/me` | 隐藏 | `pages/user_profile/` |
+| `12-Notes` | NotesPage | `/notes` | 显示 | `pages/notes/` |
+| `13-NoteFolder` | NoteFolderPage | `/notes/folder/:id` | 显示 | `pages/note_folder/` |
+| `14-NoteFile` | NoteFilePage | `/notes/file/:id` | 隐藏 | `pages/note_file/` |
 
 落地规则：
 
 - `TrackDetail` 只有一个页面骨架，`换工作 / 恋爱` 是由 `trackId` 驱动的不同视觉态和文案态，不拆分成两个页面目录。
 - `PlanEditor` 只有一个编辑器页面，`默认 / 恋爱` 是两套表单视觉态和 CTA 颜色，不拆分成两个页面目录。
-- `MainShell` 只承接 `Now / Plan / Profile` 三个主壳页和入口式 `Chat` Tab；真正进入 `ChatPage` 后使用沉浸式全屏页面，不复用底部导航。
+- `MainShell` 只承接 `Now / Plan / Notes / Profile` 四个主壳页和入口式 `Chat` Tab；真正进入 `ChatPage` 后使用沉浸式全屏页面，不复用底部导航。
 - `UserProfile`、`BattleMap`、`TrackDetail`、`PlanEditor` 都按沉浸式二级页处理。
+- `NoteFile` 按沉浸式二级页处理；`NoteFolder` 仍保留主导航高亮 `Notes`。
 
 ### 2.1 路由约束
 
@@ -87,26 +91,31 @@
 - `/`
 - `/chat`
 - `/plan`
+- `/notes`
 - `/plan/battle`
 - `/plan/battle/:trackId`
 - `/plan/editor`
 - `/plan/editor/:id`
 - `/profile`
 - `/profile/me`
+- `/notes/folder/:id`
+- `/notes/file/:id`
 
 建议的 `RouteName` 收口方式：
 
 - `RouteName.splash`
-- `RouteName.main`
 - `RouteName.now`
 - `RouteName.chat`
 - `RouteName.plan`
+- `RouteName.notes`
 - `RouteName.battleMap`
 - `RouteName.trackDetail`
 - `RouteName.planEditorCreate`
 - `RouteName.planEditorEdit`
 - `RouteName.profile`
 - `RouteName.userProfile`
+- `RouteName.noteFolder`
+- `RouteName.noteFile`
 
 ---
 
@@ -153,7 +162,8 @@ BattleMap、TrackDetail、PlanEditor 的主题色需跟随主线，不允许全�
 
 ### 3.4 底部导航与页面壳
 
-- 仅 `Now / Plan / Profile` 作为主壳页固定在 `MainPage` 中。
+- `Now / Chat / Plan / Notes / Profile` 是五个一级导航入口。
+- 仅 `Now / Plan / Notes / Profile` 作为主壳页固定在 `MainPage` 中。
 - `Chat` 由主壳的入口按钮进入全屏页，进入后隐藏底部导航。
 - 二级页一律使用独立 `CustomScaffold`，不要把它们塞进 `IndexedStack`。
 - 通用页面骨架优先抽为：
@@ -176,6 +186,8 @@ Flutter 端直接沿用产品文档里的领域模型，不在总技术文档中
 - `Task`
 - `ChatMessage`
 - `AppState`
+- `NoteFolder`
+- `NoteFile`
 - `CustomTask`
 - `CustomPhase`
 - `CustomPlan`
@@ -194,6 +206,8 @@ Flutter 端直接沿用产品文档里的领域模型，不在总技术文档中
 | 计划、阶段、任务 | `Hive + PlanStore` | 结构化业务数据 |
 | `task_instances` | `Hive` | 由 `PlanEditor` 保存链路统一重建 |
 | 聊天消息 / 草稿 | `Hive + DraftStore` | Chat 与 PlanEditor 共享 |
+| 笔记文件夹 | `Hive + NotesStore` | `NoteFolder` 结构树 |
+| 笔记文件 | `Hive + NotesStore` | `document / markdown` 内容 |
 | 用户资料 | `Hive + UserStore` | `UserProfileData` |
 | 同步状态 | `Hive + SyncStore` | `pending_sync / sync_failed` 等 |
 
@@ -204,6 +218,8 @@ Flutter 端直接沿用产品文档里的领域模型，不在总技术文档中
   - 保存计划：先写 `Hive`，再更新 `Store`，最后入同步队列
   - 完成任务：先写本地实例，再刷新页面，再尝试同步
   - 保存资料：先写本地资料，再同步远端
+  - 创建文件夹 / 文件：先写本地 Notes 结构，再尝试同步
+  - 编辑笔记：先写本地文件内容，再尝试同步
 - `Now` 不负责首次生成 `task_instances`，实例统一由 `PlanEditor` 保存链路重建。
 
 ---
@@ -348,6 +364,29 @@ lib/
   - 固定底部保存栏
 - 两页职责不能混写成一个“设置页”。
 
+### 6.9 NotesPage / NoteFolderPage / NoteFilePage
+
+- `NotesPage` 是一级页：
+  - 顶部标题
+  - `新建文件夹 / 新建笔记`
+  - 根目录文件夹 / 文件列表
+  - 底部导航高亮 `Notes`
+- `NoteFolderPage` 是带层级上下文的二级页：
+  - 路径 / 面包屑
+  - 当前层级下的子文件夹与文件
+  - 仍保留 `Notes` 导航高亮
+- `NoteFilePage` 是沉浸式文件页：
+  - 返回、标题、路径
+  - `编辑 / 预览`
+  - 文档正文 / Markdown 预览
+
+关键规则：
+
+- Notes 是主导航独立页面，不并入 `Plan` 或 `Profile`。
+- `NoteFolder` 允许继续创建子文件夹和文件。
+- `NoteFile` 默认优先进入最近一次使用的模式；若无记录，进入编辑态。
+- 当前版本只要求普通文档和 Markdown 的基础编辑与预览，不引入复杂块编辑器。
+
 ---
 
 ## 7. 公共组件与接口约束
@@ -383,6 +422,7 @@ lib/
 - 每个 Figma 页面都能对应到唯一 Flutter 页面和路由。
 - `flutter-dev-plan.md` 的阶段与任务必须能直接引用本文件。
 - `TrackDetail`、`PlanEditor`、`Profile / UserProfile` 的页面边界无歧义。
+- `Notes / NoteFolder / NoteFile` 的页面边界、导航显示规则和数据来源无歧义。
 - 视觉实现不允许把渐变 Hero、固定底部栏、时间线等关键结构简化成普通列表。
 
 ### 8.2 禁止事项

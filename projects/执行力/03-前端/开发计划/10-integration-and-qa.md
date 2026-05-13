@@ -25,6 +25,10 @@
 
 - `Chat -> PlanEditor -> Plan -> BattleMap -> TrackDetail -> Now`
 
+笔记链路：
+
+- `Notes -> NoteFolder -> NoteFile`
+
 资料链路：
 
 - `Profile -> UserProfile -> Profile`
@@ -52,6 +56,9 @@
 - `09-PlanEditor-默认`
 - `10-Profile`
 - `11-UserProfile`
+- `12-Notes`
+- `13-NoteFolder`
+- `14-NoteFile`
 
 重点检查：
 
@@ -66,6 +73,7 @@
 ## 五、验收标准
 
 - 主链路可点通
+- 笔记链路可点通
 - 资料链路可回写
 - 同步态和异常态可读
 - 关键页面与 Figma 的结构、层级和主题色保持一致

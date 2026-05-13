@@ -1,9 +1,10 @@
 # 执行力 Kotlin 后端技术文档
 
-> 版本：v1.0  
-> 创建日期：2026-04-03  
+> 版本：v1.1  
+> 更新时间：2026-05-12  
 > 关联技术方案：../02-技术方案/tech-plan.md  
 > 关联需求文档：../01-需求/requirements.md  
+> 关联设计计划：../01-需求/figma-design-plan.md  
 > 框架：Ktor  
 > Kotlin 版本：2.x  
 > JVM 版本：17
@@ -28,6 +29,7 @@ src/
 │   │       │   ├── PlanRoutes.kt
 │   │       │   ├── OverviewRoutes.kt
 │   │       │   ├── ChatRoutes.kt
+│   │       │   ├── NotesRoutes.kt
 │   │       │   ├── ProfileRoutes.kt
 │   │       │   └── SettingsRoutes.kt
 │   │       ├── services/
@@ -36,6 +38,7 @@ src/
 │   │       │   ├── PlanService.kt
 │   │       │   ├── ScheduleService.kt
 │   │       │   ├── ChatService.kt
+│   │       │   ├── NotesService.kt
 │   │       │   ├── ProfileService.kt
 │   │       │   └── SyncSupportService.kt
 │   │       ├── repositories/
@@ -43,6 +46,7 @@ src/
 │   │       │   ├── PlanRepository.kt
 │   │       │   ├── TaskInstanceRepository.kt
 │   │       │   ├── ChatRepository.kt
+│   │       │   ├── NotesRepository.kt
 │   │       │   ├── ProfileRepository.kt
 │   │       │   └── SettingsRepository.kt
 │   │       ├── models/
@@ -99,9 +103,9 @@ dependencies {
 
 ### 2.1 关键说明
 
-- 当前版本不引入 JWT、Session、Refresh Token 依赖。
+- 当前版本不引入 JWT、Session、Refresh Token。
 - 当前版本不做账号认证，设备实例通过请求头 `X-Installation-Id` 区分。
-- 若后续接入登录系统，再增补 `auth` 模块和鉴权插件。
+- Notes 接口与计划接口同样遵循“设备级隔离 + 幂等写入 + 本地优先”的原则。
 
 ---
 
@@ -119,6 +123,8 @@ dependencies {
 | `plan_tasks` | 任务定义表 | `id` |
 | `task_instances` | 执行实例表 | `id` |
 | `chat_messages` | 对话消息表 | `id` |
+| `note_folders` | 笔记文件夹表 | `id` |
+| `note_files` | 笔记文件表 | `id` |
 
 ### 3.2 核心表结构
 
@@ -153,8 +159,8 @@ CREATE TABLE profiles (
 ```sql
 CREATE TABLE settings (
     installation_id VARCHAR(64) PRIMARY KEY REFERENCES device_installations(installation_id),
-    energy_level VARCHAR(16) NOT NULL DEFAULT 'medium',
-    mode VARCHAR(16) NOT NULL DEFAULT 'normal',
+    energy_level VARCHAR(16) NOT NULL DEFAULT 'steady',
+    mode VARCHAR(16) NOT NULL DEFAULT 'focus',
     timezone VARCHAR(64),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -235,6 +241,38 @@ CREATE TABLE chat_messages (
 );
 ```
 
+#### note_folders
+
+```sql
+CREATE TABLE note_folders (
+    id UUID PRIMARY KEY,
+    installation_id VARCHAR(64) NOT NULL REFERENCES device_installations(installation_id),
+    parent_id UUID NULL REFERENCES note_folders(id),
+    name VARCHAR(128) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 1,
+    deleted_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### note_files
+
+```sql
+CREATE TABLE note_files (
+    id UUID PRIMARY KEY,
+    installation_id VARCHAR(64) NOT NULL REFERENCES device_installations(installation_id),
+    folder_id UUID NULL REFERENCES note_folders(id),
+    title VARCHAR(128) NOT NULL,
+    format VARCHAR(16) NOT NULL DEFAULT 'document',
+    content TEXT NOT NULL DEFAULT '',
+    version BIGINT NOT NULL DEFAULT 1,
+    deleted_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ### 3.3 索引建议
 
 - `plans(installation_id, updated_at desc)`
@@ -242,6 +280,8 @@ CREATE TABLE chat_messages (
 - `plan_tasks(plan_id, phase_id)`
 - `task_instances(task_id, scheduled_at)`
 - `chat_messages(installation_id, created_at desc)`
+- `note_folders(installation_id, parent_id, updated_at desc)`
+- `note_files(installation_id, folder_id, updated_at desc)`
 
 ---
 
@@ -282,8 +322,6 @@ data class ApiResponse<T>(
 #### GET /api/v1/now
 
 - **描述**：返回当前设备视角下的推荐任务与候选任务
-- **请求参数**：
-  - `at`：可选，指定时间
 - **响应体要点**：
   - 当前推荐任务
   - 备用任务列表
@@ -292,16 +330,6 @@ data class ApiResponse<T>(
 #### PATCH /api/v1/task-instances/{id}
 
 - **描述**：更新执行实例状态
-- **请求体**：
-
-```json
-{
-  "resolution": "completed",
-  "updatedAt": "2026-04-03T10:00:00+08:00",
-  "version": 3
-}
-```
-
 - **规则**：
   - 支持 `completed / postponed / dropped`
   - 若版本落后，返回 1010
@@ -309,47 +337,29 @@ data class ApiResponse<T>(
 #### GET /api/v1/plans
 
 - **描述**：返回当前设备下计划列表
-- **响应体要点**：
-  - 基础计划信息
-  - 最近更新时间
-  - 是否删除
 
 #### POST /api/v1/plans
 
 - **描述**：创建完整计划
-- **请求体**：
-  - 计划主信息
-  - 阶段数组
-  - 任务数组
 
 #### PUT /api/v1/plans/{id}
 
 - **描述**：全量更新计划结构
 - **规则**：
   - 作为事务处理
-  - 阶段与任务按请求体重建或按 diff 更新，二选一，当前版本建议全量覆盖
+  - 当前版本优先采用全量覆盖
 
 #### DELETE /api/v1/plans/{id}
 
 - **描述**：软删除计划
-- **规则**：
-  - 写入 `deleted_at`
-  - 保留同步与恢复空间
 
 #### GET /api/v1/plans/schedule
 
-- **描述**：返回日/周视图数据
-- **请求参数**：
-  - `scope=day|week`
-  - `date`
+- **描述**：返回日 / 周视图数据
 
 #### GET /api/v1/overview/battle-map
 
 - **描述**：返回作战地图聚合信息
-- **响应体要点**：
-  - 计划主线
-  - 阶段状态
-  - 进度摘要
 
 #### GET /api/v1/plans/{id}/timeline
 
@@ -362,25 +372,58 @@ data class ApiResponse<T>(
 #### POST /api/v1/chat/messages
 
 - **描述**：提交自然语言需求并返回结构化草稿
-- **请求体**：
-
-```json
-{
-  "content": "我要准备三个月后的雅思考试"
-}
-```
-
-- **响应体要点**：
-  - 当前消息
-  - AI 回复
-  - `draftPayload`
 
 #### POST /api/v1/chat/plan-drafts/apply
 
 - **描述**：把草稿转为正式计划结构
+
+#### GET /api/v1/notes
+
+- **描述**：返回当前设备根目录下的文件夹与文件结构
+- **响应体要点**：
+  - `folders`
+  - `files`
+  - `updatedAt`
+
+#### POST /api/v1/notes/folders
+
+- **描述**：创建文件夹或子文件夹
+- **请求体示例**：
+
+```json
+{
+  "name": "Android面试",
+  "parentId": null
+}
+```
+
+#### POST /api/v1/notes/files
+
+- **描述**：创建笔记文件
+- **请求体示例**：
+
+```json
+{
+  "title": "Binder.md",
+  "folderId": null,
+  "format": "markdown",
+  "content": ""
+}
+```
+
+#### PUT /api/v1/notes/files/{id}
+
+- **描述**：更新文件标题、格式与正文
 - **规则**：
-  - 返回标准化后的计划对象
-  - 由前端决定是否立即落本地或进入编辑器
+  - 当前版本支持 `document / markdown`
+  - 文件内容采用全量更新
+
+#### DELETE /api/v1/notes/{id}
+
+- **描述**：删除文件夹或文件
+- **规则**：
+  - 当前版本采用软删除
+  - 删除文件夹时需明确处理其子文件夹与文件
 
 #### GET /api/v1/me/profile
 
@@ -416,7 +459,7 @@ data class ApiResponse<T>(
 
 ### 5.3 ScheduleService
 
-- 输出日/周视图数据
+- 输出日 / 周视图数据
 - 生成 BattleMap 和 Timeline 聚合结果
 
 ### 5.4 NowService
@@ -431,12 +474,19 @@ data class ApiResponse<T>(
 - 调用 `DraftGenerator`
 - 输出结构化草稿
 
-### 5.6 ProfileService / SettingsService
+### 5.6 NotesService
+
+- 读取根目录和指定文件夹下的结构
+- 创建文件夹、子文件夹和文件
+- 更新文件标题、格式和正文内容
+- 处理文件夹树与文件内容的版本校对
+
+### 5.7 ProfileService / SettingsService
 
 - 读写设备级资料和偏好
 - 保持字段格式稳定
 
-### 5.7 SyncSupportService
+### 5.8 SyncSupportService
 
 - 比较客户端版本和服务端版本
 - 处理幂等重试
@@ -480,20 +530,20 @@ interface DraftGenerator {
 - [ ] T-B006：Timeline / Schedule / BattleMap 聚合接口
 - [ ] T-B007：TaskInstance 更新与版本控制
 - [ ] T-B008：Chat 消息与 DraftGenerator
-- [ ] T-B009：错误处理、日志、集成测试
+- [ ] T-B009：Notes 文件夹与文件接口
+- [ ] T-B010：错误处理、日志、集成测试
 
 ---
 
 ## 8. 编码注意事项
 
-- `routes` 只做参数解析和响应封装，业务逻辑必须放在 `service`。
+- `routes` 只做参数解析和响应封装，业务逻辑必须放在 `services`。
 - 使用 `StatusPages` 统一异常输出。
 - 使用 Exposed 参数化查询，避免拼接 SQL。
 - 当前版本虽无登录，但仍要保证 `installation_id` 缺失时返回明确错误。
 - 计划更新接口必须具备事务性，避免阶段和任务只更新一半。
+- Notes 更新接口应优先保证文件内容不丢失，再处理同步对齐。
 - 所有写接口尽量支持幂等重放，适应客户端补偿同步。
-- public 函数使用中文 KDoc 注释。
-- 日志重点记录：计划保存、任务反馈、同步冲突、草稿生成失败。
 
 ---
 
@@ -503,6 +553,7 @@ interface DraftGenerator {
 
 - PlanService 计划保存与更新
 - NowService 推荐逻辑
+- NotesService 文件夹树与文件内容更新
 - SyncSupportService 版本冲突处理
 - ChatService 草稿生成输出结构
 
@@ -513,6 +564,8 @@ interface DraftGenerator {
 - `PATCH /task-instances/{id}` 更新实例状态
 - `GET /overview/battle-map` 返回主线聚合
 - `POST /chat/messages` 返回草稿
+- `GET /notes` 返回根目录结构
+- `PUT /notes/files/{id}` 更新文件并回读
 
 ### 9.3 边界测试
 
@@ -520,7 +573,8 @@ interface DraftGenerator {
 - 重复提交同一版本
 - 离线重放导致的重复写入
 - 删除后的计划仍被详情接口访问
+- 删除后的 Notes 资源再次访问
 
 ---
 
-*本文件供后续 Kotlin 编码直接使用，后续若引入登录和多端同步，可在此基础上增补鉴权与账户域设计。*
+*本文件供后续 Kotlin 编码直接使用；当前版本已纳入 Notes 模块，并与 PRD、Figma 和技术方案保持一致。*
