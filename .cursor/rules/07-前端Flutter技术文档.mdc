@@ -1,5 +1,5 @@
 ---
-description: 前端Flutter技术文档阶段 - 基于技术方案与参考工程生成 Flutter 专项文档
+description: 前端 Flutter 技术文档阶段 - 基于技术方案、工时评估与可选参考工程生成 Flutter 专项文档
 globs:
 alwaysApply: false
 ---
@@ -14,22 +14,25 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮前端技术文档计划，再生成或更新 Flutter 技术文档。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
 执行本规则前，必须确认：
 1. `projects/{currentProject}/02-技术方案/tech-plan.md` 已存在
-2. `projects/{currentProject}/01-需求/figma-design-plan.md` 已存在
-3. 用户已触发「生成 Flutter 技术文档」或类似指令
+2. `projects/{currentProject}/02-技术方案/effort-estimate.md` 已存在或用户明确跳过
+3. `projects/{currentProject}/01-需求/figma-design-plan.md` 已存在
+4. 用户已触发「生成 Flutter 技术文档」或类似指令
 
 ## 参考工程
 
-当前 Flutter 文档默认参考工程：
+参考工程不再硬编码到规则中，而是由项目级配置驱动：
 
-- `G:\code\soul\Solfeggio`
+- `workflow.md` 中的 `referenceProject` 字段指向真实的参考工程绝对路径（如已设置）。
+- 若未设置 `referenceProject`，则不引用任何外部工程，直接按本规则与 `.cursor/rules/flutter/` 通用规则库生成文档。
+- 若设置了 `referenceProject` 但目录不存在，必须在 `workflow.md` 的「阻塞项」中记录，并继续按通用规则库执行，不得伪造引用。
 
-生成文档时优先吸收其真实工程约定：
+参考工程典型可吸收的工程约定（仅作启发，最终以 `referenceProject` 真实结构为准）：
 
 - `main.dart + Global.init()`
 - `GetX`
@@ -85,7 +88,7 @@ alwaysApply: false
 
 1. 当前 Flutter 最终技术路线
 2. 当前项目从通用规则库中继承了哪些项目初始化规则
-3. 当前项目结构与参考工程对齐点
+3. 当前项目结构与参考工程对齐点（若有 `referenceProject`）
 4. 当前项目第三方依赖基线
 5. 启动与全局初始化
 6. 状态管理与数据流
@@ -123,4 +126,5 @@ alwaysApply: false
 
 ## 推进规则
 
-- 文档生成完成后，下一步优先进入 Flutter 总体开发计划阶段
+- 文档生成完成后，下一步优先进入 09 Flutter 总体开发计划阶段
+- 后端 Kotlin 技术文档（08）可与本文档并行生成，两者完成后再分别进入 09/10 总体计划阶段

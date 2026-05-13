@@ -1,6 +1,6 @@
 ---
-description: 后端Kotlin技术文档阶段 - 基于技术方案生成Kotlin后端专项详细技术文档，供Cursor直接执行编码
-globs: 
+description: 后端 Kotlin 技术文档阶段 - 基于技术方案生成 Kotlin 后端专项详细技术文档，供 Cursor 直接执行编码
+globs:
 alwaysApply: false
 ---
 
@@ -14,13 +14,27 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮后端技术文档计划，再生成或更新 Kotlin 技术文档。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
 执行本规则前，必须确认：
 1. `projects/{currentProject}/02-技术方案/tech-plan.md` 已存在
-2. 用户已触发"生成Kotlin技术文档"或类似指令
+2. `projects/{currentProject}/02-技术方案/effort-estimate.md` 已存在或用户明确跳过
+3. 用户已触发"生成 Kotlin 技术文档"或类似指令
+
+## 规则来源（生成前必读）
+
+- `.cursor/rules/kotlin/01-项目初始化规则.mdc`
+- `.cursor/rules/kotlin/02-项目结构目录.mdc`
+- `.cursor/rules/kotlin/03-编码规范.mdc`
+- `.cursor/rules/kotlin/04-路由与控制器规则.mdc`
+- `.cursor/rules/kotlin/05-数据库与持久化.mdc`
+- `.cursor/rules/kotlin/06-第三方依赖参考.mdc`
+- `.cursor/rules/kotlin/07-新接口开发.mdc`
+- `.cursor/rules/kotlin/08-鉴权与安全.mdc`
+- `.cursor/rules/kotlin/09-大功能先规划再编码.mdc`
+- `.cursor/rules/kotlin/10-编码工作流程.mdc`
 
 ---
 
@@ -49,6 +63,7 @@ alwaysApply: false
 > 版本：v1.0  
 > 创建日期：{今天日期}  
 > 关联技术方案：../02-技术方案/tech-plan.md  
+> 关联工时评估：../02-技术方案/effort-estimate.md  
 > 框架：{Ktor / Spring Boot}  
 > Kotlin 版本：{版本}  
 > JVM 版本：{版本}
@@ -229,13 +244,8 @@ data class ApiResponse<T>(
 文件写入完成后输出：
 
 > Kotlin 技术文档已生成：`projects/{currentProject}/04-后端/kotlin-tech.md`
-> 
-> 至此，项目 `{currentProject}` 的完整文档体系已生成：
-> ```
-> projects/{currentProject}/
-> ├── 01-需求/requirements.md      ✅
-> ├── 02-技术方案/tech-plan.md     ✅
-> ├── 03-前端/flutter-tech.md      ✅
-> └── 04-后端/kotlin-tech.md       ✅
-> ```
-> 现在可以按照技术文档中的"编码任务清单"开始实际编码。
+>
+> 下一步默认进入「10 Kotlin 总体开发计划」，请输入：
+> - `"生成 Kotlin 总体开发计划"` — 基于本文档拆出后端编码任务总表与恢复点
+>
+> 前端 Flutter 技术文档（07）可与本文档并行生成，两者完成后再分别进入 09/10 总体计划阶段。

@@ -1,0 +1,85 @@
+---
+description: Flutter 编码阶段薄入口 - 触发编码时按本规则加载 flutter/ 子规则与项目文档，确保变更管控与架构门禁
+globs:
+alwaysApply: false
+---
+
+# Flutter 编码索引规则
+
+> 本规则是 Flutter 编码阶段的薄入口，只负责「加载哪些规则、读哪些文档、按什么顺序」。
+> 编码具体执行流程仍由 `.cursor/rules/flutter/10-编码工作流程.mdc` 负责。
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 必须先检查 `change-plan.md` 顶部「进行中变更」区块；若有 `in_progress` 条目，先按变更条目的最小改动清单执行。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. `projects/{currentProject}/03-前端/flutter-tech.md` 已存在
+2. `projects/{currentProject}/03-前端/flutter-dev-plan.md` 已存在
+3. 当前模块对应的 `projects/{currentProject}/03-前端/开发计划/{module}.md` 已存在
+4. `00-核心工作流程.mdc` 第六步「Flutter 架构门禁」已通过
+
+## 必读规则清单（按序加载）
+
+进入 Flutter 编码阶段时，必须按以下顺序读取规则：
+
+1. `.cursor/rules/00-核心工作流程.mdc` 第六步 6.1 Flutter 架构门禁
+2. `.cursor/rules/flutter/01-项目初始化规则.mdc`（首次搭建工程时必读）
+3. `.cursor/rules/flutter/02-项目结构目录.mdc`
+4. `.cursor/rules/flutter/03-编码规范.mdc`
+5. `.cursor/rules/flutter/04-导航规则.mdc`
+6. `.cursor/rules/flutter/10-编码工作流程.mdc`（编码执行流程）
+
+按任务类型补读：
+
+| 任务类型 | 补读规则 |
+|----------|----------|
+| 新功能模块开发 | `flutter/07-新功能开发.mdc` |
+| UI 对稿 / 状态补齐 | `flutter/08-UI处理任务.mdc` |
+| 多语言接入 | `flutter/05-多语言支持.mdc` |
+| 依赖调整 | `flutter/06-第三方依赖参考.mdc` |
+| 跨模块联动 / 大功能 | `flutter/09-大功能先规划再编码.mdc` |
+
+## 必读项目文档清单
+
+进入 Flutter 编码阶段前，必须读取：
+
+1. `projects/{currentProject}/workflow.md`
+2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
+3. `projects/{currentProject}/03-前端/flutter-tech.md`
+4. `projects/{currentProject}/03-前端/flutter-dev-plan.md`
+5. 当前恢复点对应的 `projects/{currentProject}/03-前端/开发计划/{module}.md`
+6. 涉及 UI 时：`projects/{currentProject}/01-需求/figma-design-plan.md` 与 `projects/{currentProject}/01-需求/references/images/` 中相关图片
+7. 涉及接口时：`projects/{currentProject}/04-后端/kotlin-tech.md` 与对应 `projects/{currentProject}/04-后端/开发计划/{module}.md`
+
+## 变更管控接入点
+
+- 若 `change-plan.md` 顶部存在 `in_progress` 条目，编码阶段必须先完成该条目「最小改动清单」中的工作，不允许并行做无关任务。
+- 完成一条变更后，把条目状态置为 `done`，从 `change-plan.md` 顶部区块挪到底部「本迭代历史变更」，并追加到 `change-log.md` 对应版本号下。
+- 若编码过程中发现实际影响超出条目「最小改动清单」，必须先回写 `change-plan.md` 再继续。
+
+## 阻塞式编码阶段规则
+
+Flutter 编码属于阻塞式代码开发阶段：
+
+- 只要用户没有明确说「进入下一步」或「切换阶段」，就默认还停留在当前 Flutter 编码步骤
+- 默认继续做当前步骤内的修改、调试、验证和回写
+- 不自动跳到 14 Kotlin 编码或 15 联调 QA
+
+## 完成判定
+
+当前 Flutter 编码步骤完成必须满足：
+
+- 本轮目标代码已落地
+- `flutter analyze` 通过；必要时 `flutter test` 通过
+- 对应模块开发文档与 `flutter-dev-plan.md` 任务状态已回写
+- `change-plan.md` 中本轮变更条目已归档（如有）
+- `workflow.md` 已更新恢复点、执行记录、下一步默认动作

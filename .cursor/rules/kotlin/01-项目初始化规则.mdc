@@ -1,0 +1,376 @@
+---
+description: Kotlin 后端项目初始化规则，提供通用工程骨架、依赖基线与可直接复用的模板代码（Ktor + Exposed）
+globs: "**/build.gradle.kts,**/src/main/kotlin/**/Application.kt"
+alwaysApply: false
+---
+
+# 项目初始化规则
+
+> 本规则用于创建一个新的 Kotlin 后端工程时，快速建立可持续的 AI 编码基线。
+> 目标不是只搭目录，而是同时给出可直接复用的模板代码。
+> 默认技术栈：Ktor + Exposed + JWT + Logback。
+
+---
+
+## 一、适用场景
+
+- 新建 Kotlin 后端项目
+- 把现有工程整理成统一骨架
+- 需要快速建立 `Application/plugins/routes/services/repositories/models/utils` 基础设施
+
+---
+
+## 二、初始化目标
+
+初始化阶段至少要完成：
+
+1. 建立标准目录结构
+2. 建立 `Application.kt`
+3. 建立 `plugins/`（Routing / Serialization / Security / StatusPages）
+4. 建立 `routes/`
+5. 建立 `services/`
+6. 建立 `repositories/`
+7. 建立 `models/`（request / response / entity）
+8. 建立 `utils/`
+9. 建立 `db/migration/`（迁移脚本目录）
+10. 产出最小可运行健康检查接口
+
+---
+
+## 三、推荐目录骨架
+
+```text
+src/main/kotlin/com/{company}/{project}/
+├── Application.kt
+├── plugins/
+│   ├── Routing.kt
+│   ├── Serialization.kt
+│   ├── Security.kt
+│   ├── StatusPages.kt
+│   └── DatabaseFactory.kt
+├── routes/
+│   ├── HealthRoutes.kt
+│   └── AuthRoutes.kt
+├── services/
+│   └── AuthService.kt
+├── repositories/
+│   └── UserRepository.kt
+├── models/
+│   ├── request/
+│   ├── response/
+│   └── entity/
+│       └── Users.kt
+└── utils/
+    ├── ApiResponse.kt
+    ├── JwtConfig.kt
+    └── Logger.kt
+src/main/resources/
+├── application.conf
+└── db/migration/
+    └── V1__init.sql
+```
+
+---
+
+## 四、推荐依赖基线（build.gradle.kts）
+
+```kotlin
+val ktorVersion = "2.3.x"
+val exposedVersion = "0.45.x"
+val logbackVersion = "1.4.x"
+
+dependencies {
+    // Ktor 核心
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+
+    // 鉴权
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
+
+    // 数据库
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+
+    // 数据库驱动（按选型）
+    implementation("org.postgresql:postgresql:42.x.x")
+    // 或 implementation("mysql:mysql-connector-java:8.x.x")
+
+    // 连接池
+    implementation("com.zaxxer:HikariCP:5.x.x")
+
+    // 迁移
+    implementation("org.flywaydb:flyway-core:9.x.x")
+
+    // 密码哈希
+    implementation("org.mindrot:jbcrypt:0.4")
+
+    // 日志
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
+    // 测试
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+}
+```
+
+---
+
+## 五、模板代码
+
+### 5.1 `Application.kt`
+
+```kotlin
+package com.example.project
+
+import com.example.project.plugins.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+
+fun main() {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+        module()
+    }.start(wait = true)
+}
+
+fun Application.module() {
+    configureSerialization()
+    configureDatabase()
+    configureSecurity()
+    configureStatusPages()
+    configureRouting()
+}
+```
+
+### 5.2 `plugins/Serialization.kt`
+
+```kotlin
+package com.example.project.plugins
+
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import kotlinx.serialization.json.Json
+
+fun Application.configureSerialization() {
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = false
+            isLenient = true
+            ignoreUnknownKeys = true
+        })
+    }
+}
+```
+
+### 5.3 `plugins/DatabaseFactory.kt`
+
+```kotlin
+package com.example.project.plugins
+
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import io.ktor.server.application.*
+import org.flywaydb.core.Flyway
+import org.jetbrains.exposed.sql.Database
+
+fun Application.configureDatabase() {
+    val config = environment.config
+    val jdbcUrl = config.property("database.jdbcUrl").getString()
+    val username = config.property("database.username").getString()
+    val password = config.property("database.password").getString()
+
+    val hikariConfig = HikariConfig().apply {
+        this.jdbcUrl = jdbcUrl
+        this.username = username
+        this.password = password
+        maximumPoolSize = 10
+        isAutoCommit = false
+        transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        validate()
+    }
+
+    val dataSource = HikariDataSource(hikariConfig)
+    Database.connect(dataSource)
+
+    Flyway.configure()
+        .dataSource(dataSource)
+        .locations("classpath:db/migration")
+        .load()
+        .migrate()
+}
+```
+
+### 5.4 `plugins/Security.kt`
+
+```kotlin
+package com.example.project.plugins
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+
+fun Application.configureSecurity() {
+    val secret = environment.config.property("jwt.secret").getString()
+    val issuer = environment.config.property("jwt.issuer").getString()
+    val audience = environment.config.property("jwt.audience").getString()
+    val realm = environment.config.property("jwt.realm").getString()
+
+    install(Authentication) {
+        jwt("auth-jwt") {
+            this.realm = realm
+            verifier(
+                JWT.require(Algorithm.HMAC256(secret))
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .build()
+            )
+            validate { credential ->
+                if (credential.payload.getClaim("userId").asString().isNotEmpty()) {
+                    JWTPrincipal(credential.payload)
+                } else null
+            }
+        }
+    }
+}
+```
+
+### 5.5 `plugins/StatusPages.kt`
+
+```kotlin
+package com.example.project.plugins
+
+import com.example.project.utils.ApiResponse
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+
+fun Application.configureStatusPages() {
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            call.application.environment.log.error("Unhandled exception", cause)
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                ApiResponse<Unit>(code = 5000, message = cause.message ?: "Internal error")
+            )
+        }
+        status(HttpStatusCode.NotFound) { call, status ->
+            call.respond(status, ApiResponse<Unit>(code = 1004, message = "Not Found"))
+        }
+    }
+}
+```
+
+### 5.6 `plugins/Routing.kt`
+
+```kotlin
+package com.example.project.plugins
+
+import com.example.project.routes.*
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
+
+fun Application.configureRouting() {
+    routing {
+        healthRoutes()
+        route("/api") {
+            authRoutes()
+        }
+    }
+}
+```
+
+### 5.7 `routes/HealthRoutes.kt`
+
+```kotlin
+package com.example.project.routes
+
+import com.example.project.utils.ApiResponse
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+
+fun Route.healthRoutes() {
+    get("/health") {
+        call.respond(ApiResponse(code = 0, message = "ok", data = mapOf("status" to "up")))
+    }
+}
+```
+
+### 5.8 `utils/ApiResponse.kt`
+
+```kotlin
+package com.example.project.utils
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ApiResponse<T>(
+    val code: Int,
+    val message: String,
+    val data: T? = null
+)
+```
+
+### 5.9 `resources/application.conf`
+
+```hocon
+ktor {
+    deployment {
+        port = 8080
+    }
+    application {
+        modules = [ com.example.project.ApplicationKt.module ]
+    }
+}
+
+database {
+    jdbcUrl = "jdbc:postgresql://localhost:5432/app_db"
+    jdbcUrl = ${?DATABASE_URL}
+    username = "postgres"
+    username = ${?DATABASE_USER}
+    password = "postgres"
+    password = ${?DATABASE_PASSWORD}
+}
+
+jwt {
+    secret = "change-me-in-production"
+    secret = ${?JWT_SECRET}
+    issuer = "https://example.com/"
+    audience = "users"
+    realm = "Access to API"
+}
+```
+
+---
+
+## 六、强约束
+
+- 包名按 `com.{company}.{project}` 组织，所有源码放该包内
+- `Application.kt` 只负责装配（install / module）
+- `plugins/` 只负责框架接入，不写业务
+- 业务请求只经过 `routes → services → repositories` 三层，不允许跨层
+- 敏感配置（数据库密码、JWT 密钥）只走环境变量注入
+- 不在初始化阶段引入业务 SDK、业务路由、业务实体
+
+---
+
+## 七、完成后的检查清单
+
+- [ ] 项目目录结构完整
+- [ ] `Application.kt` 可启动
+- [ ] `/health` 接口返回 200 与统一 ApiResponse
+- [ ] 数据库连接成功，Flyway 迁移脚本可执行
+- [ ] JWT 配置已就绪（可在测试环境签发并验证）
+- [ ] `./gradlew build` 通过
+- [ ] 可在此基础上继续新增业务接口

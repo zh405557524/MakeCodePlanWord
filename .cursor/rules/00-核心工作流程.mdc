@@ -15,15 +15,15 @@ alwaysApply: true
 本工作台分为三层：
 
 1. **总调度规则**：`00-核心工作流程.mdc`，只控制阶段识别、上下文加载、流程推进和门禁。
-2. **步骤规则**：`01-需求分析.mdc` 到 `08-Flutter模块开发文档.mdc` 及 `flutter/` 下编码规则，只描述某一步如何生成或修改对应产物。
-3. **工作空间**：`projects/{currentProject}/`，保存具体项目产物、流程状态、依赖文件、注意事项和变更计划。
+2. **步骤规则**：`01-需求分析.mdc` 到 `19-上线监控与迭代.mdc`，以及 `flutter/`、`kotlin/` 下的子规则，只描述某一步如何生成或修改对应产物。
+3. **工作空间**：`projects/{currentProject}/`，保存具体项目产物、流程状态、依赖文件、变更登记、注意事项和发布物料。
 
 边界要求：
 
 - `.cursor/rules/` 只保存抽象规则，不写入具体项目业务状态。
-- `projects/{currentProject}/` 才保存具体任务、生成文件、恢复点和项目级注意事项。
+- `projects/{currentProject}/` 才保存具体任务、生成文件、恢复点、变更登记和项目级注意事项。
 - 总流程像责任链调度器，只决定“进入哪一步”和“加载哪些文件”；具体规则只在进入对应步骤后生效。
-- 进入下一步后，不依赖上一轮对话上下文；必须以 `workflow.md` 和已生成文件作为恢复来源。
+- 进入下一步后，不依赖上一轮对话上下文；必须以 `workflow.md`、`change-plan.md`、`change-log.md` 和已生成文件作为恢复来源。
 
 ---
 
@@ -31,18 +31,30 @@ alwaysApply: true
 
 根据用户输入关键词判断阶段。若关键词同时命中多个阶段，以用户明确表达的目标为准；若仍不明确，优先读取 `workflow.md` 的当前恢复点。
 
+若关键词命中第五步「变更管控」的入口词（见 5.1），不论当前在哪个阶段，都必须先走变更流程，再回当前阶段继续。
+
 | 阶段 | 触发关键词 | 加载规则 |
 |------|-----------|---------|
 | 需求分析 | 需求分析、分析需求、开始需求、新项目、新功能、产品文档、原型、设计稿、截图、附件 | `01-需求分析.mdc` |
 | 需求文档生成 | 生成需求文档、输出需求文档、写需求文档、PRD | `02-需求文档生成.mdc` |
 | 需求文档检测 | 检测需求文档、审查需求、检查需求文档、验证需求 | `03-需求文档检测.mdc` |
-| Figma设计稿计划 | figma设计稿计划、设计稿计划、生成设计计划、生成figma计划、生成 Figma 设计稿计划 | `03A-Figma设计稿计划.mdc` |
-| 技术方案计划 | 技术方案、技术计划、技术设计、架构设计、输出方案 | `04-技术方案计划.mdc` |
-| 前端Flutter文档 | Flutter、前端、dart、UI文档、前端技术文档 | `05-前端Flutter技术文档.mdc` |
-| 后端Kotlin文档 | Kotlin、后端、API文档、服务端、后端技术文档 | `06-后端Kotlin技术文档.mdc` |
-| Flutter总体开发计划 | Flutter开发计划、总体开发计划、开发计划文档、编码计划、开发计划 | `07-Flutter开发计划文档.mdc` |
-| Flutter模块开发文档 | 模块开发文档、模块开发计划、Flutter模块开发文档 | `08-Flutter模块开发文档.mdc` |
-| Flutter编码 | 生成代码、输出项目代码、实现页面、继续编码、搭建工程、接入前端、接入后端 | 当前阶段规则 + `flutter/` 下相关编码规则 |
+| Figma设计稿计划 | figma设计稿计划、设计稿计划、生成设计计划、生成figma计划、生成 Figma 设计稿计划 | `04-Figma设计稿计划.mdc` |
+| 技术方案计划 | 技术方案、技术计划、技术设计、架构设计、输出方案 | `05-技术方案计划.mdc` |
+| 工作时长评估 | 工时评估、估算开发时间、工作时长、项目排期、项目时长、里程碑评估、三点估计 | `06-工作时长评估.mdc` |
+| 前端Flutter文档 | Flutter、前端、dart、UI文档、前端技术文档 | `07-前端Flutter技术文档.mdc` |
+| 后端Kotlin文档 | Kotlin、后端、API文档、服务端、后端技术文档 | `08-后端Kotlin技术文档.mdc` |
+| Flutter总体开发计划 | Flutter开发计划、前端总体开发计划、Flutter 编码计划、前端开发计划 | `09-Flutter开发计划文档.mdc` |
+| Kotlin总体开发计划 | Kotlin开发计划、后端总体开发计划、后端编码计划、Kotlin 开发计划 | `10-Kotlin开发计划文档.mdc` |
+| Flutter模块开发文档 | Flutter模块开发文档、前端模块开发文档、Flutter模块计划 | `11-Flutter模块开发文档.mdc` |
+| Kotlin模块开发文档 | Kotlin模块开发文档、后端模块开发文档、Kotlin模块计划、接口模块文档 | `12-Kotlin模块开发文档.mdc` |
+| Flutter编码 | 生成代码、输出项目代码、实现页面、继续编码、搭建前端工程、接入前端、Flutter 编码 | `13-Flutter编码索引.mdc` + `flutter/` 下相关编码规则 |
+| Kotlin编码 | 写后端、实现接口、继续后端、搭建后端工程、Kotlin 编码、后端实现 | `14-Kotlin编码索引.mdc` + `kotlin/` 下相关编码规则 |
+| 联调与测试QA | 联调、QA、测试、回归、E2E、集成测试、缺陷登记、测试报告 | `15-联调与测试QA.mdc` |
+| 构建与打包 | 打包、构建、签名、APK、AAB、IPA、构建配置、CI 构建、出包 | `16-构建与打包.mdc` |
+| 应用商店上架 | 上架、应用商店、AppStore、Google Play、华为、小米、应用市场、商店素材、隐私政策、合规、审核 | `17-应用商店上架.mdc` |
+| 发布与版本管理 | 发布、版本管理、灰度、回滚、热修、changelog、版本规划 | `18-发布与版本管理.mdc` |
+| 上线监控与迭代 | 监控、APM、崩溃、用户反馈、运营数据、迭代规划、上线后 | `19-上线监控与迭代.mdc` |
+| 变更管控 | 新增、加上、补一个、还要一个、改成、调整、改一下、修改、去掉、删除、不要、移除 | 第五步 + `change-plan.md` + `change-log.md` |
 
 ---
 
@@ -58,21 +70,25 @@ alwaysApply: true
    - 若处于需求分析新项目阶段，先询问项目名。
 4. 定位 `projects/{currentProject}/workflow.md`。
 5. 若 `workflow.md` 不存在，先按 `.cursor/rules/templates/workflow.md` 创建项目级状态文件，再继续执行。
-6. 若本轮是二次调整、局部修改、返工或修订，定位 `projects/{currentProject}/change-plan.md`；不存在时按 `.cursor/rules/templates/change-plan.md` 创建。
+6. 若本轮命中第五步「变更管控」入口，或本轮是二次调整、局部修改、返工或修订，定位 `projects/{currentProject}/change-plan.md`；不存在时按 `.cursor/rules/templates/change-plan.md` 创建。
+7. 若 `projects/{currentProject}/change-log.md` 不存在，按 `.cursor/rules/templates/change-log.md` 创建空骨架，便于后续变更归档。
 
 补充要求：
 
 - `workflow.md` 必须包含“总体流程列表”，用于记录整体工程步骤与真实完成度。
 - 若 `workflow.md` 缺少“总体流程列表”，必须先补齐，再继续后续阶段判断与执行。
+- 进入任何阶段前，必须先检查 `change-plan.md` 顶部「进行中变更」区块是否有未闭合条目；有则优先处理或明确 defer。
 
 **项目文档输出路径规范**：
 
 ```text
 projects/
 └── {currentProject}/
-    ├── workflow.md                 # 工作空间流程状态、恢复点、依赖文件、注意事项
-    ├── change-plan.md              # 二次调整计划，仅发生变更时创建或更新
+    ├── workflow.md                 # 工作空间流程状态、恢复点、依赖文件、注意事项、当前变更登记
+    ├── change-plan.md              # 进行中变更 + 本迭代历史变更（双区块）
+    ├── change-log.md               # 跨迭代累积研发变更日志（按版本号汇总，研发面向）
     ├── 01-需求/
+    │   ├── requirements-list.md     # 需求清单（需求分析阶段产物）
     │   ├── requirements.md          # 需求文档（PRD）
     │   ├── detection-feedback.md    # 检测阶段用户指出问题与关注点的累计记录
     │   ├── figma-design-plan.md     # Figma 设计稿计划
@@ -81,14 +97,39 @@ projects/
     │       ├── images/
     │       └── docs/
     ├── 02-技术方案/
-    │   └── tech-plan.md
+    │   ├── tech-plan.md             # 技术方案
+    │   └── effort-estimate.md       # 工作时长评估
     ├── 03-前端/
     │   ├── flutter-tech.md
     │   ├── flutter-dev-plan.md
     │   └── 开发计划/
-    └── 04-后端/
-        └── kotlin-tech.md
+    ├── 04-后端/
+    │   ├── kotlin-tech.md
+    │   ├── kotlin-dev-plan.md
+    │   └── 开发计划/
+    ├── 05-联调与测试/
+    │   └── qa-plan.md
+    ├── 06-构建打包/
+    │   ├── build-plan.md
+    │   ├── android.md
+    │   └── ios.md
+    ├── 07-应用上架/
+    │   ├── release-checklist.md
+    │   ├── store-assets/
+    │   ├── privacy-policy.md
+    │   └── compliance.md
+    ├── 08-发布版本/
+    │   ├── release-plan.md
+    │   └── changelog.md             # 面向用户的产品版本日志
+    └── 09-上线监控/
+        ├── monitoring-plan.md
+        └── feedback-loop.md
 ```
+
+注意：
+
+- `change-log.md`（仓库根目录，研发面向）与 `08-发布版本/changelog.md`（用户面向）是两份不同的文件，通过版本号串联，禁止合并。
+- 编码工程目录不强制放在 `projects/{currentProject}/` 下，由项目级 `workflow.md` 中的 `referenceProject` / `frontendRepo` / `backendRepo` 字段指向真实工程。
 
 ---
 
@@ -100,15 +141,17 @@ projects/
 2. 必须读取当前阶段对应的步骤规则。
 3. 必须读取 `projects/{currentProject}/workflow.md`。
 4. 必须先查看 `workflow.md` 中的“总体流程列表”，确认整体哪些步骤已完成、哪些步骤待补齐，以及当前用户请求是否会影响已完成阶段的重新同步。
-5. 再查看 `workflow.md` 中的“当前流程”，确认当前阶段、当前步骤、恢复点和下一步默认动作。
-6. 只读取 `workflow.md` 中“当前步骤依赖文件”列出的项目文件。
-7. 若步骤规则明确要求额外文件，再补充读取。
-8. 不把上一阶段对话当成上下文来源；上一阶段的结论必须已经沉淀到项目文件。
+5. 必须查看 `workflow.md` 中的“当前变更登记”，确认是否存在 `in_progress` 的变更条目；若存在，进入第五步流程优先处理。
+6. 再查看 `workflow.md` 中的“当前流程”，确认当前阶段、当前步骤、恢复点和下一步默认动作。
+7. 只读取 `workflow.md` 中“当前步骤依赖文件”列出的项目文件。
+8. 若步骤规则明确要求额外文件，再补充读取。
+9. 不把上一阶段对话当成上下文来源；上一阶段的结论必须已经沉淀到项目文件。
 
 **引用约定**：
 
 - 需求之后的阶段引用业务规则时，优先读取 `01-需求/requirements.md`。
 - UI、页面、状态、组件与交互约束优先读取 `01-需求/figma-design-plan.md`；若缺失，必须在 `workflow.md` 的“阻塞项/注意事项”中记录。
+- 工时评估之后的阶段引用排期与里程碑时，优先读取 `02-技术方案/effort-estimate.md`。
 - 技术方案、前后端文档、开发计划与编码阶段应按 `workflow.md` 的依赖文件加载，不因单次小改动扩大读取和重写范围。
 
 ---
@@ -121,9 +164,10 @@ projects/
 
 1. 确认 `currentProject`、当前阶段、当前步骤状态和恢复点。
 2. 先核对 `workflow.md` 的“总体流程列表”，确认本轮任务在整体工程中的位置，以及是否需要把历史上已完成的阶段重新标为 `pending` 或 `in_progress`。
-3. 读取当前步骤规则和 `workflow.md` 中列出的依赖文件。
-4. 若是二次调整，先读取或创建 `change-plan.md`，明确影响文件与不应改动范围。
-5. 若依赖文件缺失或冲突，先更新 `workflow.md` 的阻塞项并停止推进。
+3. 检查 `change-plan.md` 顶部「进行中变更」区块；若有 `in_progress` 条目且与本轮请求无关，先提示用户确认是否切换，避免变更线索丢失。
+4. 读取当前步骤规则和 `workflow.md` 中列出的依赖文件。
+5. 若是二次调整或命中第五步入口词，先读取或创建 `change-plan.md`，按 `small_change` 限定影响范围。
+6. 若依赖文件缺失或冲突，先更新 `workflow.md` 的阻塞项并停止推进。
 
 ### 4.2 执行中
 
@@ -131,11 +175,13 @@ projects/
 2. 只处理当前步骤规则负责的产物，不跨步骤顺手重写其他文档。
 3. 小改动默认只改 `change-plan.md` 标出的影响文件。
 4. 除非用户明确要求重构，否则禁止因局部调整触发大面积重写。
+5. 上线后任何反馈（崩溃、用户反馈、运营数据）都视为「变更管控入口」，必须先写 `change-plan.md` 并回到对应阶段，不允许跳过流程直接热修代码。
 
 ### 4.3 执行后
 
 1. 更新 `workflow.md`：
    - 总体流程列表
+   - 当前变更登记（同步 `change-plan.md` 中的 `in_progress` 条目）
    - 当前阶段
    - 当前步骤状态
    - 当前恢复点
@@ -146,14 +192,14 @@ projects/
    - 阻塞项
    - 下一步默认动作
    - 执行记录
-2. 若本轮有二次调整，更新 `change-plan.md` 的完成记录。
+2. 若本轮命中变更管控，更新 `change-plan.md` 的完成记录；条目状态变为 `done` 时，归档到 `change-log.md`（详见第五步 5.3）。
 3. 到达暂停点时必须等待用户确认，不自动跳入下一阶段。
 
 补充要求：
 
 - “总体流程列表”必须优先反映当前版本的真实完成度，不能只保留历史完成记录。
-- 如果本轮新增需求影响了技术方案、产品文档、开发计划或代码实现，必须把这些受影响项在“总体流程列表”中重新标记为 `pending` 或 `in_progress`。
-- `Flutter 编码`、`后端代码开发`、`前端接入后端接口` 都属于阻塞式代码开发阶段；如果用户没有明确说“进入下一步”、切换阶段或切换流程项，则默认继续停留在当前编码步骤中进行修改、调试、验证与回写，不自动推进到下一个流程阶段。
+- 如果本轮新增需求影响了技术方案、产品文档、工时评估、开发计划或代码实现，必须把这些受影响项在“总体流程列表”中重新标记为 `pending` 或 `in_progress`。
+- `Flutter 编码`、`Kotlin 编码` 都属于阻塞式代码开发阶段；如果用户没有明确说“进入下一步”、切换阶段或切换流程项，则默认继续停留在当前编码步骤中进行修改、调试、验证与回写，不自动推进到下一个流程阶段。
 
 状态枚举固定为：
 
@@ -168,41 +214,105 @@ projects/
 
 ---
 
-## 第五步：二次调整与局部变更规则
+## 第五步：变更管控与版本化记录
 
-当用户要求修改已生成内容时，默认按局部变更处理：
+> 目标：编码中途、联调中途，乃至上架前后任何时刻的新增/修改/删除需求，都走「最小改动 + 版本化记录」，不允许整体重写。
 
-1. 先生成或更新 `projects/{currentProject}/change-plan.md`。
-2. 变更类型默认写为 `small_change`。
-3. 明确本次影响文件、无需修改范围、执行步骤和验收标准。
-4. 若 UI 改一小段逻辑，只追踪可能受影响的需求、产品文档、技术文档或代码文件；不得整篇重写。
-5. 只有用户明确说“重构、整体重写、重新设计、推倒重来”等，才允许将变更类型改为 `refactor` 或 `rewrite`。
-6. 执行完成后，把改动摘要回写到 `workflow.md` 和 `change-plan.md`。
-7. 若本轮变更影响整体工程路径，必须同步更新 `workflow.md` 的“总体流程列表”，不能只更新“当前流程”。
+### 5.1 入口判定
+
+任何阶段，只要本轮用户输入命中以下任一关键词，即视为「变更入口」：
+
+- 新增、加上、补一个、再加一个、再做一个、还要一个
+- 改成、调整、改一下、修改、改这里
+- 去掉、删除、不要、移除
+
+进入变更流程后，先在 `change-plan.md` 顶部「进行中变更」区块追加一条结构化条目，再回到对应阶段继续执行。
+
+### 5.2 变更条目固定格式
+
+```markdown
+### [CHG-{seq}] {一句话标题}
+
+- 版本号: v{major}.{minor}.{patch}（编码期 patch++；新增模块 minor++；推翻重做 major++）
+- 提出时间: YYYY-MM-DD HH:mm
+- 类型: feature_add | feature_modify | feature_remove
+- 触发原因: （用户原话 + 上下文）
+- 影响范围:
+  - 需求文档: 是/否 + 具体小节
+  - Figma 设计计划: 是/否 + 具体页面
+  - 技术方案: 是/否 + 具体章节
+  - 工时评估: 是/否 + 增量工时估计
+  - Flutter 模块: 是/否 + 具体模块/页面/文件
+  - Kotlin 模块: 是/否 + 具体接口/Service/Repository
+- 最小改动清单:
+  - 必要新增: 文件 A、字段 B、接口 C
+  - 对应修改: 文件 D 的 X 方法、组件 E 的 props
+  - 必要删除: 文件 F、字段 G（含数据迁移说明）
+- 不应改动范围: （明确写出本次不动的目录/文件/接口，防止扩散）
+- 验收标准: 1) ... 2) ... 3) ...
+- 回滚说明: （如何撤销该变更）
+- 状态: pending | in_progress | done | rolled_back
+- 关联恢复点: workflow.md 当前阶段编号 + 当前步骤
+```
+
+`{seq}` 从 1 开始全局递增，跨迭代延续，编号一旦分配不复用。
+
+### 5.3 双文件版本化记录
+
+- `projects/{currentProject}/change-plan.md`（进行中 + 当前迭代历史）
+  - 顶部区块：所有 `pending` 与 `in_progress` 的变更条目
+  - 底部区块：本迭代已完成（`done` / `rolled_back`）的变更条目，按版本号排序
+- `projects/{currentProject}/change-log.md`（跨迭代累积日志，研发面向）
+  - 完成一条变更（状态变为 `done`）时，从 `change-plan.md` 顶部区块归档到 `change-log.md`
+  - 按 `v0.1.0 / v0.1.1 / v0.2.0 / v1.0.0` 分块，每块包含 added / changed / removed 三段，并保留 CHG-id 与影响文件路径
+  - 与 `08-发布版本/changelog.md`（用户面向）通过版本号串联：用户日志只筛选 user-visible 变更，禁止直接复制研发条目
+
+### 5.4 最小改动强约束
+
+- 不允许借「新增需求」之机重写未受影响的模块
+- 不允许在「最小改动清单」未写出文件名之前就开始改代码
+- 不允许跳过 `change-plan.md` 直接改文件（哪怕只是 1 行）
+- 不允许把多条不相关变更塞进同一个 CHG-id
+- 发现实际影响超出预估时，必须先回写 `change-plan.md` 的「最小改动清单」再继续
+- 只有用户明确说“重构、整体重写、重新设计、推倒重来”等，才允许把变更类型升级为 `refactor` 或 `rewrite`
+
+### 5.5 受影响阶段回卷
+
+变更落地后，必须把 `workflow.md` 的“总体流程列表”中所有受影响阶段重新置为 `pending` 或 `in_progress`，例如：
+
+- 新增一个页面 → 重置 04 Figma 设计计划、07 Flutter 技术文档（局部章节）、09 Flutter 总体计划、11 Flutter 模块文档、13 Flutter 编码
+- 改一个接口字段 → 重置 08 Kotlin 技术文档、10 Kotlin 总体计划、12 Kotlin 模块文档、14 Kotlin 编码、15 联调 QA
+- 删除一个模块 → 重置上述对应阶段，并在 17 上架与 18 发布版本中标注下版本删除项
+- 凡是涉及任务工时或里程碑的变化，必须追加一份 `06-工作时长评估.mdc` 的「评估增量」（effort-estimate.md 的版本 v1.x）
+
+### 5.6 与 16/17/18 阶段的关系
+
+- 进入 16 构建前必须把所有 `in_progress` 的变更条目归档为 `done` 或明确 defer，且 `change-plan.md` 顶部「进行中变更」区块必须为空
+- 17 上架阶段必须把本次发布关联的 `change-log.md` 版本号列入合规材料
+- 18 发布与版本管理阶段生成 `changelog.md`（面向用户）时，必须从 `change-log.md` 按版本号筛选 user-visible 变更，不直接复制研发条目
 
 ---
 
 ## 第六步：代码生成前架构门禁
 
-当用户要求“生成代码、输出项目代码、实现页面、继续编码、搭建工程、接入前端/后端工程”时，必须在写任何业务代码之前执行架构门禁。
+当用户要求“生成代码、输出项目代码、实现页面、继续编码、搭建工程、接入前端/后端工程”时，必须在写任何业务代码之前执行架构门禁。门禁分为前端（Flutter）与后端（Kotlin）两套。
 
-### 6.1 必须先读取的上下文
+### 6.1 Flutter 架构门禁
 
-编码前必须先读取并对齐以下内容：
+#### 6.1.1 必须先读取的上下文
 
-1. `projects/{currentProject}/workflow.md`。
-2. 当前阶段对应的 `.cursor/rules/` 子规则。
-3. 若是 Flutter 工程，必须先按任务类型读取 `.cursor/rules/flutter/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-导航规则.mdc`，并按需补读 `05-多语言支持.mdc`、`06-第三方依赖参考.mdc`、`07-新功能开发.mdc`、`08-UI处理任务.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`。
-4. 当前项目的技术文档与开发计划，例如：
+1. `projects/{currentProject}/workflow.md`
+2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
+3. 当前阶段对应的 `.cursor/rules/` 子规则（13-Flutter编码索引）
+4. `.cursor/rules/flutter/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-导航规则.mdc`，并按需补读 `05-多语言支持.mdc`、`06-第三方依赖参考.mdc`、`07-新功能开发.mdc`、`08-UI处理任务.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
+5. 当前项目的技术文档与开发计划：
    - `projects/{currentProject}/03-前端/flutter-tech.md`
    - `projects/{currentProject}/03-前端/flutter-dev-plan.md`
    - `projects/{currentProject}/03-前端/开发计划/*.md`
    - 若存在后端接口文档，也必须读取 `projects/{currentProject}/04-后端/kotlin-tech.md`
-5. 若技术文档指定参考工程，例如 `G:\code\soul\Solfeggio`，必须先检查参考工程真实目录结构和入口文件，再生成代码。
+6. 若技术文档指定 `referenceProject`，必须先检查参考工程真实目录结构和入口文件，再生成代码。
 
-### 6.2 必须先确认架构清单
-
-写代码前必须形成并遵守架构清单。以 Flutter 为例，若项目规则或技术文档要求如下结构，则必须先搭好该结构，再写 UI 和业务：
+#### 6.1.2 必须先确认架构清单
 
 ```text
 lib/
@@ -223,14 +333,55 @@ lib/
 
 禁止在已有明确项目规则时，先生成单文件原型，或使用未被规则/技术文档认可的通用架构，例如随意新增 `app/`、`core/`、`controllers/` 等目录来替代项目标准骨架。
 
-### 6.3 编码后的架构验收
-
-代码生成完成后，除了运行 `flutter analyze`、`flutter test` 等编译测试外，还必须做架构验收：
+#### 6.1.3 编码后的架构验收
 
 1. 扫描 `lib/` 顶层目录，确认与项目规则一致。
 2. 扫描 `pages/`，确认业务页面均位于 `pages/{feature}/`，并包含 `view.dart`、`controller.dart`、`index.dart`。
-3. 确认入口、路由、全局初始化、主题文件符合规则，例如 `main.dart`、`global.dart`、`routes/`、`theme.dart`。
+3. 确认入口、路由、全局初始化、主题文件符合规则（`main.dart`、`global.dart`、`routes/`、`theme.dart`）。
 4. 若发现架构不一致，必须先修正架构，再向用户汇报完成。
+5. 至少跑过 `flutter analyze`、必要时跑 `flutter test`。
+6. 更新 `workflow.md` 中的恢复点、执行记录和下一步。
+
+### 6.2 Kotlin 架构门禁
+
+#### 6.2.1 必须先读取的上下文
+
+1. `projects/{currentProject}/workflow.md`
+2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
+3. 当前阶段对应的 `.cursor/rules/` 子规则（14-Kotlin编码索引）
+4. `.cursor/rules/kotlin/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-路由与控制器规则.mdc`，并按需补读 `05-数据库与持久化.mdc`、`06-第三方依赖参考.mdc`、`07-新接口开发.mdc`、`08-鉴权与安全.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
+5. 当前项目的技术文档与开发计划：
+   - `projects/{currentProject}/04-后端/kotlin-tech.md`
+   - `projects/{currentProject}/04-后端/kotlin-dev-plan.md`
+   - `projects/{currentProject}/04-后端/开发计划/*.md`
+
+#### 6.2.2 必须先确认架构清单
+
+```text
+src/main/kotlin/{packageName}/
+├── Application.kt              # 入口，配置插件和路由
+├── plugins/                    # Ktor 插件配置（Routing / Security / Serialization / StatusPages）
+├── routes/                     # 路由层，只做参数解析与路由
+├── services/                   # 业务逻辑层
+├── repositories/               # 数据访问层
+├── models/
+│   ├── request/                # 请求体
+│   ├── response/               # 响应体
+│   └── entity/                 # 数据库实体
+└── utils/
+src/main/resources/
+├── application.conf            # 配置文件
+└── db/migration/               # 数据库迁移脚本
+```
+
+禁止在 Routes 中写业务逻辑、在 Service 中写裸 SQL、跳过 Repository 直接访问数据库。
+
+#### 6.2.3 编码后的架构验收
+
+1. 扫描 `src/main/kotlin/{packageName}/` 顶层目录，确认与规则一致。
+2. 扫描 `routes/`，确认仅做参数解析和返回拼装。
+3. 扫描 `services/`，确认承担业务逻辑且没有直接的 SQL 字符串拼接。
+4. 至少跑过 `./gradlew build` 与必要的 `./gradlew test`。
 5. 更新 `workflow.md` 中的恢复点、执行记录和下一步。
 
 ---
@@ -238,12 +389,21 @@ lib/
 ## 整体工作流程
 
 ```text
-需求分析 → 需求文档生成 → 需求文档检测（可多轮迭代）→ Figma设计稿计划 → 技术方案计划 → Flutter技术文档 → Flutter总体开发计划 → 审核 → Flutter模块开发文档 → Flutter编码 → 后端代码开发 → 前端接入后端接口
+01 需求分析 → 02 需求文档生成 → 03 需求文档检测（可多轮迭代）→ 04 Figma设计稿计划 →
+05 技术方案计划 → 06 工作时长评估 →
+[ 07 Flutter技术文档 | 08 Kotlin技术文档 ] →
+[ 09 Flutter总体开发计划 | 10 Kotlin总体开发计划 ] → 审核 →
+[ 11 Flutter模块开发文档 | 12 Kotlin模块开发文档 ] →
+[ 13 Flutter编码 | 14 Kotlin编码 ] →
+15 联调与测试QA → 16 构建与打包 → 17 应用商店上架 → 18 发布与版本管理 → 19 上线监控与迭代
 ```
 
-- **需求文档检测阶段会暂停**：检测完成后等待用户确认（"文档通过" / "继续下一步"）再进入 Figma 设计稿计划阶段。
-- **Figma设计稿计划阶段会暂停**：设计计划生成后等待用户按计划补齐设计稿或明确确认可继续，再进入技术方案阶段。
-- **Flutter总体开发计划阶段会暂停**：总体开发计划生成后等待用户审核，通过后再生成模块开发文档。
-- **代码开发阶段默认不自动前进**：`Flutter 编码`、`后端代码开发`、`前端接入后端接口` 都视为阻塞式代码开发阶段。只要用户没有明确说“进入下一步”，就默认留在当前编码步骤反复修改和调试。
+阶段属性：
+
+- **暂停点**：03 检测、04 设计计划、06 工时评估、09/10 总体开发计划生成后、15 联调 QA、17 上架前、18 发布前，均必须等待用户确认才继续。
+- **代码开发阻塞**：13 Flutter 编码、14 Kotlin 编码 默认停留在当前编码步骤反复修改和调试。
+- **串行强门禁**：15 联调 QA → 16 构建 → 17 上架 → 18 发布 → 19 监控；前一项未达验收不允许进下一项。
+- **并行允许**：07/08、09/10、11/12、13/14 可在团队人力允许时并行推进，但每一对内部都有依赖检查（详见对应步骤规则）。
+- **变更回流**：19 监控发现的问题进入第五步「变更管控」，按受影响阶段回卷处理；禁止跳过流程直接热修代码。
 - **每个阶段独立触发**：用户可以随时通过关键词跳转到任意阶段，但必须更新 `workflow.md`。
 - **文档按项目隔离**：不同项目的文档存放在各自的 `projects/{项目名}/` 目录下。

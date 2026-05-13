@@ -1,0 +1,134 @@
+---
+description: Kotlin 后端路由与控制器规则，强约束 Routes → Service → Repository 三层职责分离
+globs: "**/src/main/kotlin/**/routes/**/*.kt"
+alwaysApply: false
+---
+
+# 路由与控制器规则
+
+## 一、三层职责
+
+| 层 | 职责 | 禁止 |
+|----|------|------|
+| Routes | 参数解析、鉴权检查、调用 Service、拼接 ApiResponse | 业务逻辑、直接访问数据库、跨域复杂判断 |
+| Service | 业务编排、跨 Repository 调用、事务边界 | 直接读写 HTTP request/response、拼裸 SQL |
+| Repository | 数据访问（Exposed DSL / DAO / 缓存） | 业务规则判断、HTTP 上下文 |
+
+---
+
+## 二、Routes 标准模式
+
+```kotlin
+fun Route.userRoutes(service: UserService) {
+    route("/users") {
+        post {
+            val req = call.receive<CreateUserRequest>()
+            val resp = service.create(req)
+            call.respond(ApiResponse(code = 0, message = "ok", data = resp))
+        }
+
+        authenticate("auth-jwt") {
+            get("/{id}") {
+                val id = call.parameters["id"]
+                    ?: throw IllegalArgumentException("id required")
+                val user = service.findById(id)
+                    ?: throw NotFoundException("user not found")
+                call.respond(ApiResponse(code = 0, message = "ok", data = user))
+            }
+        }
+    }
+}
+```
+
+约定：
+
+- 一个领域一个 `xxxRoutes.kt`
+- 每个 Route 函数都是 `Route.xxxRoutes()` 扩展函数
+- Service 通过参数注入，不在函数体里 new
+
+---
+
+## 三、参数解析
+
+- 路径参数：`call.parameters["id"]`
+- 查询参数：`call.request.queryParameters["page"]`
+- 请求体：`call.receive<XxxRequest>()`
+- 头部：`call.request.header("X-Custom-Header")`
+- 鉴权用户：`call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asString()`
+
+不允许：
+
+- 在 Routes 中直接读取 `call.receive<JsonElement>()` 然后手动解析
+- 把多种入参塞到同一个 `Map<String, Any>`
+
+---
+
+## 四、鉴权接入
+
+- 受保护路由放在 `authenticate("auth-jwt") { ... }` 块内
+- 未受保护的路由（注册、登录、健康检查）放在外层
+- 跨权限的路由组使用嵌套 `route()` 与不同 `authenticate(...)`
+
+---
+
+## 五、错误处理
+
+Routes 不允许 try/catch 业务异常并自行返回 5xx：
+
+- 参数错误 → `throw IllegalArgumentException(...)`
+- 资源不存在 → `throw NotFoundException(...)`
+- 业务规则错误 → `throw BusinessException(code, message)`
+
+所有异常由 `StatusPages` 拦截转 `ApiResponse`。
+
+---
+
+## 六、响应规范
+
+- 统一通过 `call.respond(ApiResponse(...))`
+- 成功：`code = 0`
+- 失败：`code` 从错误码规范取
+- 不直接返回 `call.respondText("...")` 或裸 JSON
+- 文件下载、SSE、WebSocket 等特殊情况除外
+
+---
+
+## 七、Service 接入
+
+- Service 单例由 DI 容器 / 顶层对象提供
+- Routes 注册时显式传入：`userRoutes(userService)`
+- 不在 Routes 里 `UserService()`，避免每次请求创建
+
+---
+
+## 八、Repository 调用
+
+Repository 永远由 Service 调用，不允许：
+
+- Routes 直接调用 Repository
+- 多个 Service 嵌套调用同一个 Repository 的写操作而不打事务
+
+---
+
+## 九、事务边界
+
+- 单写操作：在 Repository 内部 `transaction { }` 即可
+- 跨表 / 多步写：在 Service 中开事务：`transaction { repoA.insert(...); repoB.update(...) }`
+- 禁止把事务边界放到 Routes 层
+
+---
+
+## 十、版本化路由
+
+- 默认路径前缀：`/api`
+- 如需多版本：`/api/v1`、`/api/v2`
+- 不兼容变更必须新增版本，不在原版本上偷偷改
+
+---
+
+## 十一、禁止事项
+
+- 不把业务逻辑写在 Routes 内（包括校验之外的判断）
+- 不在 Routes 内拼接 SQL
+- 不在 Routes 内拿到 `call.principal()` 后做复杂权限判断（下沉到 Service）
+- 不在 Routes 内打开数据库连接 / 调用 `Database.connect`

@@ -1,5 +1,5 @@
 ---
-description: Flutter 模块开发文档阶段 - 基于总体开发计划与参考工程为单模块生成可直接驱动 AI 编码的文档
+description: Flutter 模块开发文档阶段 - 基于总体开发计划与可选参考工程为单模块生成可直接驱动 AI 编码的文档
 globs:
 alwaysApply: false
 ---
@@ -14,7 +14,7 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮模块开发计划，再生成或更新对应模块开发文档。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
@@ -26,18 +26,12 @@ alwaysApply: false
 
 ## 参考工程
 
-当前模块开发文档默认参考：
+参考工程不再硬编码到规则中，由 `workflow.md` 的 `referenceProject` 字段在项目级配置：
 
-- `G:\code\soul\Solfeggio`
+- 已设置且目录存在时，可复用其目录组织、页面拆分、Controller 写法、Service / Store 关系、路由与初始化方式、通用组件风格。
+- 未设置或不存在时，直接按 `.cursor/rules/flutter/` 通用规则库与项目自身约定执行。
 
-目标不是照搬其业务，而是复用其：
-
-- 目录组织
-- 页面拆分
-- Controller 写法
-- Service / Store 关系
-- 路由与初始化方式
-- 通用组件风格
+目标不是照搬其业务，而是复用风格与骨架。
 
 ## 目标
 
@@ -58,13 +52,13 @@ alwaysApply: false
 
 1. 功能定位与边界
 2. 入口、路由与页面文件
-3. 依赖前置
+3. 依赖前置（含对 Kotlin 模块 / 接口的依赖）
 4. 视觉参考与设计稿分析
 5. 涉及模块与类
 6. 业务内容与数据流
-7. 现有工程参考点
+7. 现有工程参考点（来自 `referenceProject`，若存在）
 8. 建议实现步骤
-9. 详细编码任务清单
+9. 详细编码任务清单（任务 ID 与 `flutter-dev-plan.md` 对齐）
 10. 验收标准
 11. 编码注意事项
 
@@ -80,3 +74,4 @@ alwaysApply: false
 
 - 生成模块文档时，同步更新总体开发计划中的模块状态或记录
 - 模块文档生成完成后，等待用户决定是否开始编码或继续处理下一个模块
+- 编码阶段触发后，由 `13-Flutter编码索引.mdc` 接管

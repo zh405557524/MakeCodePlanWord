@@ -14,21 +14,23 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮总体开发计划，再生成或更新 Flutter 总体开发计划文档。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
 执行本规则前，必须确认：
 1. `projects/{currentProject}/03-前端/flutter-tech.md` 已存在
-2. 用户已明确要求生成 Flutter 开发计划或总体开发计划文档
+2. `projects/{currentProject}/02-技术方案/effort-estimate.md` 已存在或用户明确跳过
+3. 用户已明确要求生成 Flutter 开发计划或总体开发计划文档
 
 ## 参考工程
 
-总体开发计划默认对齐：
+参考工程不再硬编码到规则中，而是由项目级配置驱动：
 
-- `G:\code\soul\Solfeggio`
+- `workflow.md` 中的 `referenceProject` 字段指向真实的参考工程绝对路径（如已设置）。
+- 若未设置或目录不存在，按 `.cursor/rules/flutter/` 通用规则库继续，不引用不存在的工程。
 
-开发顺序与工程口径优先继承其真实模式，不再沿用旧的 `Riverpod + Drift` 计划。
+开发顺序与工程口径优先继承 `referenceProject` 的真实模式，不再沿用旧的 `Riverpod + Drift` 计划。
 
 ## 目标
 
@@ -52,8 +54,8 @@ alwaysApply: false
 2. 当前状态与恢复点
 3. 状态枚举与更新规则
 4. 总体开发策略
-5. 总体阶段划分
-6. 详细任务清单
+5. 总体阶段划分（含工时与里程碑，引用 `effort-estimate.md`）
+6. 详细任务清单（任务 ID 与技术方案 `T-F00x` 对齐）
 7. 模块开发文档列表
 8. 编码约束
 9. 执行记录
@@ -78,4 +80,5 @@ alwaysApply: false
 ## 推进规则
 
 - 总体开发计划生成后必须暂停
-- 等用户明确审核通过后，再进入模块开发文档阶段
+- 等用户明确审核通过后，再进入 11 Flutter 模块开发文档阶段
+- 后端 Kotlin 总体开发计划（10）可与本规则并行生成
