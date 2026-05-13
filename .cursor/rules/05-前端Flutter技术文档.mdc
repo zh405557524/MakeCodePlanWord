@@ -37,14 +37,34 @@ alwaysApply: false
 - `MaterialApp.router + go_router`
 - `flutter_screenutil`
 - `CustomScaffold`
-- `pages/{feature}/view.dart + controller.dart + index.dart`
+- `pages/{feature}/index.dart + controller.dart + view.dart`
 
 ## 规则来源（生成前必读）
 
-- `.cursor/rules/flutter/08-项目结构目录.mdc`
-- `.cursor/rules/flutter/task-project_init.mdc`
-- `.cursor/rules/flutter/task-new_feature.mdc`
-- `.cursor/rules/flutter/task-ui_task.mdc`
+- `.cursor/rules/flutter/01-项目初始化规则.mdc`
+- `.cursor/rules/flutter/02-项目结构目录.mdc`
+- `.cursor/rules/flutter/03-编码规范.mdc`
+- `.cursor/rules/flutter/04-导航规则.mdc`
+- `.cursor/rules/flutter/05-多语言支持.mdc`
+- `.cursor/rules/flutter/06-第三方依赖参考.mdc`
+- `.cursor/rules/flutter/07-新功能开发.mdc`
+- `.cursor/rules/flutter/08-UI处理任务.mdc`
+- `.cursor/rules/flutter/09-大功能先规划再编码.mdc`
+- `.cursor/rules/flutter/10-编码工作流程.mdc`
+
+## Flutter 规则目录的定位
+
+`.cursor/rules/flutter/` 是一个**通用规则库 + 代码模板库**：
+
+1. 可以直接作为新 Flutter 工程的初始化规则源
+2. 可以直接作为生成 `flutter-tech.md` 时的规则输入
+3. 其中的规则默认是通用版本，不随单个项目反复改写
+
+因此，本规则负责的不是“修改 `.cursor/rules/flutter`”，而是：
+
+- 读取这套通用规则库
+- 结合当前项目业务、Figma 与技术方案
+- 输出当前项目自己的 Flutter 开发规则和技术文档口径
 
 ## 输出路径
 
@@ -64,16 +84,31 @@ alwaysApply: false
 生成 `flutter-tech.md` 时必须明确：
 
 1. 当前 Flutter 最终技术路线
-2. 参考工程对齐点
-3. 项目结构
-4. 启动与全局初始化
-5. 状态管理与数据流
-6. 存储设计（GetStorage / Hive）
-7. 路由配置
-8. UI 基础规范
-9. 页面实现摘要
-10. 编码任务清单
-11. 编码注意事项
+2. 当前项目从通用规则库中继承了哪些项目初始化规则
+3. 当前项目结构与参考工程对齐点
+4. 当前项目第三方依赖基线
+5. 启动与全局初始化
+6. 状态管理与数据流
+7. 存储设计（GetStorage / Hive）
+8. 路由配置
+9. UI 基础规范
+10. 页面实现摘要
+11. 编码任务清单
+12. 编码注意事项
+13. Flutter 编码工作流程
+
+还必须单独输出“项目专属开发规则”章节，至少说明：
+
+- 继承了哪些通用规则
+- 哪些通用规则在当前项目中被裁剪
+- 哪些规则因为当前业务、Figma 或技术方案被特化
+- 当前项目最终执行的导航、编码规范、多语言、UI、规划与编码关系
+- 当前项目最终执行的 Flutter 编码推进流程
+
+也就是说：
+
+- **如何输出规则，只在本文件中定义**
+- `.cursor/rules/flutter/` 只保存通用规则和模板，不在里面写“如何生成项目规则”
 
 其中 UI 基础规范、页面实现摘要、编码任务清单必须明确引用 `figma-design-plan.md` 中的页面、状态、组件和交互要求，而不是只按散图兜底。
 
@@ -84,6 +119,7 @@ alwaysApply: false
 - 不再沿用 `Riverpod + Drift` 作为主路线
 - 若技术方案与参考工程冲突，优先保持参考工程风格，并在文档中写明
 - 若设计计划与单张参考图存在差异，优先以 `figma-design-plan.md` 约束页面与状态要求，并注明图中现状
+- 若通用规则库与当前业务存在差异，优先保留通用规则，再在 `flutter-tech.md` 中明确写出项目级特化点
 
 ## 推进规则
 

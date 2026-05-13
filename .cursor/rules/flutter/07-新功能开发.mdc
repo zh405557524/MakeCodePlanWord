@@ -1,0 +1,181 @@
+---
+description: Flutter 新功能开发规则，提供模块结构、Controller 职责、路由接入与配套层扩展模板
+globs: "**/lib/pages/**/*.dart"
+alwaysApply: false
+---
+
+# 新功能开发
+
+## 一、标准模块结构
+
+```text
+lib/pages/{feature_name}/
+├── index.dart
+├── controller.dart
+├── view.dart
+├── widgets/
+├── dialog/
+└── {sub_feature}/
+```
+
+约定：
+
+- 默认使用 `index.dart + part / part of`
+- 目录与文件名使用 `snake_case`
+- 页面类与 Controller 类使用 `PascalCase`
+
+---
+
+## 二、推荐模板
+
+### 2.1 `index.dart`
+
+```dart
+library pages.user_profile;
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:your_project/routes/index.dart';
+import 'package:your_project/widgets/index.dart';
+
+part 'controller.dart';
+part 'view.dart';
+```
+
+### 2.2 `controller.dart`
+
+```dart
+part of 'index.dart';
+
+class UserProfileController extends GetxController {
+  bool isLoading = true;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    isLoading = true;
+    update();
+
+    try {
+      // load data
+    } finally {
+      isLoading = false;
+      update();
+    }
+  }
+}
+```
+
+### 2.3 `view.dart`
+
+```dart
+part of 'index.dart';
+
+class UserProfilePage extends StatelessWidget {
+  const UserProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<UserProfileController>(
+      init: UserProfileController(),
+      builder: (controller) => CustomScaffold(
+        body: controller.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+```
+
+---
+
+## 三、Controller 职责
+
+Controller 负责：
+
+- 页面状态
+- 数据加载
+- 用户操作响应
+- 与 Service / Store 交互
+- 路由参数解析后的初始化
+
+Controller 不负责：
+
+- 复杂 UI 拼装
+- 直接依赖 `Get.context`
+- 在页面之外再创造一套全局状态
+
+---
+
+## 四、何时新增配套层
+
+### 4.1 新增 Model
+
+当有以下情况时新增：
+
+- 路由参数复杂
+- API 请求/响应有明确结构
+- 页面需要领域对象或视图对象
+
+### 4.2 新增 Service
+
+当有以下情况时新增：
+
+- 逻辑可复用
+- 需要统一封装 API、本地存储、平台能力
+- 多个页面会用到同一业务动作
+
+### 4.3 新增 Store
+
+当有以下情况时新增：
+
+- 状态需要跨页面共享
+- 状态需要长期持有
+- 响应式状态读取需要集中管理
+
+---
+
+## 五、路由接入
+
+新增页面时必须同步检查：
+
+1. `RouteName` 是否新增
+2. `router.dart` 是否注册
+3. 是否是父路由下的子路由
+4. 参数走 `path/query/extra` 哪一类
+
+不要只建页面文件不接路由。
+
+---
+
+## 六、对话框与局部组件
+
+- 本页私有组件放 `widgets/`
+- 本页私有弹窗放 `dialog/`
+- 可独立跳转的历史/详情/编辑流程优先拆成 `sub_feature/`
+
+---
+
+## 七、强约束
+
+- 数据加载不放在 View 层
+- 不使用 `Get.context`
+- 不在 widget 回调里塞大段业务逻辑
+- 至少考虑 `loading / empty / error / success` 四种状态
+
+---
+
+## 八、完成后的检查
+
+- 目录结构正确
+- 命名一致
+- 路由已接入
+- Model / Service / Store 配套完整
+- 状态完整
+- `flutter analyze` 通过

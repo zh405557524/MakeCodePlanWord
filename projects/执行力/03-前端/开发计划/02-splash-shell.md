@@ -31,8 +31,11 @@
 **路由**：
 
 - `RouteName.splash`
-- `RouteName.main`
+- `RouteName.now`
 - `RouteName.chat`
+- `RouteName.plan`
+- `RouteName.notes`
+- `RouteName.profile`
 
 **页面文件**：
 
@@ -64,7 +67,7 @@
 
 - Splash 是品牌启动页，深色渐变背景 + Logo + 文案 + 加载点
 - MainShell 是浅色底部导航壳，不承载二级页
-- 底部导航需要保留 4 个入口位：Now / Chat / Plan / Profile
+- 底部导航需要保留 5 个入口位：Now / Chat / Plan / Notes / Profile
 - Chat 入口位点击后进入全屏 `ChatPage`，不是在壳内长期展示深色聊天页
 
 ---
@@ -81,6 +84,7 @@
 
 - `Now`
 - `Plan`
+- `Notes`
 - `Profile`
 
 ---
@@ -100,7 +104,7 @@
 
 - 启动先进入 Splash
 - Splash 能自动跳转 MainShell
-- 底部导航 4 个入口位完整
+- 底部导航 5 个入口位完整
 - Chat 入口进入全屏路由
 - MainShell 不承担二级页面
 

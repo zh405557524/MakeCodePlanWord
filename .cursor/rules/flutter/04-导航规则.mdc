@@ -1,0 +1,168 @@
+---
+description: Flutter 导航规则，默认使用 go_router，提供路由结构、注册方式与参数传递模板
+globs: "**/lib/routes/**/*.dart,**/lib/pages/**/*.dart"
+alwaysApply: false
+---
+
+# 导航规则
+
+## 一、基础约定
+
+- 默认使用 `go_router`
+- 所有路由配置放在 `lib/routes/`
+- 路由名集中维护，不直接在业务代码里写裸字符串
+
+---
+
+## 二、路由目录
+
+```text
+lib/routes/
+├── index.dart
+├── name.dart
+├── router.dart
+├── observers.dart
+└── transitions.dart
+```
+
+---
+
+## 三、推荐模板
+
+### 3.1 `routes/index.dart`
+
+```dart
+library routes;
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:your_project/pages/main/index.dart';
+
+part 'name.dart';
+part 'router.dart';
+part 'observers.dart';
+part 'transitions.dart';
+
+export 'package:go_router/go_router.dart';
+```
+
+### 3.2 `routes/name.dart`
+
+```dart
+part of 'index.dart';
+
+abstract class RouteName {
+  static const main = 'main';
+  static const login = 'login';
+}
+```
+
+### 3.3 `routes/router.dart`
+
+```dart
+part of 'index.dart';
+
+abstract class CustomRouter {
+  static final RouteObserver<Route> observer = RouteObservers();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  static final GoRouter config = GoRouter(
+    initialLocation: '/',
+    navigatorKey: navigatorKey,
+    observers: <NavigatorObserver>[observer],
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        name: RouteName.main,
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          name: state.fullPath,
+          child: const MainPage(),
+        ),
+      ),
+    ],
+  );
+}
+```
+
+---
+
+## 四、命名与路径规范
+
+- 路径：语义化英文，必要时用下划线
+- 路由名：集中在 `RouteName`
+- 一级页面用一级路径
+- 子流程尽量注册为父路由的子路由
+
+示例：
+
+- `/`
+- `/login`
+- `/plan/editor`
+- `/notes/file/:id`
+
+---
+
+## 五、参数传递规则
+
+### 5.1 `pathParameters`
+
+适用于唯一标识：
+
+```dart
+context.pushNamed(
+  RouteName.noteFile,
+  pathParameters: <String, String>{'id': fileId},
+);
+```
+
+### 5.2 `queryParameters`
+
+适用于简单 key-value：
+
+```dart
+context.pushNamed(
+  RouteName.web,
+  queryParameters: <String, String>{'url': url},
+);
+```
+
+### 5.3 `extra`
+
+适用于复杂对象：
+
+```dart
+context.pushNamed(
+  RouteName.planEditorCreate,
+  extra: <String, dynamic>{'draftId': draftId},
+);
+```
+
+---
+
+## 六、跳转规范
+
+- 替换主导航或主路径：优先 `goNamed`
+- 打开详情或子流程：优先 `pushNamed`
+- 需要等待返回值：`await context.pushNamed(...)`
+- 页面返回：`context.pop(result)`
+
+---
+
+## 七、路由守卫
+
+如项目需要登录态、首启态、实验态等守卫：
+
+- 守卫逻辑集中放在 `router.dart`
+- 不把登录判断散落到每个页面中
+- 守卫依赖的状态优先从 `store/` 读取
+
+---
+
+## 八、禁止事项
+
+- 不直接拼裸路径字符串到处跳转
+- 不把路由参数藏到全局变量里
+- 不在页面中自建一套局部导航规范

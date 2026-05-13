@@ -1,0 +1,563 @@
+---
+description: Flutter 项目初始化规则，提供通用工程骨架、依赖基线与可直接复用的模板代码
+globs: "**/pubspec.yaml,**/lib/main.dart,**/lib/global.dart"
+alwaysApply: false
+---
+
+# 项目初始化规则
+
+> 本规则用于创建一个新的 Flutter 工程时，快速建立可持续的 AI 编码基线。
+> 目标不是只搭目录，而是同时给出可直接复用的模板代码。
+
+---
+
+## 一、适用场景
+
+- 新建 Flutter 项目
+- 把现有工程整理成统一骨架
+- 需要快速建立 `main/global/routes/services/store/utils/widgets` 基础设施
+
+---
+
+## 二、初始化目标
+
+初始化阶段至少要完成：
+
+1. 建立标准目录结构
+2. 建立 `main.dart`
+3. 建立 `global.dart`
+4. 建立 `theme.dart`
+5. 建立 `routes/`
+6. 建立 `services/`
+7. 建立 `store/`
+8. 建立 `utils/`
+9. 建立 `widgets/`
+10. 产出最小可运行首页或壳页
+
+---
+
+## 三、推荐目录骨架
+
+```text
+lib/
+├── apis/
+│   └── index.dart
+├── components/
+│   └── index.dart
+├── enums/
+│   └── index.dart
+├── generated/
+├── l10n/
+├── models/
+│   ├── params/
+│   ├── responses/
+│   └── index.dart
+├── pages/
+│   └── main/
+│       ├── index.dart
+│       ├── controller.dart
+│       └── view.dart
+├── plugins/
+│   └── index.dart
+├── routes/
+│   ├── index.dart
+│   ├── name.dart
+│   ├── router.dart
+│   ├── observers.dart
+│   └── transitions.dart
+├── services/
+│   ├── index.dart
+│   ├── http.dart
+│   ├── storage.dart
+│   └── event.dart
+├── store/
+│   ├── index.dart
+│   ├── user.dart
+│   └── config.dart
+├── utils/
+│   ├── index.dart
+│   ├── constants.dart
+│   ├── logger.dart
+│   └── assets.dart
+├── widgets/
+│   ├── index.dart
+│   ├── toast.dart
+│   └── custom_scaffold.dart
+├── global.dart
+├── main.dart
+└── theme.dart
+```
+
+---
+
+## 四、推荐依赖基线
+
+基础依赖通常包括：
+
+- `get`
+- `go_router`
+- `dio`
+- `package_info_plus`
+- `flutter_localizations`
+- `intl`
+- `flutter_screenutil`（如采用移动端设计稿适配）
+
+本地存储按项目选型补充：
+
+- `shared_preferences`
+- `get_storage`
+- `hive`
+
+全局提示按项目选一套：
+
+- `bot_toast`
+- `fluttertoast`
+- 或自研 `CustomToast`
+
+---
+
+## 五、模板代码
+
+### 5.1 `lib/main.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:your_project/global.dart';
+import 'package:your_project/routes/index.dart';
+import 'package:your_project/theme.dart';
+import 'package:your_project/widgets/index.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(CustomTheme.systemStyleLight);
+  await Global.init();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: '应用名称',
+      theme: CustomTheme.light,
+      themeMode: ThemeMode.light,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale.fromSubtags(languageCode: 'zh'),
+        Locale.fromSubtags(languageCode: 'en'),
+      ],
+      routerConfig: CustomRouter.config,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context),
+          child: Builder(
+            builder: (innerContext) {
+              ScreenUtil.init(
+                innerContext,
+                designSize: const Size(375, 812),
+                minTextAdapt: true,
+                splitScreenMode: true,
+              );
+
+              return CustomToast.init(
+                context: innerContext,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.noScaling,
+                  ),
+                  child: child ?? const Material(),
+                ),
+              )(innerContext, child);
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+### 5.2 `lib/global.dart`
+
+```dart
+import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:your_project/services/index.dart';
+import 'package:your_project/store/index.dart';
+
+class Global {
+  Global._();
+
+  static PackageInfo? _platform;
+
+  static String get version => _platform?.version ?? '0.0.0';
+  static String get build => _platform?.buildNumber ?? '0';
+  static String get appName => _platform?.appName ?? '-';
+
+  static Future<void> init() async {
+    _platform = await PackageInfo.fromPlatform();
+
+    await Get.putAsync<StorageService>(() => StorageService().init());
+
+    Get.put<EventService>(EventService());
+    Get.put<HttpService>(HttpService());
+    Get.put<ConfigStore>(ConfigStore());
+    Get.put<UserStore>(UserStore());
+  }
+}
+```
+
+### 5.3 `lib/routes/index.dart`
+
+```dart
+library routes;
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:your_project/pages/main/index.dart';
+
+part 'name.dart';
+part 'router.dart';
+part 'observers.dart';
+part 'transitions.dart';
+
+export 'package:go_router/go_router.dart';
+```
+
+### 5.4 `lib/routes/name.dart`
+
+```dart
+part of 'index.dart';
+
+abstract class RouteName {
+  static const main = 'main';
+}
+```
+
+### 5.5 `lib/routes/router.dart`
+
+```dart
+part of 'index.dart';
+
+abstract class CustomRouter {
+  static final RouteObserver<Route> observer = RouteObservers();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  static final GoRouter config = GoRouter(
+    initialLocation: '/',
+    navigatorKey: navigatorKey,
+    observers: <NavigatorObserver>[observer],
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        name: RouteName.main,
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          name: state.fullPath,
+          child: const MainPage(),
+        ),
+      ),
+    ],
+  );
+}
+```
+
+### 5.6 `lib/routes/observers.dart`
+
+```dart
+part of 'index.dart';
+
+class RouteObservers extends RouteObserver<Route<dynamic>> {}
+```
+
+### 5.7 `lib/services/index.dart`
+
+```dart
+library services;
+
+import 'package:dio/dio.dart';
+import 'package:get/get.dart' hide Response, FormData, MultipartFile;
+import 'package:get_storage/get_storage.dart';
+
+part 'http.dart';
+part 'storage.dart';
+part 'event.dart';
+```
+
+### 5.8 `lib/services/http.dart`
+
+```dart
+part of 'index.dart';
+
+class HttpService extends GetxService {
+  late final Dio dio;
+
+  HttpService() {
+    dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://api.example.com',
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
+  }
+}
+```
+
+### 5.9 `lib/services/storage.dart`
+
+```dart
+part of 'index.dart';
+
+class StorageService extends GetxService {
+  late final GetStorage _box;
+
+  Future<StorageService> init() async {
+    await GetStorage.init();
+    _box = GetStorage();
+    return this;
+  }
+
+  T? read<T>(String key) => _box.read<T>(key);
+
+  Future<void> write(String key, dynamic value) async {
+    await _box.write(key, value);
+  }
+
+  Future<void> remove(String key) async {
+    await _box.remove(key);
+  }
+}
+```
+
+### 5.10 `lib/services/event.dart`
+
+```dart
+part of 'index.dart';
+
+class EventService extends GetxService {}
+```
+
+### 5.11 `lib/store/index.dart`
+
+```dart
+library store;
+
+import 'package:get/get.dart';
+import 'package:your_project/services/index.dart';
+
+part 'user.dart';
+part 'config.dart';
+```
+
+### 5.12 `lib/store/user.dart`
+
+```dart
+part of 'index.dart';
+
+class UserStore extends GetxController {
+  static UserStore get to => Get.find<UserStore>();
+
+  final RxBool _isLogin = false.obs;
+  bool get isLogin => _isLogin.value;
+}
+```
+
+### 5.13 `lib/store/config.dart`
+
+```dart
+part of 'index.dart';
+
+class ConfigStore extends GetxController {
+  static ConfigStore get to => Get.find<ConfigStore>();
+}
+```
+
+### 5.14 `lib/utils/index.dart`
+
+```dart
+library utils;
+
+export 'constants.dart';
+export 'logger.dart';
+export 'assets.dart';
+```
+
+### 5.15 `lib/utils/constants.dart`
+
+```dart
+abstract class Constants {
+  static const apiBaseUrl = 'https://api.example.com';
+  static const pageSize = 20;
+}
+```
+
+### 5.16 `lib/utils/logger.dart`
+
+```dart
+import 'package:flutter/foundation.dart';
+
+abstract class Logger {
+  static void debug(Object? message) {
+    if (kDebugMode) {
+      debugPrint('[DEBUG] $message');
+    }
+  }
+
+  static void error(Object? message, [Object? error]) {
+    if (kDebugMode) {
+      debugPrint('[ERROR] $message');
+      if (error != null) {
+        debugPrint('$error');
+      }
+    }
+  }
+}
+```
+
+### 5.17 `lib/utils/assets.dart`
+
+```dart
+abstract class AssetImages {
+  static const iconBack = 'assets/images/icon_back.png';
+  static const iconLogo = 'assets/images/icon_logo.png';
+}
+```
+
+### 5.18 `lib/widgets/index.dart`
+
+```dart
+library widgets;
+
+export 'toast.dart';
+export 'custom_scaffold.dart';
+```
+
+### 5.19 `lib/widgets/toast.dart`
+
+```dart
+import 'package:flutter/material.dart';
+
+class CustomToast {
+  static TransitionBuilder init({
+    required BuildContext context,
+    required TransitionBuilder builder,
+  }) {
+    return builder;
+  }
+
+  static void text(String message) {}
+  static void success(String message) {}
+  static void fail(String message) {}
+  static void loading([String? message]) {}
+  static void dismiss() {}
+}
+```
+
+### 5.20 `lib/widgets/custom_scaffold.dart`
+
+```dart
+import 'package:flutter/material.dart';
+
+class CustomScaffold extends StatelessWidget {
+  const CustomScaffold({
+    super.key,
+    this.appBar,
+    this.body,
+    this.bottomNavigationBar,
+    this.backgroundColor,
+    this.resizeToAvoidBottomInset,
+  });
+
+  final PreferredSizeWidget? appBar;
+  final Widget? body;
+  final Widget? bottomNavigationBar;
+  final Color? backgroundColor;
+  final bool? resizeToAvoidBottomInset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: appBar,
+      body: body,
+      bottomNavigationBar: bottomNavigationBar,
+      backgroundColor: backgroundColor,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+    );
+  }
+}
+```
+
+### 5.21 `lib/pages/main/index.dart`
+
+```dart
+library pages.main;
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:your_project/widgets/index.dart';
+
+part 'controller.dart';
+part 'view.dart';
+```
+
+### 5.22 `lib/pages/main/controller.dart`
+
+```dart
+part of 'index.dart';
+
+class MainController extends GetxController {}
+```
+
+### 5.23 `lib/pages/main/view.dart`
+
+```dart
+part of 'index.dart';
+
+class MainPage extends StatelessWidget {
+  const MainPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<MainController>(
+      init: MainController(),
+      builder: (controller) => const CustomScaffold(
+        body: Center(child: Text('Hello Flutter')),
+      ),
+    );
+  }
+}
+```
+
+---
+
+## 六、强约束
+
+- 优先使用 `index.dart + part / part of`
+- `main.dart` 只保留应用级编排
+- `global.dart` 只负责初始化与依赖注入
+- 页面目录统一放在 `pages/{feature_name}/`
+- 不在初始化阶段夹带业务 SDK、业务页面、业务逻辑
+
+---
+
+## 七、完成后的检查清单
+
+- [ ] 项目目录结构完整
+- [ ] `main.dart` 可启动
+- [ ] `Global.init()` 清晰可读
+- [ ] 路由基础链路可运行
+- [ ] `services/store/utils/widgets` 均有入口文件
+- [ ] `flutter analyze` 无错误
+- [ ] 可在此基础上继续新增业务功能
