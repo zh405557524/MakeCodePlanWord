@@ -1,0 +1,125 @@
+---
+description: 上线监控与迭代阶段 - 接入崩溃 / 性能 / 用户反馈监控，把线上数据回流到需求与变更管控
+globs:
+alwaysApply: false
+---
+
+# 上线监控与迭代规则
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 执行前先形成本轮监控接入与反馈回流计划，再生成或更新 `monitoring-plan.md`、`feedback-loop.md`。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. 18 发布与版本管理阶段已进入灰度或全量
+2. 监控 SDK 已在 13 / 14 编码阶段接入（如未接入，先回到编码阶段补齐再回 19）
+
+## 目标
+
+把线上数据「持续转化」为下一轮迭代的输入，闭环：
+
+- 崩溃 / 性能 / 用户反馈持续观察
+- 异常自动告警，关键问题立刻成为变更条目
+- 用户感知问题与产品决策回流到 `01-需求/`
+- 把「上线后」也纳入流程，避免反馈丢失
+
+## 输出路径
+
+- `projects/{currentProject}/09-上线监控/monitoring-plan.md`（监控配置）
+- `projects/{currentProject}/09-上线监控/feedback-loop.md`（反馈回流计划）
+
+## `monitoring-plan.md` 固定结构
+
+1. 监控维度
+   - 崩溃：iOS / Android / 进程级
+   - 性能：启动时长、关键页面 FPS、内存峰值、卡顿、ANR
+   - 网络：接口成功率、P95/P99 响应时长、错误码分布
+   - 业务：关键路径漏斗、付费、注册、留存
+   - 后端：服务可用性、错误日志、慢查询、数据库连接池
+2. 监控 SDK 与平台
+
+   | 维度 | SDK / 平台 | 接入位置 | 数据保留 | 告警通道 |
+   |------|-----------|----------|----------|----------|
+   | 崩溃 | Crashlytics / Bugly / Sentry | `main.dart` 入口 | 90 天 | 飞书 / Slack |
+   | 性能 | Sentry Performance / Firebase Performance | 同上 | 30 天 | |
+   | 后端 | Sentry / ELK / Prometheus + Grafana | 服务入口 | 90 天 | |
+
+3. 关键基线指标
+
+   | 指标 | 当前基线 | 警戒线 | 告警阈值 |
+   |------|----------|--------|----------|
+   | 崩溃率 | | | |
+   | ANR 率 | | | |
+   | 启动时长 P50 / P95 | | | |
+   | 关键接口成功率 | | | |
+   | 服务 5xx 率 | | | |
+
+4. 符号 / 源码地图上传策略
+   - iOS dSYM 自动上传（CI 脚本）
+   - Android Mapping 文件自动上传
+   - Web/JS（如有）source map 上传策略
+5. 数据隐私
+   - 不在监控数据中带入个人信息
+   - 错误堆栈中的用户路径要做脱敏
+   - 用户拒绝隐私协议时禁止上报
+
+## `feedback-loop.md` 固定结构
+
+1. 反馈通道
+
+   | 通道 | 入口 | 责任人 | 处理 SLA |
+   |------|------|--------|----------|
+   | 应用内反馈 | 我的 > 意见反馈 | | 24h 内首次响应 |
+   | 商店评论 | AppStore / Google Play | | 48h |
+   | 客服邮件 / 工单 | | | |
+   | 社群（微信 / Discord） | | | |
+
+2. 反馈分类规则
+   - bug：复现路径明确，影响功能
+   - feature_request：用户提出新功能或改进
+   - usability：体验问题，不影响功能
+   - praise：好评、感谢，归档保留
+   - spam：广告 / 灌水，过滤
+3. 反馈回流到流程
+   - bug → 进入 `change-plan.md`，类型 `feature_modify`，关联崩溃 / 慢日志
+   - feature_request 高频 → 进入 `01-需求/requirements-list.md` 待评估清单
+   - usability → 进入 `change-plan.md`，类型 `feature_modify`，关联 `figma-design-plan.md` 待优化项
+4. 异常自动告警 → 变更入口
+   - 监控告警触发后，必须自动生成「变更条目草稿」放入 `change-plan.md` 顶部
+   - 草稿包含告警类型、影响范围估计、关联崩溃链接 / 慢日志链接
+   - 由值班人员决定是否升级为正式变更条目
+5. 迭代规划
+   - 每周回顾一次反馈与告警，决定下个迭代的优先级
+   - 每个版本发布前回看上个版本的「未解决反馈」与「未达成基线」
+
+## 反馈回流与流程衔接
+
+线上反馈如何回到流程：
+
+```mermaid
+flowchart TD
+  user[用户反馈/监控告警] --> classify[反馈分类]
+  classify -->|bug| chg[change-plan.md 新增变更条目]
+  classify -->|feature_request| req[requirements-list.md 待评估]
+  classify -->|usability| chg
+  chg --> stage[回卷受影响阶段为 pending/in_progress]
+  stage --> code[回到 13/14 编码或 04 设计计划]
+  code --> rest[回到 15 联调 → 16 构建 → 17 上架 → 18 发布]
+  rest --> back[回到 19 监控]
+```
+
+## 推进规则
+
+- 监控基线确定后，进入「持续监控」常态
+- 每发现一个 P0/P1 问题，按变更管控流程处理；不允许跳过流程直接热修
+- 每个迭代结束后，更新 `monitoring-plan.md` 中的基线指标
+- 项目长期处于本阶段，直到团队决定停止维护

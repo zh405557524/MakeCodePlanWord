@@ -1,6 +1,6 @@
 ---
-description: 技术方案计划阶段 - 基于已确认的 PRD 生成完整技术方案，拆分前端Flutter和后端Kotlin任务
-globs: 
+description: 技术方案计划阶段 - 基于已确认的 PRD 与 Figma 设计计划生成完整技术方案，拆分前端 Flutter 和后端 Kotlin 任务
+globs:
 alwaysApply: false
 ---
 
@@ -14,11 +14,12 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮技术方案计划，再生成或更新技术方案文档。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
 执行本规则前，必须确认：
+
 1. `projects/{currentProject}/01-需求/requirements.md` 已存在且已通过检测
 2. `projects/{currentProject}/01-需求/figma-design-plan.md` 已存在
 3. 用户已明确说"文档通过，生成技术方案"或类似确认指令
@@ -159,6 +160,7 @@ src/
 | T-F002 | | | 中 |
 
 > 前端任务拆分时，必须覆盖 `figma-design-plan.md` 中的页面、关键状态、组件与交互约束。
+> 任务 ID（T-F00x / T-B00x）必须在后续 06 工时评估阶段一一对应，不可遗漏或并条。
 
 ### 6.2 后端任务（Kotlin）
 | 任务 | 描述 | 预估工作量 | 优先级 |
@@ -176,6 +178,8 @@ src/
 | 第二阶段 | | | |
 | 第三阶段 | | | |
 
+> 阶段规划只给出顺序与边界，具体工时与日历日期由 06 工作时长评估阶段输出。
+
 ---
 
 ## 8. 风险与应对
@@ -187,13 +191,13 @@ src/
 
 ---
 
-### 第四步：推进到技术文档阶段
+### 第四步：推进到工时评估阶段
 
 文件写入完成后输出：
 
 > 技术方案已生成：`projects/{currentProject}/02-技术方案/tech-plan.md`
 > 
-> 下一步可输入：
-> - `"生成Flutter技术文档"` — 生成前端详细技术文档
-> - `"生成Kotlin技术文档"` — 生成后端详细技术文档
-> - 或两者都做：`"生成前后端技术文档"`
+> 下一步默认进入「工作时长评估」，请输入：
+> - `"评估工时"` / `"估算开发时间"` — 基于本技术方案做三点估计与里程碑
+>
+> 工时评估通过后，再进入前端 Flutter 技术文档与后端 Kotlin 技术文档阶段。

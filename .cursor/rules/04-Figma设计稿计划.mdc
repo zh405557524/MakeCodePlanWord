@@ -14,7 +14,7 @@ alwaysApply: false
 - 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
 - 执行前先形成本轮设计计划生成思路，再生成或更新 `figma-design-plan.md`。
 - 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
-- 若本轮是二次调整，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
 
 ## 前置条件
 
@@ -92,6 +92,19 @@ alwaysApply: false
 
 - 交互 / 原型清单要优先覆盖主路径、跨页跳转和关键状态切换。
 - 不要求在本阶段必须提供 Figma 链接，但要写清后续设计稿需补齐哪些交互演示。
+
+## 设计稿产物落点
+
+设计稿在补齐过程中，产物必须按以下落点维护，避免散落到对话或本地缓存：
+
+| 产物类型 | 路径 | 备注 |
+|----------|------|------|
+| Figma 文件链接 | `figma-design-plan.md` 顶部「Figma 链接表」一节 | 至少含 项目主文件 / 各模块子文件 / 原型链接 |
+| 页面静态截图 / 导出图 | `projects/{currentProject}/01-需求/references/images/` | 文件名建议 `{页面英文名}-{状态}.png` |
+| 设计稿配套文档 | `projects/{currentProject}/01-需求/references/docs/` | 风格指南、色彩规范、字体规范等 |
+| 参考资料索引 | `projects/{currentProject}/01-需求/references/README.md` | 每加一份图片/文档必须在此登记一行 |
+
+设计稿如发生改动，必须按第五步「变更管控」走 `change-plan.md`，并把改动落点同步到 `figma-design-plan.md` 的「设计验收标准」段。
 
 ## 推进规则
 

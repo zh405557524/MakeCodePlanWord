@@ -1,0 +1,81 @@
+---
+description: Kotlin 总体开发计划阶段 - 基于 kotlin-tech.md 生成可断点恢复的后端总体开发计划
+globs:
+alwaysApply: false
+---
+
+# Kotlin 总体开发计划规则
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 执行前先形成本轮总体开发计划，再生成或更新 Kotlin 总体开发计划文档。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. `projects/{currentProject}/04-后端/kotlin-tech.md` 已存在
+2. `projects/{currentProject}/02-技术方案/effort-estimate.md` 已存在或用户明确跳过
+3. 用户已明确要求生成 Kotlin 开发计划或后端总体开发计划文档
+
+## 目标
+
+输出一份直接给 AI 执行 Kotlin 编码的总体开发计划文档，满足：
+
+- 先有整体计划，再拆模块计划
+- 文档可反复执行
+- 文档内明确当前恢复点
+- 中断后能从恢复点继续
+- 总体计划生成后先等待用户审核
+
+## 输出路径
+
+- `projects/{currentProject}/04-后端/kotlin-dev-plan.md`
+
+## 文档要求
+
+总体开发计划至少包含：
+
+1. 文档用途
+2. 当前状态与恢复点
+3. 状态枚举与更新规则
+4. 总体开发策略（分层顺序：基础设施 → 鉴权 → 数据库 → 业务接口 → 集成测试 → 部署）
+5. 总体阶段划分（含工时与里程碑，引用 `effort-estimate.md`）
+6. 详细任务清单（任务 ID 与技术方案 `T-B00x` 对齐）
+7. API 接口任务表
+
+   | 任务 ID | 接口 | 方法 | 路径 | 依赖表 | Service | 状态 |
+   |---------|------|------|------|--------|---------|------|
+
+8. 模块开发文档列表（对应 12-Kotlin模块开发文档.mdc 的产物）
+9. 编码约束
+10. 执行记录
+
+## 业务逻辑与接口约束
+
+生成 Kotlin 总体开发计划时，必须明确后端开发文档对应的业务边界和数据流，不允许只列接口路径。
+
+- 若 `projects/{currentProject}/03-前端/flutter-tech.md` 已存在，必须对照前端对接口的依赖期望，确保字段名、错误码、状态枚举一致。
+- 总体开发计划中的业务任务必须能追溯到具体后端模块或表结构，例如用户、订单、任务、消息等。
+- 对复杂业务链路，必须在「模块开发文档列表」中规划对应业务模块开发文档，例如鉴权、订单、任务调度、消息推送、文件上传等。
+- 业务模块开发文档需要明确 Routes、Service、Repository、Entity、Migration、Test 之间的关系。
+- 如果接口已经在 `tech-plan.md` 中确定，不得在总体计划中另行发明不一致的接口路径或字段名；如发现冲突，应先修订 `tech-plan.md` 与 `kotlin-tech.md` 再进入编码。
+
+## 技术口径
+
+- 按 `Ktor + Exposed + JWT + StatusPages + 自定义 ApiResponse`（如技术方案未另行指定）
+- 数据库迁移使用 Flyway 或 Liquibase，由 `kotlin-tech.md` 中明确
+- 恢复点与任务必须贴合该技术路线
+- 不在本文档发明前后端通信协议
+
+## 推进规则
+
+- 总体开发计划生成后必须暂停
+- 等用户明确审核通过后，再进入 12 Kotlin 模块开发文档阶段
+- 前端 Flutter 总体开发计划（09）可与本规则并行生成

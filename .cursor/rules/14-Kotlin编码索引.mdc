@@ -1,0 +1,86 @@
+---
+description: Kotlin 编码阶段薄入口 - 触发后端编码时按本规则加载 kotlin/ 子规则与项目文档，确保变更管控与架构门禁
+globs:
+alwaysApply: false
+---
+
+# Kotlin 编码索引规则
+
+> 本规则是 Kotlin 编码阶段的薄入口，只负责「加载哪些规则、读哪些文档、按什么顺序」。
+> 编码具体执行流程仍由 `.cursor/rules/kotlin/10-编码工作流程.mdc` 负责。
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 必须先检查 `change-plan.md` 顶部「进行中变更」区块；若有 `in_progress` 条目，先按变更条目的最小改动清单执行。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. `projects/{currentProject}/04-后端/kotlin-tech.md` 已存在
+2. `projects/{currentProject}/04-后端/kotlin-dev-plan.md` 已存在
+3. 当前模块对应的 `projects/{currentProject}/04-后端/开发计划/{module}.md` 已存在
+4. `00-核心工作流程.mdc` 第六步「Kotlin 架构门禁」已通过
+
+## 必读规则清单（按序加载）
+
+进入 Kotlin 编码阶段时，必须按以下顺序读取规则：
+
+1. `.cursor/rules/00-核心工作流程.mdc` 第六步 6.2 Kotlin 架构门禁
+2. `.cursor/rules/kotlin/01-项目初始化规则.mdc`（首次搭建工程时必读）
+3. `.cursor/rules/kotlin/02-项目结构目录.mdc`
+4. `.cursor/rules/kotlin/03-编码规范.mdc`
+5. `.cursor/rules/kotlin/04-路由与控制器规则.mdc`
+6. `.cursor/rules/kotlin/10-编码工作流程.mdc`（编码执行流程）
+
+按任务类型补读：
+
+| 任务类型 | 补读规则 |
+|----------|----------|
+| 新接口开发 | `kotlin/07-新接口开发.mdc` |
+| 数据库表 / 迁移 | `kotlin/05-数据库与持久化.mdc` |
+| 鉴权 / 安全 | `kotlin/08-鉴权与安全.mdc` |
+| 依赖调整 | `kotlin/06-第三方依赖参考.mdc` |
+| 跨模块联动 / 大功能 | `kotlin/09-大功能先规划再编码.mdc` |
+
+## 必读项目文档清单
+
+进入 Kotlin 编码阶段前，必须读取：
+
+1. `projects/{currentProject}/workflow.md`
+2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
+3. `projects/{currentProject}/04-后端/kotlin-tech.md`
+4. `projects/{currentProject}/04-后端/kotlin-dev-plan.md`
+5. 当前恢复点对应的 `projects/{currentProject}/04-后端/开发计划/{module}.md`
+6. 涉及前端联动时：`projects/{currentProject}/03-前端/flutter-tech.md` 与对应模块开发文档
+7. 涉及数据迁移时：`src/main/resources/db/migration/` 现有脚本
+
+## 变更管控接入点
+
+- 若 `change-plan.md` 顶部存在 `in_progress` 条目，编码阶段必须先完成该条目「最小改动清单」中的工作，不允许并行做无关任务。
+- 完成一条变更后，把条目状态置为 `done`，从 `change-plan.md` 顶部区块挪到底部「本迭代历史变更」，并追加到 `change-log.md` 对应版本号下。
+- 若接口契约（请求体、响应体、错误码）变化，必须先更新 `kotlin-tech.md` 与对应前端模块文档的引用，再改代码。
+
+## 阻塞式编码阶段规则
+
+Kotlin 编码属于阻塞式代码开发阶段：
+
+- 只要用户没有明确说「进入下一步」或「切换阶段」，就默认还停留在当前 Kotlin 编码步骤
+- 默认继续做当前步骤内的修改、调试、验证和回写
+- 不自动跳到 13 Flutter 编码或 15 联调 QA
+
+## 完成判定
+
+当前 Kotlin 编码步骤完成必须满足：
+
+- 本轮目标代码已落地
+- `./gradlew build` 通过；必要时 `./gradlew test` 通过
+- 对应模块开发文档与 `kotlin-dev-plan.md` 任务状态已回写
+- 数据库迁移脚本（如有）已落到 `db/migration/` 并通过本地启动验证
+- `change-plan.md` 中本轮变更条目已归档（如有）
+- `workflow.md` 已更新恢复点、执行记录、下一步默认动作

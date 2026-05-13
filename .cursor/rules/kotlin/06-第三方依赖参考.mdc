@@ -1,0 +1,170 @@
+---
+description: Kotlin 后端通用第三方依赖参考，按依赖类别而不是业务包名组织
+globs: "**/build.gradle.kts"
+alwaysApply: false
+---
+
+# 第三方依赖参考
+
+## 一、依赖分层
+
+第三方依赖分为三类：
+
+1. 基础必选
+2. 通用可选
+3. 业务专用
+
+规则：
+
+- 先确认用途，再引入依赖
+- 不因为参考项目依赖很多就全部照搬
+- 版本统一通过 `gradle.properties` 或 Version Catalog 管理
+
+---
+
+## 二、基础必选
+
+### 2.1 框架
+
+- `io.ktor:ktor-server-core`
+- `io.ktor:ktor-server-netty`（或 CIO / Jetty）
+
+### 2.2 序列化
+
+- `io.ktor:ktor-server-content-negotiation`
+- `io.ktor:ktor-serialization-kotlinx-json`
+
+### 2.3 数据库
+
+- `org.jetbrains.exposed:exposed-core` / `exposed-dao` / `exposed-jdbc`
+- `com.zaxxer:HikariCP`
+- 数据库驱动（PostgreSQL / MySQL / SQLite）
+
+### 2.4 迁移
+
+- `org.flywaydb:flyway-core`（或 Liquibase）
+
+### 2.5 鉴权
+
+- `io.ktor:ktor-server-auth`
+- `io.ktor:ktor-server-auth-jwt`
+
+### 2.6 错误处理
+
+- `io.ktor:ktor-server-status-pages`
+
+### 2.7 日志
+
+- `ch.qos.logback:logback-classic`
+
+---
+
+## 三、通用可选
+
+### 3.1 CORS
+
+- `io.ktor:ktor-server-cors`
+
+### 3.2 调用日志
+
+- `io.ktor:ktor-server-call-logging`
+
+### 3.3 密码哈希
+
+- `org.mindrot:jbcrypt`
+- 或 `de.svenkubiak:jBCrypt`
+
+### 3.4 缓存
+
+- `io.lettuce:lettuce-core`（Redis）
+- `com.github.ben-manes.caffeine:caffeine`（本地缓存）
+
+### 3.5 限流
+
+- `io.github.resilience4j:resilience4j-ratelimiter`
+- 或自研 Token Bucket
+
+### 3.6 文件 / 对象存储
+
+- `software.amazon.awssdk:s3`（S3 兼容）
+- `com.aliyun.oss:aliyun-sdk-oss`
+
+### 3.7 消息队列
+
+- `io.lettuce:lettuce-core`（Redis Streams）
+- `org.apache.kafka:kafka-clients`
+- `org.springframework.amqp:spring-rabbit`（RabbitMQ）
+
+### 3.8 任务调度
+
+- `org.quartz-scheduler:quartz`
+- 或 Ktor 自带 `Tasks`
+
+### 3.9 监控 / APM
+
+- `io.micrometer:micrometer-core`
+- `io.sentry:sentry`
+- `io.opentelemetry:opentelemetry-sdk`
+
+### 3.10 测试
+
+- `io.ktor:ktor-server-test-host`
+- `org.jetbrains.kotlin:kotlin-test`
+- `io.mockk:mockk`
+
+---
+
+## 四、业务专用
+
+只有业务明确时才引入：
+
+- 邮件：`org.simplejavamail:simple-java-mail`
+- 短信：阿里云 / 腾讯云 SDK
+- 支付：Stripe / 微信支付 / 支付宝
+- 推送：FCM / 个推 / 极光
+- IM：环信 / 融云 SDK
+- 富文本：jsoup（HTML 解析）
+- 文档：iText / Apache POI
+- 图像：thumbnailator / ImageMagick
+
+---
+
+## 五、推荐写法
+
+在 `kotlin-tech.md` 中至少写清：
+
+1. 基础必选依赖与版本
+2. 当前项目启用的通用可选依赖
+3. 当前项目启用的业务专用依赖
+4. 各依赖的初始化时机（哪些在 `Application.kt` 装配、哪些懒加载）
+5. 如有 SDK 涉及隐私收集，必须在 17 阶段隐私政策中同步声明
+
+---
+
+## 六、版本统一
+
+推荐使用 Gradle Version Catalog（`libs.versions.toml`）统一管理：
+
+```toml
+[versions]
+ktor = "2.3.x"
+exposed = "0.45.x"
+hikari = "5.x.x"
+flyway = "9.x.x"
+postgresql = "42.x.x"
+logback = "1.4.x"
+
+[libraries]
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+# ...
+```
+
+---
+
+## 七、依赖审计
+
+- 每次升级核心依赖（Ktor / Exposed / Kotlin / JVM）必须先在 `change-plan.md` 登记
+- 升级后跑全量测试，确保兼容
+- 引入新依赖时，必须评估是否带入安全漏洞、许可证风险

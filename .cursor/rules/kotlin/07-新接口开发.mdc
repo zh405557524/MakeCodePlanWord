@@ -1,0 +1,201 @@
+---
+description: Kotlin 新接口开发规则，规定 路由 → 请求 / 响应模型 → Service → Repository → 测试 的标准流程
+globs: "**/src/main/kotlin/**/routes/**/*.kt,**/src/main/kotlin/**/services/**/*.kt"
+alwaysApply: false
+---
+
+# 新接口开发
+
+## 一、开发顺序
+
+新增一个接口必须按以下顺序：
+
+1. 在 `kotlin-tech.md` 或对应 `12-Kotlin模块开发文档.mdc` 中确认接口契约
+2. 写 Request / Response 模型
+3. 写 Repository 方法（如需要）
+4. 写 Service 方法（业务逻辑）
+5. 写 Routes
+6. 写测试（集成测试 + 必要时单元测试）
+7. 跑 `./gradlew build`，回写文档与 `workflow.md`
+
+不允许：先写 Routes 占位后再回头补 Service / Repository。
+
+---
+
+## 二、Request / Response 模型
+
+### 2.1 Request
+
+```kotlin
+package com.example.project.models.request
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class CreateUserRequest(
+    val username: String,
+    val email: String,
+    val password: String,
+)
+```
+
+约定：
+
+- 一个 Request 一个文件（或同领域合并到 `XxxRequests.kt`）
+- 必须 `@Serializable`
+- 字段名与 API 文档完全一致
+- 不在 Request 中暴露内部字段（如 `passwordHash`、`createdAt`）
+
+### 2.2 Response
+
+```kotlin
+@Serializable
+data class UserResponse(
+    val id: String,
+    val username: String,
+    val email: String,
+    val createdAt: String,
+)
+```
+
+约定：
+
+- 与 Request 同样必须 `@Serializable`
+- 时间统一序列化为 ISO 8601 字符串
+- 不直接返回 Entity；先映射成 Response
+
+---
+
+## 三、Service 方法
+
+```kotlin
+class UserService(
+    private val userRepository: UserRepository,
+) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    /**
+     * 创建用户。邮箱重复返回业务错误码 2001。
+     */
+    suspend fun create(req: CreateUserRequest): UserResponse {
+        require(req.email.isNotBlank()) { "email required" }
+        require(req.password.length >= 6) { "password too short" }
+
+        val existing = userRepository.findByEmail(req.email)
+        if (existing != null) {
+            throw BusinessException(code = 2001, message = "email already used")
+        }
+
+        val passwordHash = BCrypt.hashpw(req.password, BCrypt.gensalt())
+        val user = userRepository.create(
+            User(username = req.username, email = req.email),
+            passwordHash = passwordHash,
+        )
+        logger.info("user created: {}", user.id)
+        return user.toResponse()
+    }
+}
+```
+
+约定：
+
+- Service 方法签名清晰：参数是 Request 或基础类型，返回是 Response 或领域对象
+- 业务规则集中：参数校验 → 业务前置检查 → Repository 调用 → 后置处理
+- 错误抛 `IllegalArgumentException` / `BusinessException` / `NotFoundException`，不返回 null 表达失败
+
+---
+
+## 四、Routes 接入
+
+```kotlin
+fun Route.userRoutes(service: UserService) {
+    route("/users") {
+        post {
+            val req = call.receive<CreateUserRequest>()
+            val resp = service.create(req)
+            call.respond(ApiResponse(code = 0, message = "ok", data = resp))
+        }
+    }
+}
+```
+
+在 `Application.kt` 装配：
+
+```kotlin
+fun Application.configureRouting() {
+    val userRepository = UserRepository()
+    val userService = UserService(userRepository)
+
+    routing {
+        route("/api") {
+            userRoutes(userService)
+        }
+    }
+}
+```
+
+---
+
+## 五、测试
+
+### 5.1 集成测试
+
+```kotlin
+class UserRoutesTest {
+    @Test
+    fun `create user returns 0 on success`() = testApplication {
+        application { module() }
+
+        val response = client.post("/api/users") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"username":"alice","email":"a@b.com","password":"123456"}""")
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        // 进一步断言 ApiResponse.code == 0
+    }
+}
+```
+
+### 5.2 单元测试（Service）
+
+```kotlin
+class UserServiceTest {
+    @Test
+    fun `create user fails on duplicate email`() = runTest {
+        val repo = mockk<UserRepository>()
+        coEvery { repo.findByEmail("a@b.com") } returns User(id = "x", ...)
+
+        val service = UserService(repo)
+        val ex = assertFailsWith<BusinessException> {
+            service.create(CreateUserRequest("alice", "a@b.com", "123456"))
+        }
+        assertEquals(2001, ex.code)
+    }
+}
+```
+
+---
+
+## 六、错误码约定
+
+新增接口必须复用现有错误码；新增错误码必须在 `kotlin-tech.md` 的「错误码规范」中登记：
+
+| 段 | 含义 |
+|----|------|
+| 0 | 成功 |
+| 1xxx | 通用错误（参数、鉴权、不存在） |
+| 2xxx | 业务错误（用户、订单） |
+| 3xxx | 第三方错误（支付、推送） |
+| 5xxx | 服务器内部错误 |
+
+---
+
+## 七、完成后检查
+
+- [ ] Request / Response 模型已创建并 `@Serializable`
+- [ ] Repository 方法已实现并有事务
+- [ ] Service 方法已实现，含校验、业务、日志
+- [ ] Routes 已注册到 `Application.kt` 的 `configureRouting`
+- [ ] 至少 1 个成功路径 + 1 个错误路径测试
+- [ ] `kotlin-tech.md` 接口列表与 `kotlin-dev-plan.md` 任务表已回写
+- [ ] `./gradlew build` 通过

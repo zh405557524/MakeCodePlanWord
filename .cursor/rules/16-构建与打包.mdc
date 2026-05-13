@@ -1,0 +1,129 @@
+---
+description: 构建与打包阶段 - QA 验收通过后，配置签名、版本号、环境变量与 CI，生成可上架的发布包
+globs:
+alwaysApply: false
+---
+
+# 构建与打包规则
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 执行前先形成本轮构建与打包计划，再生成或更新 `build-plan.md`、`android.md`、`ios.md`。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. 15 联调与测试 QA 阶段已 PASS（P0/P1 缺陷全部 fixed 且回归通过）
+2. `projects/{currentProject}/change-plan.md` 顶部「进行中变更」区块为空
+3. 项目版本号、构建号策略已明确（默认 semver `major.minor.patch` + 数字递增 buildCode）
+
+## 目标
+
+把测试通过的代码转化为「可上架的发布包」，覆盖：
+
+- Android：APK / AAB
+- iOS：IPA
+- 后端：Docker 镜像 / 部署包
+
+并固化签名、版本号、环境变量、混淆、ProGuard、Symbol、ATS、网络白名单等配置。
+
+## 输出路径
+
+- `projects/{currentProject}/06-构建打包/build-plan.md`（总览）
+- `projects/{currentProject}/06-构建打包/android.md`（Android 专项）
+- `projects/{currentProject}/06-构建打包/ios.md`（iOS 专项）
+- 可选：`projects/{currentProject}/06-构建打包/backend.md`（后端镜像与部署）
+
+## `build-plan.md` 固定结构
+
+1. 构建版本信息
+   - 当前版本号 / 构建号
+   - 对应 `change-log.md` 版本号
+   - 关联 QA 报告
+2. 多环境配置
+   - dev / staging / prod 三套配置
+   - 每套配置的 API Base URL、Token 加密 Key、统计 SDK 开关
+3. 版本号策略
+   - semver 升级规则（major/minor/patch 触发条件）
+   - buildCode 递增策略（按构建次数自增，不可回退）
+4. CI / CD 选型
+   - Codemagic / Fastlane / GitHub Actions / Bitrise 之一
+   - 触发策略（手动 / 标签 / main 分支）
+5. 产物归档
+   - 归档目录与命名规则（如 `dist/{project}-{version}-{buildCode}-{env}.apk`）
+   - 归档保留策略（最近 N 次构建、跨版本保留）
+6. 构建后自动化
+   - 自动跑 `flutter analyze` / `flutter test` / `gradle test`
+   - 自动符号上传（Crashlytics / Bugly / Sentry）
+   - 自动通知（Slack / 飞书 / 钉钉 webhook）
+
+## `android.md` 固定结构
+
+1. 包名（applicationId）与版本号
+2. 签名配置
+   - keystore 文件存放位置（不入仓库）
+   - 别名、密码注入方式（环境变量 / CI Secret）
+   - V1 / V2 / V3 / V4 签名策略
+3. 渠道与变体
+   - Google Play / 华为 / 小米 / OPPO / vivo / 自有渠道
+   - flavor 配置示例
+4. Gradle 配置要点
+   - minSdk / targetSdk / compileSdk
+   - ProGuard / R8 混淆规则
+   - multiDex 是否启用
+5. 第三方 SDK 合规
+   - 需要在隐私政策中声明的 SDK 列表（统计、广告、地图、推送、IM 等）
+   - 每个 SDK 的初始化时机（合规要求：必须在用户同意隐私政策后）
+6. 出包步骤
+   - 本地命令：`flutter build apk --release` / `flutter build appbundle --release`
+   - CI 命令对照
+7. 出包前自检清单
+   - 图标 / 启动图齐全
+   - 网络白名单（Android usesCleartextTraffic、网络安全配置）
+   - 权限清单与运行时申请
+
+## `ios.md` 固定结构
+
+1. Bundle ID 与版本号
+2. 证书与描述文件
+   - 开发证书 / 发布证书 / Distribution Profile
+   - Apple Developer Team 管理
+3. 能力配置（Capabilities）
+   - 推送、Sign in with Apple、Keychain Sharing 等
+4. ATS（App Transport Security）配置
+5. 隐私清单（Privacy Manifests，iOS 17+ 要求）
+   - 列出使用的 Required Reason APIs
+   - 第三方 SDK 隐私清单合并策略
+6. 出包步骤
+   - 本地命令：`flutter build ipa --release --export-options-plist=ExportOptions.plist`
+   - CI 命令对照
+7. 出包前自检清单
+   - LaunchScreen / Icon Set 齐全
+   - Info.plist 中所有 NS*UsageDescription 文案符合 App Store 审核要求
+   - dSYM 已生成并归档
+
+## 上架就绪检查表（强门禁）
+
+进入 17 应用商店上架阶段前，必须满足：
+
+- [ ] 15 QA 阶段 PASS（P0/P1 缺陷全部修复并回归）
+- [ ] `change-plan.md` 顶部「进行中」区块为空
+- [ ] 当前版本号 / buildCode 已确定且与 `change-log.md` 一致
+- [ ] Android AAB / APK 已生成并测试安装通过
+- [ ] iOS IPA 已生成并通过 TestFlight 内部测试
+- [ ] 签名配置正常，没有过期证书
+- [ ] 隐私政策已确认（详见 17 阶段）
+- [ ] 商店素材已就绪（详见 17 阶段）
+
+## 推进规则
+
+- 构建配置文件生成后必须暂停，等待用户确认构建产物
+- 用户确认通过后，进入 17 应用商店上架阶段
+- 若构建发现配置缺陷（如签名失败、依赖冲突），视为变更入口，必须先写 `change-plan.md` 再调整

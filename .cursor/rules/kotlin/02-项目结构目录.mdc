@@ -1,0 +1,137 @@
+---
+description: Kotlin 通用项目结构目录索引，默认对齐 Ktor + Exposed 风格的分层骨架
+globs: "**/src/main/kotlin/**/*.kt"
+alwaysApply: false
+---
+
+# 项目结构目录
+
+## 一、工程根目录
+
+```text
+project/
+├── .cursor/
+├── gradle/
+├── src/
+│   ├── main/
+│   │   ├── kotlin/
+│   │   └── resources/
+│   └── test/
+│       └── kotlin/
+├── build.gradle.kts
+├── settings.gradle.kts
+├── gradlew
+└── gradlew.bat
+```
+
+---
+
+## 二、`src/main/kotlin/{基础包}/` 顶层分层
+
+```text
+com/{company}/{project}/
+├── Application.kt
+├── plugins/
+├── routes/
+├── services/
+├── repositories/
+├── models/
+│   ├── request/
+│   ├── response/
+│   └── entity/
+└── utils/
+```
+
+---
+
+## 三、目录职责
+
+| 路径 | 职责 | 说明 |
+|------|------|------|
+| `Application.kt` | 入口 | 只负责 install 插件与装配 module |
+| `plugins/` | 框架接入 | Routing、Serialization、Security、StatusPages、DatabaseFactory |
+| `routes/` | 路由层 | 只做参数解析、调用 Service、返回响应 |
+| `services/` | 业务层 | 业务逻辑、跨 Repository 编排、事务边界 |
+| `repositories/` | 数据访问层 | 直接与数据库 / 外部存储交互 |
+| `models/request/` | 请求体模型 | 仅描述 API 入参，必须 `@Serializable` |
+| `models/response/` | 响应体模型 | 仅描述 API 出参，必须 `@Serializable` |
+| `models/entity/` | 数据库实体 | Exposed `Table` 或 DAO 实体 |
+| `utils/` | 工具层 | ApiResponse、JwtConfig、日志、扩展函数 |
+
+---
+
+## 四、`src/main/resources/`
+
+```text
+src/main/resources/
+├── application.conf            # 主配置文件
+├── application-dev.conf        # 环境配置（可选）
+├── application-prod.conf
+├── logback.xml                 # 日志配置
+└── db/
+    └── migration/              # Flyway / Liquibase 迁移脚本
+        ├── V1__init.sql
+        ├── V2__add_users.sql
+        └── ...
+```
+
+---
+
+## 五、`src/test/kotlin/` 测试目录
+
+```text
+src/test/kotlin/com/{company}/{project}/
+├── routes/                     # 路由集成测试（withTestApplication / testApplication）
+├── services/                   # Service 单元测试
+├── repositories/               # Repository 测试（必要时跑真库或 H2）
+└── utils/                      # 工具类测试
+```
+
+---
+
+## 六、模块化拆分（大型项目）
+
+当项目变大、单 Gradle 模块不堪重负时：
+
+```text
+project/
+├── app/                        # 应用入口模块，含 Application.kt 与 plugins/
+├── feature-auth/               # 鉴权领域模块
+├── feature-user/               # 用户领域模块
+├── feature-order/              # 订单领域模块
+├── shared/                     # 共享代码（models、utils）
+└── infrastructure/             # 基础设施（DB、缓存、消息队列）
+```
+
+约定：
+
+- `feature-*` 之间不允许互相依赖，必须通过 `shared/` 或事件总线
+- `app/` 是唯一组装入口
+- `infrastructure/` 只暴露接口，不暴露实现
+
+---
+
+## 七、命名约定
+
+- 包名：小写，`com.{company}.{project}.{layer}`
+- 类名：`PascalCase`
+- 函数：`camelCase`
+- 常量：`UPPER_SNAKE_CASE`
+- Routes 函数：`Route.xxxRoutes()`（动词扩展函数风格）
+- Service 类：`{Domain}Service`
+- Repository 类：`{Domain}Repository`
+- Request DTO：`{Action}Request`
+- Response DTO：`{Action}Response`
+
+---
+
+## 八、结构变更时必须同步的内容
+
+以下变化发生时，应同步调整规则或技术文档：
+
+- 新增顶层包（如 `events/`、`jobs/`、`queues/`）
+- routes / services / repositories 的组织方式发生变化
+- 引入新的基础设施层（缓存、消息队列、对象存储）
+- 模块化拆分前后
+
+目标是让本规则始终能作为工程索引使用。
