@@ -1,0 +1,147 @@
+---
+description: Flutter 通用项目结构目录索引，默认对齐 translator-flutter 风格的分层骨架
+globs: "**/lib/**/*.dart"
+alwaysApply: false
+---
+
+# 项目结构目录
+
+## 一、工程根目录
+
+```text
+project/
+├── .cursor/
+├── android/
+├── ios/
+├── linux/ macos/ windows/ web/
+├── assets/
+├── lib/
+├── test/
+├── integration_test/
+├── plugins/
+├── packages/
+├── tool/
+└── pubspec.yaml
+```
+
+说明：
+
+- `plugins/`、`packages/`、`tool/` 不是必选，但若工程已有，后续优先复用。
+- `assets/` 按资源类型继续分层，如 `images/`、`fonts/`、`json/`、`js/`。
+
+---
+
+## 二、lib/ 顶层分层
+
+```text
+lib/
+├── apis/
+├── components/
+├── enums/
+├── generated/
+├── l10n/
+├── models/
+├── pages/
+├── plugins/
+├── routes/
+├── services/
+├── store/
+├── utils/
+├── widgets/
+├── global.dart
+├── main.dart
+└── theme.dart
+```
+
+---
+
+## 三、目录职责
+
+| 路径 | 职责 | 说明 |
+|------|------|------|
+| `apis/` | 接口封装 | 请求路径、参数封装、响应解析入口 |
+| `components/` | 业务组件 | 可跨页面复用的中型业务组件 |
+| `enums/` | 枚举 | 全局状态、模式、类型枚举 |
+| `generated/` | 生成代码 | 只读，不手改 |
+| `l10n/` | 多语言资源 | 配合 `generated/` 使用 |
+| `models/` | 模型层 | 参数、响应、领域模型、视图模型 |
+| `pages/` | 页面层 | 页面、页面子流程、局部 widgets/dialog |
+| `plugins/` | 插件封装 | 平台能力、第三方插件包装 |
+| `routes/` | 路由层 | 路由名、路由表、观察器、转场 |
+| `services/` | 服务层 | HTTP、存储、事件、业务能力 |
+| `store/` | 状态层 | 全局状态、会话状态、配置状态 |
+| `utils/` | 工具层 | 常量、日志、资源映射、格式化 |
+| `widgets/` | 通用 UI | 与业务解耦的基础组件 |
+
+---
+
+## 四、页面模块标准结构
+
+```text
+lib/pages/{feature_name}/
+├── index.dart
+├── controller.dart
+├── view.dart
+├── widgets/
+├── dialog/
+└── {sub_feature}/
+```
+
+约定：
+
+- 目录与文件名使用 `snake_case`
+- 类名使用 `PascalCase`
+- 默认使用 `index.dart + part / part of`
+- 一级页面、子流程页面、详情/历史/编辑等独立流程优先自成目录
+
+---
+
+## 五、模型目录推荐
+
+```text
+lib/models/
+├── params/
+├── responses/
+├── data/              # 如存在纯本地业务模型
+└── index.dart
+```
+
+规则：
+
+- 请求参数放 `params/`
+- 服务端响应放 `responses/`
+- 纯前端临时视图模型或本地数据模型可单独分类
+
+---
+
+## 六、聚合入口规则
+
+以下目录默认应提供 `index.dart`：
+
+- `models/`
+- `pages/{feature_name}/`
+- `routes/`
+- `services/`
+- `store/`
+- `utils/`
+- `widgets/`
+
+默认风格：
+
+- `index.dart` 统一 `import` 外部依赖
+- 目录内部文件使用 `part / part of`
+
+不要在同一个模块里混用 `part` 和本地互相 `import` 两套方式。
+
+---
+
+## 七、结构变更时必须同步的内容
+
+以下变化发生时，应同步调整规则或技术文档：
+
+- 新增顶层目录
+- `pages` 的组织方式发生变化
+- `routes/services/store` 的聚合模式变化
+- 引入 `l10n/generated/plugins/packages` 等新层次
+
+目标是让本规则始终能作为工程索引使用。
