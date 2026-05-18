@@ -21,7 +21,7 @@ alwaysApply: false
 执行本规则前，必须确认：
 
 1. 13 Flutter 编码阶段已达成阶段性闭合（Alpha 或更高）
-2. 14 Kotlin 编码阶段已达成阶段性闭合（Alpha 或更高）
+2. 14 Java 编码阶段已达成阶段性闭合（Alpha 或更高）
 3. 前后端基础链路已可点通（登录、主流程、关键接口）
 4. `projects/{currentProject}/change-plan.md` 顶部「进行中变更」区块已清空或所有条目已明确 defer
 
@@ -48,7 +48,7 @@ QA 阶段是 **串行强门禁**：未达验收不允许进 16 构建打包。
    |------|----------|----------|----------|------|
 
 4. 测试用例清单
-   - 单元测试覆盖（Flutter `flutter test` + Kotlin `gradle test`）
+   - 单元测试覆盖（Flutter `flutter test` + Java `./mvnw test`）
    - 集成测试（接口契约、数据库写入读取一致性）
    - 端到端（E2E）用例（主路径 + 关键状态切换 + 异常恢复）
    - UI 验收（对照 `figma-design-plan.md`，至少抽检 30% 关键页面）

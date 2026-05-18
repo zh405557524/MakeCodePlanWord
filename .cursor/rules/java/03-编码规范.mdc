@@ -1,0 +1,110 @@
+---
+description: Java 后端通用编码规范，强调分层、命名、空值边界、异常分类、Javadoc、日志与错误处理
+globs: "**/src/main/java/**/*.java"
+alwaysApply: true
+---
+
+# 编码规范
+
+## 一、文件组织
+
+- 使用领域 / 分层目录
+- 一个文件一个 public 顶层类、接口、枚举或 record
+- 相同领域的 controller / service / mapper / domain 必须放在对应 layer 目录里，不允许把多层混在一个文件
+
+---
+
+## 二、命名规范
+
+- 包名：`com.{company}.{project}.{layer}`，全小写
+- 类、接口、枚举、record：`PascalCase`
+- 方法、变量、字段：`camelCase`
+- 常量：`UPPER_SNAKE_CASE`
+- 测试类：`{被测类}Test`
+- DTO 后缀：`Request` / `Response`，避免使用 `DTO`、`VO`、`Bean` 等含糊后缀
+
+---
+
+## 三、空值与校验
+
+- Controller 入参优先用 Bean Validation：`@NotBlank`、`@NotNull`、`@Size`、`@Email`
+- Service 边界用 `Objects.requireNonNull(...)` 或明确的业务异常守住必填参数
+- 查询可能为空时优先返回 `Optional<T>`；接口响应中可空字段必须在技术文档说明含义
+- 不用 `null` 表达多种业务状态；需要多状态时使用枚举或明确字段
+
+---
+
+## 四、异常分类
+
+业务异常分为四类，禁止直接 `throw new Exception("...")`：
+
+1. `IllegalArgumentException` / `BadRequestException`：参数校验失败 → 1001
+2. `UnauthorizedException`：鉴权失败 → 1002 / 1003
+3. `NotFoundException`：资源不存在 → 1004
+4. `BusinessException(int code, String message)`：业务规则失败
+
+所有异常由 `@RestControllerAdvice` 统一拦截，转成 `ApiResponse`。Service 层禁止直接读写 HTTP 响应对象。
+
+---
+
+## 五、Javadoc 注释
+
+- 所有 public 类和 public 方法必须写 Javadoc
+- Javadoc 使用中文，描述「负责什么 / 为什么这样做」，不重复代码字面意思
+- 至少描述：参数含义、返回含义、可能抛出的异常、并发 / 事务约束
+
+示例：
+
+```java
+/**
+ * 根据邮箱查找用户。
+ *
+ * @param email 用户邮箱，调用方保证已 trim 并小写化
+ * @return 命中用户实体，未命中返回 Optional.empty()
+ * @throws IllegalArgumentException 当 email 为空字符串
+ */
+Optional<UserEntity> findByEmail(String email);
+```
+
+---
+
+## 六、状态与并发
+
+- Service 默认无状态；如必须持有状态，需使用线程安全数据结构或外部存储
+- 数据库写操作统一通过 `@Transactional` 包裹
+- 异步任务使用受控线程池、`@Async` 或消息队列，不在请求线程里阻塞长任务
+- `CompletableFuture`、线程池、定时任务必须处理异常并记录日志
+
+---
+
+## 七、错误处理
+
+- 异步调用统一处理异常，不允许吞掉关键失败
+- 关键错误必须进入日志（warn / error 级别）
+- 不允许在 Controller 层 catch 后返回临时 JSON，统一交给全局异常处理器
+
+---
+
+## 八、日志规范
+
+- 使用 SLF4J + Logback
+- 每个类使用 `private static final Logger log = LoggerFactory.getLogger(CurrentClass.class);`
+- 关键业务操作（登录、数据写入、外部调用）必须 `log.info(...)`
+- 异常必须 `log.error("context", throwable)` 带上下文
+- 不在日志中输出密码、Token、身份证号等敏感信息
+
+---
+
+## 九、配置与常量
+
+- 敏感配置走 `application.properties` + 环境变量
+- 业务常量集中到 `common/Constants.java` 或对应领域常量类
+- 不在业务代码中硬编码 baseUrl、密钥、超时时间
+
+---
+
+## 十、验证要求
+
+- 改动后至少通过 `./mvnw verify`
+- 关键链路改动后补单元测试或集成测试
+- 文件、命名、目录、依赖关系必须保持一致

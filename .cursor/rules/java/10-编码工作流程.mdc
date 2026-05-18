@@ -1,12 +1,12 @@
 ---
-description: Kotlin 编码工作流程规则，仅用于进入 Kotlin 代码阶段后的执行、验证与回写，不负责整体项目流程调度
-globs: "**/src/main/kotlin/**/*.kt,**/build.gradle.kts,**/src/test/kotlin/**/*.kt"
+description: Java 编码工作流程规则，仅用于进入 Java 代码阶段后的执行、验证与回写，不负责整体项目流程调度
+globs: "**/src/main/java/**/*.java,**/pom.xml,**/src/test/java/**/*.java"
 alwaysApply: false
 ---
 
 # 编码工作流程
 
-> 本规则只负责 **Kotlin 编码阶段内部** 的执行流程。
+> 本规则只负责 **Java 编码阶段内部** 的执行流程。
 > 它不是整体项目流程，不负责「需求 → 文档 → 技术方案 → 开发计划」的总调度。
 > 整体项目阶段推进仍然由顶层 `00-核心工作流程.mdc` 负责。
 
@@ -16,18 +16,18 @@ alwaysApply: false
 
 本规则在以下场景生效：
 
-- 用户要求开始 Kotlin 编码
-- 用户要求继续修改 Kotlin 代码
-- 用户要求调试、修复、联调 Kotlin 工程
-- 当前 `workflow.md` 的当前阶段已经进入 `Kotlin 编码`
+- 用户要求开始 Java 编码
+- 用户要求继续修改 Java 代码
+- 用户要求调试、修复、联调 Java 工程
+- 当前 `workflow.md` 的当前阶段已经进入 `Java 编码`
 
 不适用场景：
 
 - 需求分析
 - PRD 生成或修订
 - 技术方案生成
-- Kotlin 技术文档生成
-- Kotlin 总体开发计划或模块开发文档生成
+- Java 技术文档生成
+- Java 总体开发计划或模块开发文档生成
 
 ---
 
@@ -42,11 +42,11 @@ alwaysApply: false
 - 是否需要暂停等待用户确认
 - 是否需要回到文档阶段
 
-### 2.2 Kotlin 编码流程负责什么
+### 2.2 Java 编码流程负责什么
 
 本规则只负责：
 
-- 进入 Kotlin 代码阶段后，该先读哪些文档
+- 进入 Java 代码阶段后，该先读哪些文档
 - 当前编码步骤应该怎么拆解
 - 代码实现顺序
 - 校验顺序
@@ -56,12 +56,12 @@ alwaysApply: false
 
 ## 三、编码前必须读取的内容
 
-进入 Kotlin 编码前，至少读取以下内容：
+进入 Java 编码前，至少读取以下内容：
 
 1. `projects/{currentProject}/workflow.md`
 2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
-3. `projects/{currentProject}/04-后端/kotlin-tech.md`
-4. `projects/{currentProject}/04-后端/kotlin-dev-plan.md`
+3. `projects/{currentProject}/04-后端/java-tech.md`
+4. `projects/{currentProject}/04-后端/java-dev-plan.md`
 5. 当前恢复点对应的 `projects/{currentProject}/04-后端/开发计划/{module}.md`
 6. 若涉及前端联动：`projects/{currentProject}/03-前端/flutter-tech.md` 与对应模块文档
 7. 若技术文档指定了参考工程，还需读取参考工程的真实结构
@@ -72,7 +72,7 @@ alwaysApply: false
 
 ### 4.1 先确认当前恢复点
 
-从 `workflow.md` 与 `kotlin-dev-plan.md` 确认：
+从 `workflow.md` 与 `java-dev-plan.md` 确认：
 
 - 当前步骤编号
 - 当前步骤状态
@@ -92,7 +92,7 @@ alwaysApply: false
 开始写代码前，先明确本轮只做什么：
 
 - 要改哪些文件
-- 要补哪层内容（routes / service / repository / model / migration）
+- 要补哪层内容（controller / service / mapper / domain / migration）
 - 哪些事情本轮不做
 
 规则：
@@ -105,18 +105,18 @@ alwaysApply: false
 默认实现顺序（自下而上）：
 
 1. 迁移脚本 / Entity 表定义
-2. Repository 方法 + 单元测试
+2. Mapper 方法 + 单元测试
 3. Service 方法 + 单元测试
 4. Request / Response 模型
-5. Routes 注册
+5. Controller 注册
 6. 集成测试
 
 或新接口场景（自上而下）：
 
 1. Request / Response 模型
-2. Routes 占位
+2. Controller 占位
 3. Service 方法
-4. Repository 方法
+4. Mapper 方法
 5. 迁移脚本（如需要）
 6. 测试 + 联调
 
@@ -126,8 +126,8 @@ alwaysApply: false
 
 至少做：
 
-- `./gradlew build`
-- `./gradlew test`（必要时）
+- `./mvnw verify`
+- `./mvnw test`（必要时）
 - 若是接口或链路改动，做最小链路验证（curl / Postman / 集成测试）
 
 ### 4.5 回写
@@ -135,7 +135,7 @@ alwaysApply: false
 编码完成后至少回写：
 
 - `workflow.md`（恢复点、状态、执行记录）
-- `kotlin-dev-plan.md`（如任务状态已变化）
+- `java-dev-plan.md`（如任务状态已变化）
 - 对应模块开发文档（如模块状态或边界已变化）
 - `change-plan.md`（变更条目状态从 `in_progress` 改成 `done`，归档到 `change-log.md`）
 
@@ -148,8 +148,8 @@ alwaysApply: false
 如当前步骤是初始化或骨架搭建：
 
 - 优先完成目录骨架
-- 再完成 `Application.kt + plugins/`
-- 再完成 `routes/services/repositories/models/utils` 入口文件
+- 再完成 `Application.java + config/`
+- 再完成 `controller/service/mapper/domain/common` 入口文件
 - 最后给出 `/health` 健康检查接口
 
 ### 5.2 新接口类任务
@@ -158,9 +158,9 @@ alwaysApply: false
 
 - 先确认接口契约（路径、入参、出参、错误码）
 - 再补 Request / Response 模型
-- 再补 Repository / Entity（如需要新增表）
+- 再补 Mapper / Entity（如需要新增表）
 - 再补 Service
-- 最后补 Routes 与测试
+- 最后补 Controller 与测试
 
 ### 5.3 数据迁移类任务
 
@@ -168,8 +168,8 @@ alwaysApply: false
 
 - 先写迁移脚本（`V{N}__{描述}.sql`）
 - 本地启动验证迁移
-- 再改 Entity / Repository
-- 最后改 Service / Routes
+- 再改 Entity / Mapper
+- 最后改 Service / Controller
 - 测试覆盖新旧字段的兼容情况
 
 ### 5.4 联调类任务
@@ -184,18 +184,18 @@ alwaysApply: false
 
 ## 六、阻塞式编码阶段规则
 
-Kotlin 编码属于阻塞式代码开发阶段。
+Java 编码属于阻塞式代码开发阶段。
 
 含义：
 
 - 只要用户没有明确说「进入下一步」
-- 就默认还停留在当前 Kotlin 编码步骤
+- 就默认还停留在当前 Java 编码步骤
 - 默认继续做当前步骤内的修改、调试、验证和回写
 
 规则：
 
 - 不自动把当前编码步骤标成完成并切下一步
-- 不自动从 Kotlin 编码跳到 Flutter 编码或联调 QA
+- 不自动从 Java 编码跳到 Flutter 编码或联调 QA
 - 只有用户明确推进，或当前步骤已经闭合并需要用户确认时，才允许切换
 
 ---
@@ -204,9 +204,9 @@ Kotlin 编码属于阻塞式代码开发阶段。
 
 当发现冲突时，处理顺序如下：
 
-1. 当前版本的 `kotlin-tech.md`（接口契约真源）
+1. 当前版本的 `java-tech.md`（接口契约真源）
 2. 当前版本的 `tech-plan.md`
-3. 当前版本的 `kotlin-dev-plan.md`
+3. 当前版本的 `java-dev-plan.md`
 4. 当前恢复点模块文档
 5. 现有实现代码
 
@@ -220,10 +220,10 @@ Kotlin 编码属于阻塞式代码开发阶段。
 
 ## 八、完成判定
 
-当前 Kotlin 编码步骤要满足以下条件，才可认为本轮完成：
+当前 Java 编码步骤要满足以下条件，才可认为本轮完成：
 
 - 本轮目标代码已落地
-- `./gradlew build` / `./gradlew test` 已通过或已明确说明无法执行原因
+- `./mvnw verify` / `./mvnw test` 已通过或已明确说明无法执行原因
 - 数据迁移脚本（如有）已通过本地验证
 - 当前步骤相关文档已回写
 - 当前步骤的阻塞与风险已记录
@@ -239,6 +239,6 @@ Kotlin 编码属于阻塞式代码开发阶段。
 - 不按当前步骤推进，随意跨步实现
 - 不验证就宣称完成
 - 不回写 `workflow.md`
-- 把 Kotlin 编码流程误当成整体项目流程
+- 把 Java 编码流程误当成整体项目流程
 - 私自发明前端未对齐的字段或错误码
 - 把多条不相关变更塞进同一个 CHG-id

@@ -59,7 +59,7 @@
 
 ### Added
 
-- 工程骨架（Flutter + Kotlin）
+- 工程骨架（Flutter + Java）
 - 基础规则与流程文档
 
 ### Changed

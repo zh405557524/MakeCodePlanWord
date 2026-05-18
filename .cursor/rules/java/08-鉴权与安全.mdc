@@ -1,6 +1,6 @@
 ---
-description: Kotlin 鉴权与安全规则，覆盖 JWT、密码哈希、SQL 注入防护、CORS、限流与敏感数据处理
-globs: "**/src/main/kotlin/**/*.kt"
+description: Java 鉴权与安全规则，覆盖 JWT、密码哈希、SQL 注入防护、CORS、限流与敏感数据处理
+globs: "**/src/main/java/**/*.java"
 alwaysApply: false
 ---
 
@@ -41,15 +41,15 @@ alwaysApply: false
 
 ### 2.1 注册时
 
-```kotlin
-val passwordHash = BCrypt.hashpw(req.password, BCrypt.gensalt(12))
+```java
+String passwordHash = BCrypt.hashpw(req.password(), BCrypt.gensalt(12));
 ```
 
 ### 2.2 登录时
 
-```kotlin
-if (!BCrypt.checkpw(req.password, user.passwordHash)) {
-    throw UnauthorizedException("invalid credentials")
+```java
+if (!BCrypt.checkpw(req.password(), user.getPasswordHash())) {
+    throw new UnauthorizedException("invalid credentials");
 }
 ```
 
@@ -65,9 +65,9 @@ if (!BCrypt.checkpw(req.password, user.passwordHash)) {
 ## 三、SQL 注入防护
 
 - 永远不要字符串拼接 SQL
-- 用 Exposed DSL：`Users.select { Users.email eq email }`
-- 用原生 SQL 时必须参数化：`exec("SELECT * FROM users WHERE id = ?", listOf(IntColumnType() to id))`
-- 复杂动态查询通过 Exposed `andWhere { }` / `orWhere { }` 组合
+- 用 MyBatis-Plus 参数化查询：`Wrappers.lambdaQuery(UserEntity.class).eq(UserEntity::getEmail, email)`
+- 用 XML SQL 时必须使用 `#{}` 参数绑定，不得用 `${}` 拼接
+- 复杂动态查询通过 Wrapper 或 XML `<if>` 组合
 
 ---
 
@@ -75,23 +75,24 @@ if (!BCrypt.checkpw(req.password, user.passwordHash)) {
 
 仅在确实需要跨域时启用：
 
-```kotlin
-install(CORS) {
-    anyHost()       // 仅开发环境
-    allowHost("app.example.com", schemes = listOf("https"))  // 生产环境
-    allowMethod(HttpMethod.Options)
-    allowMethod(HttpMethod.Put)
-    allowMethod(HttpMethod.Delete)
-    allowHeader(HttpHeaders.Authorization)
-    allowHeader(HttpHeaders.ContentType)
-    allowCredentials = true
-    maxAgeInSeconds = 3600
+```java
+@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(List.of("https://app.example.com"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
 }
 ```
 
 约定：
 
-- 生产禁止 `anyHost()`
+- 生产禁止通配所有域名
 - 仅放行明确域名 + 必要方法 + 必要头部
 
 ---
@@ -110,8 +111,8 @@ install(CORS) {
 
 超限响应统一 429：
 
-```kotlin
-throw BusinessException(code = 4029, message = "Too many requests")
+```java
+throw new BusinessException(4029, "Too many requests");
 ```
 
 ---
@@ -125,14 +126,14 @@ throw BusinessException(code = 4029, message = "Too many requests")
 - 身份证：`110***********1234`
 - 银行卡：`6222 **** **** 1234`
 
-实现：在 `utils/Mask.kt` 统一封装，所有日志输出必须先脱敏。
+实现：在 `utils/Mask.java` 统一封装，所有日志输出必须先脱敏。
 
 ---
 
 ## 七、HTTPS 与传输
 
 - 所有线上环境必须 HTTPS
-- 后端服务通常运行在 HTTP（由前置代理终结 TLS），但 `Application.kt` 必须信任 `X-Forwarded-Proto`
+- 后端服务通常运行在 HTTP（由前置代理终结 TLS），但必须正确处理 `X-Forwarded-Proto`
 - WebSocket 必须用 WSS
 - 内部服务间通信也应启用 mTLS（高安全场景）
 
@@ -140,7 +141,7 @@ throw BusinessException(code = 4029, message = "Too many requests")
 
 ## 八、依赖与漏洞扫描
 
-- 集成依赖审计工具（`dependencyCheck` / `snyk`）
+- 集成依赖审计工具（OWASP Dependency Check / Snyk）
 - 每月跑一次扫描，发现高危漏洞立即升级
 - 升级核心依赖必须走 `change-plan.md`
 
@@ -149,7 +150,7 @@ throw BusinessException(code = 4029, message = "Too many requests")
 ## 九、敏感配置
 
 - 不允许把密钥、Token、密码硬编码在源码
-- 不允许 `.env` / `application.conf` 中真实生产配置入仓库
+- 不允许 `.env` / `application.properties` 中真实生产配置入仓库
 - 所有敏感配置走环境变量或密钥管理（AWS Secrets Manager、Vault、KMS）
 
 ---
@@ -172,7 +173,7 @@ throw BusinessException(code = 4029, message = "Too many requests")
 
 - 所有「按 ID 查 / 改 / 删」接口必须验证：「当前用户」是否有权操作「该 ID」
 - 不允许仅靠路径参数信任用户身份
-- Service 层强制校验：`if (user.id != target.ownerId && !user.isAdmin) throw ...`
+- Service 层强制校验：`if (!user.getId().equals(target.getOwnerId()) && !user.isAdmin()) throw ...`
 
 ---
 

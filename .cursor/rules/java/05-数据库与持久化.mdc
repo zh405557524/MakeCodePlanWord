@@ -1,0 +1,171 @@
+---
+description: Java 数据库与持久化规则，覆盖 MyBatis-Plus、迁移脚本、事务边界、Redis 缓存与索引策略
+globs: "**/src/main/java/**/mapper/**/*.java,**/src/main/java/**/domain/entity/**/*.java,**/src/main/resources/db/migration/**/*.sql"
+alwaysApply: false
+---
+
+# 数据库与持久化
+
+## 一、ORM 选型
+
+默认使用 MyBatis-Plus：
+
+- 简单 CRUD：优先 `BaseMapper<T>` + Service 层编排
+- 复杂查询：`LambdaQueryWrapper` 或 XML SQL
+
+混用规则：
+
+- 同一查询链路只使用一种写法（Wrapper 或 XML），避免重复实现
+- 复杂 SQL 必须落在 Mapper 层，不允许散落在 Service
+
+---
+
+## 二、实体定义（MyBatis-Plus）
+
+```java
+@TableName("users")
+public class UserEntity {
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+    private String username;
+    private String email;
+    private String passwordHash;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 省略 getter / setter；实际项目可使用 Lombok，但必须在依赖规则中登记
+}
+```
+
+---
+
+## 三、Mapper 标准模式
+
+```java
+@Mapper
+public interface UserMapper extends BaseMapper<UserEntity> {
+    UserEntity selectByEmail(@Param("email") String email);
+}
+```
+
+---
+
+## 四、Service 标准模式
+
+```java
+@Service
+public class UserService {
+    private final UserMapper userMapper;
+    private final StringRedisTemplate redisTemplate;
+
+    public UserService(UserMapper userMapper, StringRedisTemplate redisTemplate) {
+        this.userMapper = userMapper;
+        this.redisTemplate = redisTemplate;
+    }
+
+    public Optional<UserEntity> findByEmail(String email) {
+        return Optional.ofNullable(userMapper.selectByEmail(email));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Long create(UserEntity entity) {
+        userMapper.insert(entity);
+        redisTemplate.delete("user:email:" + entity.getEmail());
+        return entity.getId();
+    }
+}
+```
+
+约定：
+
+- 数据访问由 Mapper 承担，业务编排由 Service 承担
+- 多写操作必须放在事务内
+- Service 中的缓存更新（删缓存/回填）必须与事务策略一致
+
+---
+
+## 五、事务边界
+
+| 场景 | 事务位置 |
+|------|----------|
+| 单步写 | Service 方法上 `@Transactional` |
+| Service 跨 Mapper 写 | Service 聚合方法上 `@Transactional` |
+| 多个独立写、无强一致性要求 | 不共享事务，各自独立 |
+
+禁止：
+
+- 在 Controller 层打开事务
+- 跨请求复用事务
+- 在异步线程中绕过事务边界直接写库
+
+---
+
+## 六、迁移脚本
+
+使用 Flyway（默认）或 Liquibase。
+
+### 6.1 命名规则
+
+```text
+V{版本号}__{描述}.sql
+例：
+V1__init.sql
+V2__add_users_avatar.sql
+V3__create_orders_table.sql
+```
+
+### 6.2 强约束
+
+- 一旦版本号文件提交并发布到任何环境，**不允许修改**
+- 修改字段或表必须新增下一个版本号文件
+- 删除字段或表必须在迁移脚本中标注影响范围，并在 `change-log.md` 登记
+- 大表迁移必须分批，使用数据库支持的在线 DDL 策略
+
+### 6.3 数据迁移
+
+- 业务数据修复脚本与结构迁移脚本分开
+- 数据修复脚本用 `R__{描述}.sql`（Flyway repeatable）或单独工具脚本
+
+---
+
+## 七、索引策略
+
+- 主键：UUID（推荐）或自增 ID
+- 唯一约束：在 SQL 迁移里显式声明 UNIQUE INDEX
+- 查询条件字段必须建索引
+- 多列联合索引按最常用顺序排列
+- 超过 3 列的联合索引必须在 `java-tech.md` 中说明用途
+
+---
+
+## 八、Redis 缓存
+
+- 缓存键命名：`{project}:{domain}:{key}`，如 `app:user:123`
+- 缓存层位于 Service，由 Service 决定何时读 / 写 / 失效
+- 严禁在 Controller 直接操作缓存
+- 推荐策略：Cache Aside（先查缓存，miss 查库并回填；写操作先写库再删缓存）
+
+---
+
+## 九、连接池
+
+- 默认 HikariCP
+- 池大小：核心数 × 2 + 1（CPU 密集）或更高（IO 密集）
+- 超时配置：connectionTimeout、idleTimeout、maxLifetime 必须显式配置，不使用默认
+
+---
+
+## 十、SQL 注入防护
+
+- 永远不要用字符串拼接构造 SQL
+- 所有用户输入必须走 MyBatis 参数绑定（`#{}`），禁止 `${}` 拼接
+- XML SQL 必须使用参数化写法
+- 复杂搜索必须在 Mapper 内部封装，不向上层暴露原生 SQL
+
+---
+
+## 十一、慢查询与监控
+
+- 在 `application.properties` 配置慢查询阈值（如 200ms）
+- 慢查询日志单独输出，便于审计
+- 监控接口 P95 / P99 响应时长，回流到 19 上线监控阶段

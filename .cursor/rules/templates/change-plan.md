@@ -26,7 +26,7 @@
   - 技术方案: 是/否 + 具体章节
   - 工时评估: 是/否 + 增量工时估计
   - Flutter 模块: 是/否 + 具体模块/页面/文件
-  - Kotlin 模块: 是/否 + 具体接口/Service/Repository
+  - Java 模块: 是/否 + 具体接口/Service/Mapper
 - 最小改动清单:
   - 必要新增: 文件 A、字段 B、接口 C
   - 对应修改: 文件 D 的 X 方法、组件 E 的 props
@@ -67,7 +67,7 @@
   - 技术方案: 否
   - 工时评估: 是 / +2 人天
   - Flutter 模块: 是 / `lib/pages/settings/`、`lib/theme.dart`、`lib/store/config.dart`
-  - Kotlin 模块: 否
+  - Java 模块: 否
 - 最小改动清单:
   - 必要新增: `lib/pages/settings/widgets/theme_switch.dart`、`ConfigStore` 中的 `themeMode` 字段
   - 对应修改: `lib/theme.dart` 增加 dark 主题、`MaterialApp` 接入 themeMode

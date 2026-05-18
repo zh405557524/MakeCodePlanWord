@@ -1,14 +1,14 @@
-# {项目名称} Kotlin 总体开发计划
+# {项目名称} Java 总体开发计划
 
-> 规则来源：`.cursor/rules/10-Kotlin开发计划文档.mdc`
-> 用途：把 `kotlin-tech.md` 拆成可执行、可断点恢复的后端任务总表。
+> 规则来源：`.cursor/rules/10-Java开发计划文档.mdc`
+> 用途：把 `java-tech.md` 拆成可执行、可断点恢复的后端任务总表。
 > 维护规则：任务完成后回写状态；变更影响任务时同步更新。
 
 ---
 
 ## 1. 文档用途
 
-- 给 AI / 开发者按序执行 Kotlin 后端编码
+- 给 AI / 开发者按序执行 Java 后端编码
 - 支持中断恢复（每个任务有恢复点字段）
 - 与 `effort-estimate.md` 对齐排期
 
@@ -45,9 +45,9 @@
 
 分层顺序：
 
-1. 基础设施（Application、plugins、DB、配置）
+1. 基础设施（Application、config、DB、Redis、配置）
 2. 鉴权模块
-3. 数据库表与 Repository 层
+3. 数据库表与 Mapper 层
 4. 业务接口（按模块）
 5. 集成测试与契约验证
 6. 部署配置（Docker、CI）
@@ -70,7 +70,7 @@
 
 | 任务 ID | 名称 | 依赖任务 | 状态 | 工时（E） | 关联模块文档 | 备注 |
 |---------|------|----------|------|-----------|--------------|------|
-| T-B001 | 搭建 Ktor 基础结构 | - | pending | | `04-后端/开发计划/infrastructure.md` | |
+| T-B001 | 搭建 Spring Boot + MyBatis-Plus 基础结构 | - | pending | | `04-后端/开发计划/infrastructure.md` | |
 | T-B002 | 实现鉴权模块 | T-B001 | pending | | `04-后端/开发计划/auth.md` | |
 
 ---
@@ -95,9 +95,9 @@
 
 ## 9. 编码约束
 
-- 默认 `Ktor + Exposed + JWT + StatusPages + 自定义 ApiResponse`
-- 分层：Routes → Service → Repository，禁止跨层
-- 接口契约必须与 `kotlin-tech.md` 一致；若需变更先走 `change-plan.md`
+- 默认 `Java + Spring Boot + MyBatis-Plus + PostgreSQL + Redis + JWT + 自定义 ApiResponse`
+- 分层：Controller → Service → Mapper，禁止跨层
+- 接口契约必须与 `java-tech.md` 一致；若需变更先走 `change-plan.md`
 
 ---
 
@@ -105,4 +105,4 @@
 
 | 时间 | 任务 ID | 操作 | 结果 |
 |------|---------|------|------|
-| YYYY-MM-DD | T-B001 | 创建 Application.kt | done |
+| YYYY-MM-DD | T-B001 | 创建 Application.java | done |
