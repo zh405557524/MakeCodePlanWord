@@ -43,7 +43,7 @@
 ### 4.1 单元测试
 
 - Flutter：`flutter test`
-- Kotlin：`./gradlew test`
+- Java：`./mvnw test`
 
 | 模块 | 覆盖率目标 | 当前覆盖率 | 状态 |
 |------|------------|------------|------|

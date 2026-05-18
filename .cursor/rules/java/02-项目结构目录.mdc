@@ -1,0 +1,138 @@
+---
+description: Java 通用项目结构目录索引，默认对齐 Spring Boot + MyBatis-Plus + Redis 风格分层骨架
+globs: "**/src/main/java/**/*.java"
+alwaysApply: false
+---
+
+# 项目结构目录
+
+## 一、工程根目录
+
+```text
+project/
+├── .cursor/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   └── resources/
+│   └── test/
+│       └── java/
+├── pom.xml
+├── mvnw
+└── mvnw.cmd
+```
+
+---
+
+## 二、`src/main/java/{基础包}/` 顶层分层
+
+```text
+com/{company}/{project}/
+├── {Project}Application.java
+├── config/
+├── controller/
+├── service/
+│   └── impl/
+├── mapper/
+├── domain/
+│   ├── dto/
+│   ├── vo/
+│   └── entity/
+└── common/
+```
+
+---
+
+## 三、目录职责
+
+| 路径 | 职责 | 说明 |
+|------|------|------|
+| `{Project}Application.java` | 入口 | Spring Boot 启动入口 |
+| `config/` | 框架接入 | MyBatis-Plus、Redis、Security、Jackson 配置 |
+| `controller/` | 控制器层 | 只做参数解析、调用 Service、返回响应 |
+| `service/` | 业务层 | 业务逻辑、事务边界、缓存策略 |
+| `mapper/` | 数据访问层 | MyBatis-Plus Mapper 与自定义 SQL |
+| `domain/dto/` | 请求 DTO | API 入参对象（校验注解） |
+| `domain/vo/` | 响应 VO | API 出参对象 |
+| `domain/entity/` | 实体 | MyBatis-Plus 实体对象 |
+| `common/` | 通用层 | ApiResponse、ErrorCode、GlobalExceptionHandler、工具类 |
+
+---
+
+## 四、`src/main/resources/`
+
+```text
+src/main/resources/
+├── application.properties      # 主配置文件
+├── application-dev.properties  # 环境配置（可选）
+├── application-prod.properties
+├── logback-spring.xml          # 日志配置
+├── mapper/                     # MyBatis XML（如使用 XML 写法）
+└── db/
+    └── migration/              # Flyway / Liquibase 迁移脚本
+        ├── V1__init.sql
+        ├── V2__add_users.sql
+        └── ...
+```
+
+---
+
+## 五、`src/test/java/` 测试目录
+
+```text
+src/test/java/com/{company}/{project}/
+├── controller/                 # 控制器集成测试（MockMvc）
+├── service/                    # Service 单元测试
+├── mapper/                     # Mapper 测试（必要时跑真库或 Testcontainers）
+└── common/                     # 通用类测试
+```
+
+---
+
+## 六、模块化拆分（大型项目）
+
+当项目变大、单 Maven 模块不堪重负时：
+
+```text
+project/
+├── app/                        # 应用入口模块，含 Application 与启动配置
+├── feature-auth/               # 鉴权领域模块
+├── feature-user/               # 用户领域模块
+├── feature-order/              # 订单领域模块
+├── shared/                     # 共享代码（model、utils、common）
+└── infrastructure/             # 基础设施（DB、缓存、消息队列）
+```
+
+约定：
+
+- `feature-*` 之间不允许互相直接依赖，必须通过 `shared/`、接口或事件总线
+- `app/` 是唯一组装入口
+- `infrastructure/` 暴露基础设施能力，不承载业务规则
+
+---
+
+## 七、命名约定
+
+- 包名：小写，`com.{company}.{project}.{layer}`
+- 类名：`PascalCase`
+- 方法、变量、字段：`camelCase`
+- 常量：`UPPER_SNAKE_CASE`
+- Controller 类：`{Domain}Controller`
+- Service 接口：`{Domain}Service`
+- Service 实现：`{Domain}ServiceImpl`
+- Mapper 接口：`{Domain}Mapper`
+- Request DTO：`{Action}Request`
+- Response VO：`{Action}Response`
+
+---
+
+## 八、结构变更时必须同步的内容
+
+以下变化发生时，应同步调整规则或技术文档：
+
+- 新增顶层包（如 `events/`、`jobs/`、`queues/`）
+- controller / service / mapper 的组织方式发生变化
+- 引入新的基础设施层（缓存、消息队列、对象存储）
+- 模块化拆分前后
+
+目标是让本规则始终能作为工程索引使用。

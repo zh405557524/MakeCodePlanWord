@@ -1,5 +1,5 @@
 ---
-description: 技术方案计划阶段 - 基于已确认的 PRD 与 Figma 设计计划生成完整技术方案，拆分前端 Flutter 和后端 Kotlin 任务
+description: 技术方案计划阶段 - 基于已确认的 PRD 与 Figma 设计计划生成完整技术方案，拆分前端 Flutter 和后端 Java 任务
 globs:
 alwaysApply: false
 ---
@@ -33,7 +33,7 @@ alwaysApply: false
 读取 `projects/{currentProject}/01-需求/requirements.md` 与 `projects/{currentProject}/01-需求/figma-design-plan.md`，重点提取：
 - 所有功能模块及其优先级
 - 页面、状态、组件与交互的设计约束
-- 技术约束（Flutter 版本/平台、Kotlin 框架）
+- 技术约束（Flutter 版本/平台、Java 框架）
 - 性能和安全要求
 - 里程碑规划
 
@@ -45,7 +45,7 @@ alwaysApply: false
 
 **架构模式**（根据需求选择）：
 - 前端：Flutter + GetX / Riverpod / BLoC
-- 后端：Kotlin + Ktor RESTful API / Spring Boot
+- 后端：Java + Spring Boot + MyBatis-Plus + PostgreSQL + Redis
 - 数据库：根据需求选择（SQLite/PostgreSQL/MySQL/Firebase）
 - 通信协议：HTTP REST / WebSocket（如需实时功能）
 
@@ -77,7 +77,7 @@ alwaysApply: false
 |------|------|------|---------|
 | 前端 | Flutter | | |
 | 状态管理 | | | |
-| 后端 | Kotlin + | | |
+| 后端 | Java + Spring Boot | Java 21 / Spring Boot 3.x | |
 | 数据库 | | | |
 | 部署 | | | |
 
@@ -132,16 +132,18 @@ alwaysApply: false
 
 ---
 
-## 5. 后端模块划分（Kotlin）
+## 5. 后端模块划分（Java）
 
 ### 5.1 项目结构
-```
-src/
-├── controller/    # 路由处理
+```text
+src/main/java/com/{company}/{project}/
+├── {Project}Application.java
+├── config/        # Spring / MyBatis-Plus / Redis / Security 配置
+├── controller/    # REST API
 ├── service/       # 业务逻辑
-├── repository/    # 数据访问
-├── model/         # 数据模型
-└── util/          # 工具类
+├── mapper/        # MyBatis-Plus 数据访问
+├── domain/        # dto / vo / entity
+└── common/        # ApiResponse / ErrorCode / Exception
 ```
 
 ### 5.2 核心模块列表
@@ -162,7 +164,7 @@ src/
 > 前端任务拆分时，必须覆盖 `figma-design-plan.md` 中的页面、关键状态、组件与交互约束。
 > 任务 ID（T-F00x / T-B00x）必须在后续 06 工时评估阶段一一对应，不可遗漏或并条。
 
-### 6.2 后端任务（Kotlin）
+### 6.2 后端任务（Java）
 | 任务 | 描述 | 预估工作量 | 优先级 |
 |------|------|----------|--------|
 | T-B001 | | | 高 |
@@ -200,4 +202,4 @@ src/
 > 下一步默认进入「工作时长评估」，请输入：
 > - `"评估工时"` / `"估算开发时间"` — 基于本技术方案做三点估计与里程碑
 >
-> 工时评估通过后，再进入前端 Flutter 技术文档与后端 Kotlin 技术文档阶段。
+> 工时评估通过后，再进入前端 Flutter 技术文档与后端 Java 技术文档阶段。

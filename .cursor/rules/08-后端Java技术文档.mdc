@@ -1,0 +1,285 @@
+---
+description: 后端 Java 技术文档阶段 - 基于技术方案生成 Java 后端专项详细技术文档，供 Cursor 直接执行编码
+globs:
+alwaysApply: false
+---
+
+# 后端 Java 技术文档规则
+
+## 通用执行契约
+
+执行本规则前，必须先完成核心规则中的工作空间定位：
+
+- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
+- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
+- 执行前先形成本轮后端技术文档计划，再生成或更新 Java 技术文档。
+- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+- 若本轮是二次调整或命中变更管控关键词，先读取或创建 `projects/{currentProject}/change-plan.md`，默认按 `small_change` 限定影响范围。
+
+## 前置条件
+
+执行本规则前，必须确认：
+
+1. `projects/{currentProject}/02-技术方案/tech-plan.md` 已存在
+2. `projects/{currentProject}/02-技术方案/effort-estimate.md` 已存在或用户明确跳过
+3. 用户已触发“生成 Java 技术文档”或类似指令
+
+## 规则来源（生成前必读）
+
+- `.cursor/rules/java/01-项目初始化规则.mdc`
+- `.cursor/rules/java/02-项目结构目录.mdc`
+- `.cursor/rules/java/03-编码规范.mdc`
+- `.cursor/rules/java/04-路由与控制器规则.mdc`
+- `.cursor/rules/java/05-数据库与持久化.mdc`
+- `.cursor/rules/java/06-第三方依赖参考.mdc`
+- `.cursor/rules/java/07-新接口开发.mdc`
+- `.cursor/rules/java/08-鉴权与安全.mdc`
+- `.cursor/rules/java/09-大功能先规划再编码.mdc`
+- `.cursor/rules/java/10-编码工作流程.mdc`
+
+---
+
+## 执行步骤
+
+### 第一步：读取技术方案
+
+读取 `projects/{currentProject}/02-技术方案/tech-plan.md`，提取：
+
+- 后端模块列表和优先级
+- API 接口规划（完整列表）
+- 数据库设计（表结构）
+- 框架选型（默认 Java 21 + Spring Boot 3.x）
+- 安全和性能要求
+
+---
+
+### 第二步：生成 Java 技术文档
+
+输出到：`projects/{currentProject}/04-后端/java-tech.md`
+
+**文档模板**：
+
+````markdown
+# {项目名称} Java 后端技术文档
+
+> 版本：v1.0  
+> 创建日期：{今天日期}  
+> 关联技术方案：../02-技术方案/tech-plan.md  
+> 关联工时评估：../02-技术方案/effort-estimate.md  
+> 框架：Java 21 + Spring Boot 3.x  
+> 构建工具：Maven  
+> JVM 版本：21
+
+---
+
+## 1. 项目结构
+
+### Spring Boot + MyBatis-Plus 项目结构
+
+```text
+src/
+├── main/
+│   ├── java/
+│   │   └── com.{包名}/
+│   │       ├── {Project}Application.java       # 启动入口
+│   │       ├── config/                         # Spring 配置
+│   │       ├── controller/                     # REST API
+│   │       ├── service/                        # 业务逻辑层
+│   │       ├── mapper/                         # MyBatis-Plus Mapper
+│   │       ├── domain/
+│   │       │   ├── entity/                     # 实体
+│   │       │   ├── dto/                        # 请求 DTO
+│   │       │   └── vo/                         # 响应 VO
+│   │       └── common/                         # 通用响应、错误码、异常处理
+│   └── resources/
+│       ├── application.properties
+│       ├── mapper/
+│       └── db/migration/
+└── test/
+    └── java/
+```
+
+---
+
+## 2. 依赖配置（pom.xml）
+
+```xml
+<properties>
+  <java.version>21</java.version>
+  <mybatis-plus.version>3.5.x</mybatis-plus.version>
+  <jjwt.version>0.12.x</jjwt.version>
+</properties>
+
+<dependencies>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+    <version>${mybatis-plus.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>${jjwt.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>${jjwt.version}</version>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>${jjwt.version}</version>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+  </dependency>
+</dependencies>
+```
+
+---
+
+## 3. 数据库表设计
+
+### 3.1 表清单
+
+| 表名 | 说明 | 主键 |
+|------|------|------|
+| users | 用户表 | id (UUID / Long) |
+| （按需求补充） | | |
+
+### 3.2 核心表结构
+
+```sql
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 4. API 接口详细设计
+
+### 4.1 统一响应格式
+
+```java
+public record ApiResponse<T>(int code, String message, T data) {
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(0, "success", data);
+    }
+}
+```
+
+### 4.2 错误码规范
+
+| 错误码 | 含义 |
+|--------|------|
+| 0 | 成功 |
+| 1001 | 参数错误 |
+| 1002 | 未授权 |
+| 1003 | 权限不足 |
+| 1004 | 资源不存在 |
+| 5000 | 服务器内部错误 |
+
+### 4.3 接口详细说明
+
+#### POST /api/auth/login
+
+- **描述**：用户登录
+- **请求体**：
+
+  ```json
+  { "email": "string", "password": "string" }
+  ```
+
+- **成功响应**：
+
+  ```json
+  { "code": 0, "message": "success", "data": { "token": "jwt_token", "user": {} } }
+  ```
+
+- **错误情况**：1001（参数缺失）、1002（密码错误）
+
+（按技术方案中的接口列表逐一补充）
+
+---
+
+## 5. 鉴权方案
+
+- **方式**：JWT Bearer Token
+- **Token 有效期**：7 天（可配置）
+- **刷新策略**：过期前 1 天允许刷新
+- **实现**：Spring Security 过滤器链 + JWT Filter + 自定义鉴权注解（可选）
+
+---
+
+## 6. 编码任务清单
+
+- [ ] T-B001：搭建 Spring Boot 项目基础结构（配置、统一响应、异常处理）
+- [ ] T-B002：实现用户鉴权模块（注册/登录/JWT）
+- [ ] T-B003：实现数据库表和 MyBatis-Plus Mapper 层
+- [ ] T-B004：实现{模块名}业务接口
+- [ ] T-B005：接口测试和错误处理完善
+- [ ] T-B006：部署配置（Docker/环境变量）
+
+（按实际任务拆分补充）
+
+---
+
+## 7. 编码注意事项
+
+- **分层原则**：Controller 只做参数解析与响应封装，业务逻辑在 Service，数据访问在 Mapper
+- **错误处理**：使用 `@RestControllerAdvice` 统一处理异常，返回标准错误格式
+- **密码安全**：使用 BCrypt 哈希存储密码，禁止明文存储
+- **SQL 注入防护**：使用 MyBatis-Plus 参数化查询，禁止字符串拼接 SQL
+- **日志规范**：关键业务操作（登录/数据变更）必须记录日志
+- **配置管理**：敏感配置（数据库密码/JWT 密钥）通过环境变量注入，不硬编码
+- **注释要求**：所有 public 类和 public 方法必须写 Javadoc 注释（中文）
+````
+
+---
+
+### 第三步：推进提示
+
+文件写入完成后输出：
+
+> Java 技术文档已生成：`projects/{currentProject}/04-后端/java-tech.md`
+>
+> 下一步默认进入「10 Java 总体开发计划」，请输入：
+> - “生成 Java 总体开发计划” — 基于本文档拆出后端编码任务总表与恢复点
+>
+> 前端 Flutter 技术文档（07）可与本文档并行生成，两者完成后再分别进入 09/10 总体计划阶段。

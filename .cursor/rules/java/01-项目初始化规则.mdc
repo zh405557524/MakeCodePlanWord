@@ -1,0 +1,298 @@
+---
+description: Java 后端项目初始化规则，提供通用工程骨架、依赖基线与可直接复用的模板代码（Java 21 + Spring Boot + MyBatis-Plus + PostgreSQL + Redis）
+globs: "**/pom.xml,**/src/main/java/**/Application.java"
+alwaysApply: false
+---
+
+# 项目初始化规则
+
+> 本规则用于创建一个新的 Java 后端工程时，快速建立可持续的 AI 编码基线。  
+> 默认技术栈：Java 21 + Spring Boot 3.x + Maven + MyBatis-Plus + PostgreSQL + Redis + JWT + Logback。
+
+---
+
+## 一、适用场景
+
+- 新建 Java 后端项目
+- 把现有工程整理成统一骨架
+- 需要快速建立 `Application/config/controller/service/mapper/domain/common` 基础设施
+
+---
+
+## 二、初始化目标
+
+初始化阶段至少要完成：
+
+1. 建立标准 Maven 目录结构
+2. 建立 `{Project}Application.java`
+3. 建立 `config/`（Redis / Jackson / MyBatis-Plus / Security 配置）
+4. 建立 `controller/`
+5. 建立 `service/`
+6. 建立 `mapper/`
+7. 建立 `domain/`（dto / vo / entity）
+8. 建立 `common/`
+9. 建立 `db/migration/`（迁移脚本目录）
+10. 产出最小可运行健康检查接口
+
+---
+
+## 三、推荐目录骨架
+
+```text
+src/main/java/com/{company}/{project}/
+├── {Project}Application.java
+├── config/
+│   ├── RedisConfig.java
+│   ├── JacksonConfig.java
+│   ├── MybatisPlusConfig.java
+│   └── SecurityConfig.java
+├── controller/
+│   ├── HealthController.java
+│   └── AuthController.java
+├── service/
+│   ├── AuthService.java
+│   └── impl/
+├── mapper/
+│   └── UserMapper.java
+├── domain/
+│   ├── dto/
+│   ├── vo/
+│   └── entity/
+│       └── UserEntity.java
+└── common/
+    ├── ApiResponse.java
+    ├── ErrorCode.java
+    ├── BusinessException.java
+    └── GlobalExceptionHandler.java
+src/main/resources/
+├── application.properties
+├── mapper/
+└── db/migration/
+    └── V1__init.sql
+```
+
+---
+
+## 四、推荐依赖基线（pom.xml）
+
+```xml
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.x.x</version>
+    <relativePath/>
+  </parent>
+
+  <properties>
+    <java.version>21</java.version>
+    <mybatis-plus.version>3.5.x</mybatis-plus.version>
+    <jjwt.version>0.12.x</jjwt.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.baomidou</groupId>
+      <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+      <version>${mybatis-plus.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>${jjwt.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>${jjwt.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>${jjwt.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
+```
+
+---
+
+## 五、模板代码
+
+### 5.1 `{Project}Application.java`
+
+```java
+package com.example.project;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ProjectApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ProjectApplication.class, args);
+    }
+}
+```
+
+### 5.2 `controller/HealthController.java`
+
+```java
+package com.example.project.controller;
+
+import com.example.project.common.ApiResponse;
+import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/health")
+public class HealthController {
+    @GetMapping
+    public ApiResponse<Map<String, String>> health() {
+        return ApiResponse.success(Map.of("status", "up"));
+    }
+}
+```
+
+### 5.3 `mapper/UserMapper.java`
+
+```java
+package com.example.project.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.example.project.domain.entity.UserEntity;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserMapper extends BaseMapper<UserEntity> {
+}
+```
+
+### 5.4 `config/RedisConfig.java`
+
+```java
+package com.example.project.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+
+@Configuration
+@EnableRedisRepositories
+public class RedisConfig {
+}
+```
+
+### 5.5 `common/GlobalExceptionHandler.java`
+
+```java
+package com.example.project.common;
+
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(Exception.class)
+    public ApiResponse<Void> handle(Exception ex) {
+        return ApiResponse.error(5000, ex.getMessage() == null ? "Internal error" : ex.getMessage());
+    }
+}
+```
+
+### 5.6 `common/ApiResponse.java`
+
+```java
+package com.example.project.common;
+
+public record ApiResponse<T>(int code, String message, T data) {
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(0, "success", data);
+    }
+
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return new ApiResponse<>(code, message, null);
+    }
+}
+```
+
+### 5.7 `resources/application.properties`
+
+```properties
+server.port=8080
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/app_db}
+spring.datasource.username=${DB_USER:postgres}
+spring.datasource.password=${DB_PASSWORD:postgres}
+spring.data.redis.host=${REDIS_HOST:localhost}
+spring.data.redis.port=${REDIS_PORT:6379}
+mybatis-plus.configuration.map-underscore-to-camel-case=true
+spring.flyway.locations=classpath:db/migration
+```
+
+---
+
+## 六、强约束
+
+- 包名按 `com.{company}.{project}` 组织，所有源码放该包内
+- `{Project}Application.java` 只负责 Spring Boot 启动
+- `config/` 只负责框架接入，不写业务
+- 业务请求只经过 `controller → service → mapper` 三层，不允许跨层
+- 敏感配置（数据库密码、JWT 密钥）只走环境变量注入
+- 不在初始化阶段引入业务 SDK、业务路由、业务实体
+
+---
+
+## 七、完成后的检查清单
+
+- [ ] 项目目录结构完整
+- [ ] `{Project}Application.java` 可启动
+- [ ] `/health` 接口返回 200 与统一 `ApiResponse`
+- [ ] 数据库连接成功，Flyway 迁移脚本可执行
+- [ ] Redis 连接成功且关键缓存键可读写
+- [ ] JWT 配置已就绪（可在测试环境签发并验证）
+- [ ] `./mvnw verify` 通过
+- [ ] 可在此基础上继续新增业务接口

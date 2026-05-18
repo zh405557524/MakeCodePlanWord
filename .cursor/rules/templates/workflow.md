@@ -14,9 +14,9 @@
 | `currentVersion` | `v0.1.0` | 研发当前版本号（与 `change-log.md` 一致） |
 | `referenceProject` | `{绝对路径或留空}` | 参考工程绝对路径；留空表示无参考 |
 | `frontendRepo` | `{Flutter 工程绝对路径或留空}` | 前端代码工程位置 |
-| `backendRepo` | `{Kotlin 工程绝对路径或留空}` | 后端代码工程位置 |
+| `backendRepo` | `{Java 工程绝对路径或留空}` | 后端代码工程位置 |
 | `flutterChannel` | `stable` | Flutter 通道（stable / beta / master） |
-| `kotlinFramework` | `Ktor` | Kotlin 后端框架（Ktor / Spring Boot） |
+| `backendFramework` | `Spring Boot` | Java 后端框架（固定：Spring Boot） |
 | `targetStores` | `AppStore, Google Play` | 目标应用商店清单 |
 
 ---
@@ -59,13 +59,13 @@
 | 5 | 技术方案 | `02-技术方案/tech-plan.md` | `pending` | 总体架构、模块边界与接口是否已同步 |
 | 6 | 工作时长评估 | `02-技术方案/effort-estimate.md` | `pending` | 三点估计、关键路径与里程碑是否已生成并被用户确认 |
 | 7 | 前端 Flutter 技术文档 | `03-前端/flutter-tech.md` | `pending` | 前端实现口径是否已同步 |
-| 8 | 后端 Kotlin 技术文档 | `04-后端/kotlin-tech.md` | `pending` | 接口、数据结构、同步策略是否已同步 |
+| 8 | 后端 Java 技术文档 | `04-后端/java-tech.md` | `pending` | 接口、数据结构、同步策略是否已同步 |
 | 9 | Flutter 总体开发计划 | `03-前端/flutter-dev-plan.md` | `pending` | 前端任务顺序、恢复点、验收路径是否已同步 |
-| 10 | Kotlin 总体开发计划 | `04-后端/kotlin-dev-plan.md` | `pending` | 后端任务顺序、恢复点、验收路径是否已同步 |
+| 10 | Java 总体开发计划 | `04-后端/java-dev-plan.md` | `pending` | 后端任务顺序、恢复点、验收路径是否已同步 |
 | 11 | Flutter 模块开发文档 | `03-前端/开发计划/*.md` | `pending` | 前端模块级计划是否已补齐 |
-| 12 | Kotlin 模块开发文档 | `04-后端/开发计划/*.md` | `pending` | 后端模块级计划是否已补齐 |
+| 12 | Java 模块开发文档 | `04-后端/开发计划/*.md` | `pending` | 后端模块级计划是否已补齐 |
 | 13 | Flutter 编码 | `{frontendRepo}` | `pending` | 阻塞式代码开发阶段；仅在前置文档同步后进入正式实现 |
-| 14 | Kotlin 编码 | `{backendRepo}` | `pending` | 阻塞式代码开发阶段；进入后默认在当前编码步骤内持续修改和调试 |
+| 14 | Java 编码 | `{backendRepo}` | `pending` | 阻塞式代码开发阶段；进入后默认在当前编码步骤内持续修改和调试 |
 | 15 | 联调与测试 QA | `05-联调与测试/qa-plan.md` | `pending` | 联调矩阵 / 测试用例 / 缺陷登记 / 验收报告是否完成 |
 | 16 | 构建与打包 | `06-构建打包/{build-plan.md,android.md,ios.md}` | `pending` | 签名、版本号、CI、发布包是否就绪 |
 | 17 | 应用商店上架 | `07-应用上架/release-checklist.md` 等 | `pending` | 商店素材、隐私政策、合规材料是否齐全 |
@@ -131,7 +131,7 @@
 
 - `{需要在当前步骤中特别注意的点}`
 - 总体流程列表必须优先反映“当前版本真实完成度”，不能只记录历史上曾完成过的阶段。
-- 13 Flutter 编码、14 Kotlin 编码都属于阻塞式代码开发阶段；如果用户没有明确说「进入下一步」，默认保持在当前编码步骤内持续修改、调试和回写状态，不自动推进到下一个流程项。
+- 13 Flutter 编码、14 Java 编码都属于阻塞式代码开发阶段；如果用户没有明确说「进入下一步」，默认保持在当前编码步骤内持续修改、调试和回写状态，不自动推进到下一个流程项。
 - 15 联调 → 16 构建 → 17 上架 → 18 发布 → 19 监控 是串行强门禁，前一项未达验收不允许进下一项。
 
 ---

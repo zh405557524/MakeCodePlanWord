@@ -66,7 +66,7 @@ alwaysApply: false
    - `projects/{currentProject}/01-需求/figma-design-plan.md`
    - `projects/{currentProject}/01-需求/references/images/`
 6. 若有接口或状态流转任务，还需读取：
-   - `projects/{currentProject}/04-后端/kotlin-tech.md`
+   - `projects/{currentProject}/04-后端/java-tech.md`
 7. 若技术文档指定参考工程，还需读取参考工程的真实结构和入口文件
 
 ---

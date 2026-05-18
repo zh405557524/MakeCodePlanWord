@@ -58,7 +58,7 @@ alwaysApply: false
 4. `projects/{currentProject}/03-前端/flutter-dev-plan.md`
 5. 当前恢复点对应的 `projects/{currentProject}/03-前端/开发计划/{module}.md`
 6. 涉及 UI 时：`projects/{currentProject}/01-需求/figma-design-plan.md` 与 `projects/{currentProject}/01-需求/references/images/` 中相关图片
-7. 涉及接口时：`projects/{currentProject}/04-后端/kotlin-tech.md` 与对应 `projects/{currentProject}/04-后端/开发计划/{module}.md`
+7. 涉及接口时：`projects/{currentProject}/04-后端/java-tech.md` 与对应 `projects/{currentProject}/04-后端/开发计划/{module}.md`
 
 ## 变更管控接入点
 
@@ -72,7 +72,7 @@ Flutter 编码属于阻塞式代码开发阶段：
 
 - 只要用户没有明确说「进入下一步」或「切换阶段」，就默认还停留在当前 Flutter 编码步骤
 - 默认继续做当前步骤内的修改、调试、验证和回写
-- 不自动跳到 14 Kotlin 编码或 15 联调 QA
+- 不自动跳到 14 Java 编码或 15 联调 QA
 
 ## 完成判定
 

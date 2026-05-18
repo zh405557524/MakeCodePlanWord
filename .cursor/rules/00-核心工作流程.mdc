@@ -15,7 +15,7 @@ alwaysApply: true
 本工作台分为三层：
 
 1. **总调度规则**：`00-核心工作流程.mdc`，只控制阶段识别、上下文加载、流程推进和门禁。
-2. **步骤规则**：`01-需求分析.mdc` 到 `19-上线监控与迭代.mdc`，以及 `flutter/`、`kotlin/` 下的子规则，只描述某一步如何生成或修改对应产物。
+2. **步骤规则**：`01-需求分析.mdc` 到 `19-上线监控与迭代.mdc`，以及 `flutter/`、`java/` 下的子规则，只描述某一步如何生成或修改对应产物。
 3. **工作空间**：`projects/{currentProject}/`，保存具体项目产物、流程状态、依赖文件、变更登记、注意事项和发布物料。
 
 边界要求：
@@ -42,13 +42,13 @@ alwaysApply: true
 | 技术方案计划 | 技术方案、技术计划、技术设计、架构设计、输出方案 | `05-技术方案计划.mdc` |
 | 工作时长评估 | 工时评估、估算开发时间、工作时长、项目排期、项目时长、里程碑评估、三点估计 | `06-工作时长评估.mdc` |
 | 前端Flutter文档 | Flutter、前端、dart、UI文档、前端技术文档 | `07-前端Flutter技术文档.mdc` |
-| 后端Kotlin文档 | Kotlin、后端、API文档、服务端、后端技术文档 | `08-后端Kotlin技术文档.mdc` |
+| 后端Java文档 | Java、后端、API文档、服务端、后端技术文档 | `08-后端Java技术文档.mdc` |
 | Flutter总体开发计划 | Flutter开发计划、前端总体开发计划、Flutter 编码计划、前端开发计划 | `09-Flutter开发计划文档.mdc` |
-| Kotlin总体开发计划 | Kotlin开发计划、后端总体开发计划、后端编码计划、Kotlin 开发计划 | `10-Kotlin开发计划文档.mdc` |
+| Java总体开发计划 | Java开发计划、后端总体开发计划、后端编码计划、Java 开发计划 | `10-Java开发计划文档.mdc` |
 | Flutter模块开发文档 | Flutter模块开发文档、前端模块开发文档、Flutter模块计划 | `11-Flutter模块开发文档.mdc` |
-| Kotlin模块开发文档 | Kotlin模块开发文档、后端模块开发文档、Kotlin模块计划、接口模块文档 | `12-Kotlin模块开发文档.mdc` |
+| Java模块开发文档 | Java模块开发文档、后端模块开发文档、Java模块计划、接口模块文档 | `12-Java模块开发文档.mdc` |
 | Flutter编码 | 生成代码、输出项目代码、实现页面、继续编码、搭建前端工程、接入前端、Flutter 编码 | `13-Flutter编码索引.mdc` + `flutter/` 下相关编码规则 |
-| Kotlin编码 | 写后端、实现接口、继续后端、搭建后端工程、Kotlin 编码、后端实现 | `14-Kotlin编码索引.mdc` + `kotlin/` 下相关编码规则 |
+| Java编码 | 写后端、实现接口、继续后端、搭建后端工程、Java 编码、后端实现 | `14-Java编码索引.mdc` + `java/` 下相关编码规则 |
 | 联调与测试QA | 联调、QA、测试、回归、E2E、集成测试、缺陷登记、测试报告 | `15-联调与测试QA.mdc` |
 | 构建与打包 | 打包、构建、签名、APK、AAB、IPA、构建配置、CI 构建、出包 | `16-构建与打包.mdc` |
 | 应用商店上架 | 上架、应用商店、AppStore、Google Play、华为、小米、应用市场、商店素材、隐私政策、合规、审核 | `17-应用商店上架.mdc` |
@@ -104,8 +104,8 @@ projects/
     │   ├── flutter-dev-plan.md
     │   └── 开发计划/
     ├── 04-后端/
-    │   ├── kotlin-tech.md
-    │   ├── kotlin-dev-plan.md
+    │   ├── java-tech.md
+    │   ├── java-dev-plan.md
     │   └── 开发计划/
     ├── 05-联调与测试/
     │   └── qa-plan.md
@@ -199,7 +199,7 @@ projects/
 
 - “总体流程列表”必须优先反映当前版本的真实完成度，不能只保留历史完成记录。
 - 如果本轮新增需求影响了技术方案、产品文档、工时评估、开发计划或代码实现，必须把这些受影响项在“总体流程列表”中重新标记为 `pending` 或 `in_progress`。
-- `Flutter 编码`、`Kotlin 编码` 都属于阻塞式代码开发阶段；如果用户没有明确说“进入下一步”、切换阶段或切换流程项，则默认继续停留在当前编码步骤中进行修改、调试、验证与回写，不自动推进到下一个流程阶段。
+- `Flutter 编码`、`Java 编码` 都属于阻塞式代码开发阶段；如果用户没有明确说“进入下一步”、切换阶段或切换流程项，则默认继续停留在当前编码步骤中进行修改、调试、验证与回写，不自动推进到下一个流程阶段。
 
 状态枚举固定为：
 
@@ -243,7 +243,7 @@ projects/
   - 技术方案: 是/否 + 具体章节
   - 工时评估: 是/否 + 增量工时估计
   - Flutter 模块: 是/否 + 具体模块/页面/文件
-  - Kotlin 模块: 是/否 + 具体接口/Service/Repository
+  - Java 模块: 是/否 + 具体接口/Service/Mapper
 - 最小改动清单:
   - 必要新增: 文件 A、字段 B、接口 C
   - 对应修改: 文件 D 的 X 方法、组件 E 的 props
@@ -281,7 +281,7 @@ projects/
 变更落地后，必须把 `workflow.md` 的“总体流程列表”中所有受影响阶段重新置为 `pending` 或 `in_progress`，例如：
 
 - 新增一个页面 → 重置 04 Figma 设计计划、07 Flutter 技术文档（局部章节）、09 Flutter 总体计划、11 Flutter 模块文档、13 Flutter 编码
-- 改一个接口字段 → 重置 08 Kotlin 技术文档、10 Kotlin 总体计划、12 Kotlin 模块文档、14 Kotlin 编码、15 联调 QA
+- 改一个接口字段 → 重置 08 Java 技术文档、10 Java 总体计划、12 Java 模块文档、14 Java 编码、15 联调 QA
 - 删除一个模块 → 重置上述对应阶段，并在 17 上架与 18 发布版本中标注下版本删除项
 - 凡是涉及任务工时或里程碑的变化，必须追加一份 `06-工作时长评估.mdc` 的「评估增量」（effort-estimate.md 的版本 v1.x）
 
@@ -295,7 +295,7 @@ projects/
 
 ## 第六步：代码生成前架构门禁
 
-当用户要求“生成代码、输出项目代码、实现页面、继续编码、搭建工程、接入前端/后端工程”时，必须在写任何业务代码之前执行架构门禁。门禁分为前端（Flutter）与后端（Kotlin）两套。
+当用户要求“生成代码、输出项目代码、实现页面、继续编码、搭建工程、接入前端/后端工程”时，必须在写任何业务代码之前执行架构门禁。门禁分为前端（Flutter）与后端（Java）两套。
 
 ### 6.1 Flutter 架构门禁
 
@@ -309,7 +309,7 @@ projects/
    - `projects/{currentProject}/03-前端/flutter-tech.md`
    - `projects/{currentProject}/03-前端/flutter-dev-plan.md`
    - `projects/{currentProject}/03-前端/开发计划/*.md`
-   - 若存在后端接口文档，也必须读取 `projects/{currentProject}/04-后端/kotlin-tech.md`
+   - 若存在后端接口文档，也必须读取 `projects/{currentProject}/04-后端/java-tech.md`
 6. 若技术文档指定 `referenceProject`，必须先检查参考工程真实目录结构和入口文件，再生成代码。
 
 #### 6.1.2 必须先确认架构清单
@@ -342,46 +342,47 @@ lib/
 5. 至少跑过 `flutter analyze`、必要时跑 `flutter test`。
 6. 更新 `workflow.md` 中的恢复点、执行记录和下一步。
 
-### 6.2 Kotlin 架构门禁
+### 6.2 Java 架构门禁
 
 #### 6.2.1 必须先读取的上下文
 
 1. `projects/{currentProject}/workflow.md`
 2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
-3. 当前阶段对应的 `.cursor/rules/` 子规则（14-Kotlin编码索引）
-4. `.cursor/rules/kotlin/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-路由与控制器规则.mdc`，并按需补读 `05-数据库与持久化.mdc`、`06-第三方依赖参考.mdc`、`07-新接口开发.mdc`、`08-鉴权与安全.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
+3. 当前阶段对应的 `.cursor/rules/` 子规则（14-Java编码索引）
+4. `.cursor/rules/java/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-路由与控制器规则.mdc`，并按需补读 `05-数据库与持久化.mdc`、`06-第三方依赖参考.mdc`、`07-新接口开发.mdc`、`08-鉴权与安全.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
 5. 当前项目的技术文档与开发计划：
-   - `projects/{currentProject}/04-后端/kotlin-tech.md`
-   - `projects/{currentProject}/04-后端/kotlin-dev-plan.md`
+   - `projects/{currentProject}/04-后端/java-tech.md`
+   - `projects/{currentProject}/04-后端/java-dev-plan.md`
    - `projects/{currentProject}/04-后端/开发计划/*.md`
 
 #### 6.2.2 必须先确认架构清单
 
 ```text
-src/main/kotlin/{packageName}/
-├── Application.kt              # 入口，配置插件和路由
-├── plugins/                    # Ktor 插件配置（Routing / Security / Serialization / StatusPages）
-├── routes/                     # 路由层，只做参数解析与路由
-├── services/                   # 业务逻辑层
-├── repositories/               # 数据访问层
-├── models/
-│   ├── request/                # 请求体
-│   ├── response/               # 响应体
+src/main/java/{packageName}/
+├── {Project}Application.java     # Spring Boot 启动入口
+├── config/                     # Spring 配置（MyBatis-Plus / Redis / Security / Jackson）
+├── controller/                 # 控制器层，只做参数解析与响应封装
+├── service/                    # 业务逻辑层
+├── mapper/                     # MyBatis-Plus 数据访问层
+├── domain/
+│   ├── dto/                    # 请求体
+│   ├── vo/                     # 响应体
 │   └── entity/                 # 数据库实体
-└── utils/
+└── common/
 src/main/resources/
-├── application.conf            # 配置文件
+├── application.properties      # 配置文件
+├── mapper/                     # MyBatis XML（如有）
 └── db/migration/               # 数据库迁移脚本
 ```
 
-禁止在 Routes 中写业务逻辑、在 Service 中写裸 SQL、跳过 Repository 直接访问数据库。
+禁止在 Controller 中写业务逻辑、在 Service 中写裸 SQL、跳过 Mapper 直接访问数据库。
 
 #### 6.2.3 编码后的架构验收
 
-1. 扫描 `src/main/kotlin/{packageName}/` 顶层目录，确认与规则一致。
-2. 扫描 `routes/`，确认仅做参数解析和返回拼装。
-3. 扫描 `services/`，确认承担业务逻辑且没有直接的 SQL 字符串拼接。
-4. 至少跑过 `./gradlew build` 与必要的 `./gradlew test`。
+1. 扫描 `src/main/java/{packageName}/` 顶层目录，确认与规则一致。
+2. 扫描 `controller/`，确认仅做参数解析和返回拼装。
+3. 扫描 `service/`，确认承担业务逻辑且没有直接的 SQL 字符串拼接。
+4. 至少跑过 `./mvnw verify` 与必要的 `./mvnw test`。
 5. 更新 `workflow.md` 中的恢复点、执行记录和下一步。
 
 ---
@@ -391,17 +392,17 @@ src/main/resources/
 ```text
 01 需求分析 → 02 需求文档生成 → 03 需求文档检测（可多轮迭代）→ 04 Figma设计稿计划 →
 05 技术方案计划 → 06 工作时长评估 →
-[ 07 Flutter技术文档 | 08 Kotlin技术文档 ] →
-[ 09 Flutter总体开发计划 | 10 Kotlin总体开发计划 ] → 审核 →
-[ 11 Flutter模块开发文档 | 12 Kotlin模块开发文档 ] →
-[ 13 Flutter编码 | 14 Kotlin编码 ] →
+[ 07 Flutter技术文档 | 08 Java技术文档 ] →
+[ 09 Flutter总体开发计划 | 10 Java总体开发计划 ] → 审核 →
+[ 11 Flutter模块开发文档 | 12 Java模块开发文档 ] →
+[ 13 Flutter编码 | 14 Java编码 ] →
 15 联调与测试QA → 16 构建与打包 → 17 应用商店上架 → 18 发布与版本管理 → 19 上线监控与迭代
 ```
 
 阶段属性：
 
 - **暂停点**：03 检测、04 设计计划、06 工时评估、09/10 总体开发计划生成后、15 联调 QA、17 上架前、18 发布前，均必须等待用户确认才继续。
-- **代码开发阻塞**：13 Flutter 编码、14 Kotlin 编码 默认停留在当前编码步骤反复修改和调试。
+- **代码开发阻塞**：13 Flutter 编码、14 Java 编码 默认停留在当前编码步骤反复修改和调试。
 - **串行强门禁**：15 联调 QA → 16 构建 → 17 上架 → 18 发布 → 19 监控；前一项未达验收不允许进下一项。
 - **并行允许**：07/08、09/10、11/12、13/14 可在团队人力允许时并行推进，但每一对内部都有依赖检查（详见对应步骤规则）。
 - **变更回流**：19 监控发现的问题进入第五步「变更管控」，按受影响阶段回卷处理；禁止跳过流程直接热修代码。

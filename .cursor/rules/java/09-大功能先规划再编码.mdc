@@ -1,5 +1,5 @@
 ---
-description: Kotlin 大功能开发原则，先规划再编码，适用于多模块、多阶段联动任务
+description: Java 大功能开发原则，先规划再编码，适用于多模块、多阶段联动任务
 globs:
 alwaysApply: false
 ---
@@ -14,7 +14,7 @@ alwaysApply: false
 当任务满足以下任一条件时，应先规划：
 
 - 牵扯多个领域模块（如订单 + 支付 + 库存 + 消息）
-- 同时影响 Routes、Service、Repository、Entity、Migration
+- 同时影响 Controller、Service、Mapper、Entity、Migration
 - 涉及外部 SDK / 第三方系统集成（支付、消息推送、对象存储）
 - 涉及数据迁移、字段变更
 - 预计需要多轮联调
@@ -24,7 +24,7 @@ alwaysApply: false
 
 ## 二、规划阶段至少输出
 
-把规划写到对应的 `12-Kotlin模块开发文档.mdc` 产物（即 `projects/{currentProject}/04-后端/开发计划/{module}.md`），至少包含：
+把规划写到对应的 `12-Java模块开发文档.mdc` 产物（即 `projects/{currentProject}/04-后端/开发计划/{module}.md`），至少包含：
 
 1. 功能目标与边界
 2. 涉及目录、模块、表
@@ -50,7 +50,7 @@ alwaysApply: false
 ## 四、编码阶段要求
 
 - 按计划步骤推进
-- 每一步完成后回写状态到 `kotlin-dev-plan.md` 与 `workflow.md`
+- 每一步完成后回写状态到 `java-dev-plan.md` 与 `workflow.md`
 - 发现计划失真时先更新计划，再继续编码
 - 数据迁移脚本一旦写完必须本地启动验证
 

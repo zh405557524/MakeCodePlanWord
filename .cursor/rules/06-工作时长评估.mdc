@@ -33,7 +33,7 @@ alwaysApply: false
 - `projects/{currentProject}/02-技术方案/tech-plan.md`（任务拆分与阶段规划）
 - `projects/{currentProject}/01-需求/figma-design-plan.md`（页面与状态复杂度）
 - `projects/{currentProject}/01-需求/requirements.md`（功能边界与优先级）
-- 用户提供的团队配置与排期约束（如「3 名 Flutter + 1 名 Kotlin + 1 名 QA」「目标 GA 日期」）
+- 用户提供的团队配置与排期约束（如「3 名 Flutter + 1 名 Java + 1 名 QA」「目标 GA 日期」）
 
 ## 基本原则
 
@@ -53,7 +53,7 @@ alwaysApply: false
 
 1. **评估前提与假设**
    - 当前评估版本号（v1.0 / v1.x）
-   - 团队配置（N 名 Flutter + N 名 Kotlin + N 名设计/QA）
+   - 团队配置（N 名 Flutter + N 名 Java + N 名设计/QA）
    - 每日有效工时（默认 6 小时）
    - 并行度（前后端是否并行、单人是否多任务切换）
    - 估算单位与精度（默认 0.5 人天为最小颗粒）
@@ -94,7 +94,7 @@ alwaysApply: false
    - 必须写明本项目采用的缓冲策略与原因
 8. **资源/人力变化敏感性**
    - 多 1 人 Flutter 对总日历时长的影响
-   - 少 1 人 Kotlin 对总日历时长的影响
+   - 少 1 人 Java 对总日历时长的影响
    - 若 QA 并行度变化，对联调阶段的影响
 9. **评估版本与历史**
    - 当前版本号 + 评估生成日期
@@ -113,5 +113,5 @@ alwaysApply: false
 ## 推进规则
 
 - 评估文档生成后必须暂停，等待用户确认时间表与里程碑。
-- 用户确认通过后，再分别进入 07 前端 Flutter 技术文档与 08 后端 Kotlin 技术文档阶段；这两个阶段允许并行。
+- 用户确认通过后，再分别进入 07 前端 Flutter 技术文档与 08 后端 Java 技术文档阶段；这两个阶段允许并行。
 - 若用户未给出团队配置，先用合理默认值生成 v1.0 草稿，并在「待确认项」中明确列出，避免阻塞流程。

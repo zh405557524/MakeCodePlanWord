@@ -1,6 +1,6 @@
 # {模块名} 模块开发文档
 
-> 规则来源：`.cursor/rules/12-Kotlin模块开发文档.mdc`
+> 规则来源：`.cursor/rules/12-Java模块开发文档.mdc`
 > 用途：单个后端模块的详细开发指南，可直接驱动 AI 编码。
 > 路径：`projects/{currentProject}/04-后端/开发计划/{module-name}.md`
 
@@ -16,14 +16,14 @@
 
 ---
 
-## 2. 涉及的 Routes / Service / Repository / Entity
+## 2. 涉及的 Controller / Service / Mapper / Entity
 
 | 类型 | 类名 | 文件路径 | 状态 |
 |------|------|----------|------|
-| Routes | `XxxRoutes.kt` | `routes/XxxRoutes.kt` | pending |
-| Service | `XxxService.kt` | `services/XxxService.kt` | pending |
-| Repository | `XxxRepository.kt` | `repositories/XxxRepository.kt` | pending |
-| Entity | `Xxx.kt` | `models/entity/Xxx.kt` | pending |
+| Controller | `XxxController.java` | `controller/XxxController.java` | pending |
+| Service | `XxxService.java` | `service/XxxService.java` | pending |
+| Mapper | `XxxMapper.java` | `mapper/XxxMapper.java` | pending |
+| Entity | `XxxEntity.java` | `domain/entity/XxxEntity.java` | pending |
 | Migration | `V{N}__xxx.sql` | `resources/db/migration/V{N}__xxx.sql` | pending |
 
 ---
@@ -88,8 +88,8 @@ stateDiagram-v2
 
 - 参数错误：`throw IllegalArgumentException(...)`
 - 资源不存在：`throw NotFoundException(...)`
-- 业务规则错误：`throw BusinessException(code = 2xxx, message = "...")`
-- 日志：关键操作必须 `logger.info(...)`，异常必须 `logger.error("context", e)`
+- 业务规则错误：`throw new BusinessException(2xxx, "...")`
+- 日志：关键操作必须 `log.info(...)`，异常必须 `log.error("context", e)`
 
 ---
 
@@ -97,7 +97,7 @@ stateDiagram-v2
 
 - 其他模块：`auth`（提供 JWTPrincipal）
 - 外部 SDK：无
-- 配置项：`application.conf` 中的 `xxx.enabled`
+- 配置项：`application.properties` 中的 `xxx.enabled`
 
 ---
 
@@ -105,10 +105,10 @@ stateDiagram-v2
 
 1. 写迁移脚本，本地启动验证
 2. 写 Entity
-3. 写 Repository + 单元测试
+3. 写 Mapper + 单元测试
 4. 写 Service + 单元测试
 5. 写 Request / Response 模型
-6. 写 Routes 并注册到 `configureRouting`
+6. 写 Controller 并注册路由映射
 7. 写集成测试
 
 ---
@@ -118,16 +118,16 @@ stateDiagram-v2
 | 任务 ID | 名称 | 状态 | 备注 |
 |---------|------|------|------|
 | T-B020 | 创建 `xxx` 表迁移脚本 | pending | |
-| T-B021 | 实现 `XxxRepository` | pending | |
+| T-B021 | 实现 `XxxMapper` | pending | |
 | T-B022 | 实现 `XxxService` | pending | |
-| T-B023 | 实现 `XxxRoutes` | pending | |
+| T-B023 | 实现 `XxxController` | pending | |
 | T-B024 | 编写集成测试 | pending | |
 
 ---
 
 ## 10. 测试要求
 
-- 单元测试：Service 关键方法 + Repository 自定义查询
+- 单元测试：Service 关键方法 + Mapper 自定义查询
 - 集成测试：每个接口至少 1 个正常路径 + 1 个错误路径
 - 契约测试：与前端模块文档对齐
 
@@ -136,7 +136,7 @@ stateDiagram-v2
 ## 11. 验收标准
 
 - [ ] 所有任务 `done`
-- [ ] `./gradlew build` 通过
+- [ ] `./mvnw verify` 通过
 - [ ] 单元测试覆盖率达到约定（默认 60%+）
 - [ ] 集成测试全部通过
 - [ ] 接口契约与前端模块文档一致
@@ -147,6 +147,6 @@ stateDiagram-v2
 ## 12. 编码注意事项
 
 - `{该模块特有的注意点}`
-- 不允许在 Routes 中写业务逻辑
+- 不允许在 Controller 中写业务逻辑
 - 数据库写操作必须在事务内
 - 敏感字段不入日志
