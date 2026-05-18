@@ -54,6 +54,7 @@ alwaysApply: false
 - `.cursor/rules/flutter/08-UI处理任务.mdc`
 - `.cursor/rules/flutter/09-大功能先规划再编码.mdc`
 - `.cursor/rules/flutter/10-编码工作流程.mdc`
+- `.cursor/rules/flutter/11-测试规则.mdc`
 
 ## Flutter 规则目录的定位
 
@@ -99,6 +100,7 @@ alwaysApply: false
 11. 编码任务清单
 12. 编码注意事项
 13. Flutter 编码工作流程
+14. 测试用例与自动化辅助规则
 
 还必须单独输出“项目专属开发规则”章节，至少说明：
 
@@ -107,6 +109,7 @@ alwaysApply: false
 - 哪些规则因为当前业务、Figma 或技术方案被特化
 - 当前项目最终执行的导航、编码规范、多语言、UI、规划与编码关系
 - 当前项目最终执行的 Flutter 编码推进流程
+- 当前项目最终执行的测试用例结构、测试人员编写约束，以及 Python 自动化辅助执行规则
 
 也就是说：
 
