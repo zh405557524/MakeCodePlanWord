@@ -1,183 +1,118 @@
 # 执行力 Flutter 模块开发文档 - Notes
 
-> 模块编号：`M-11`  
-> 对应总体任务：`F-012A ~ F-012C`  
+> 模块编号：`M-11`
+> 对应总体任务：`F-012A ~ F-012C`
 > 状态：`done`
+> 当前策略：Notes 三层链路已落地，v2 中从 ChatHome 的工具菜单或侧边菜单进入
 
 ---
 
-## 一、功能定位与边界
+## 一、模块定位
 
-Notes 模块负责把“资料沉淀”从长期规划能力变成当前版本正式功能。
+Notes 模块负责把笔记能力作为当前版本正式功能落地。v2 中它不再是底部 Tab 一级入口，而是从 `ChatHome` 派生进入的二级能力。
 
 本模块负责：
 
-- `Notes` 一级页
+- `Notes` 入口页
 - `NoteFolder` 子文件夹页
 - `NoteFile` 文件页
 - 文件夹与文件的本地结构管理
-- 文档 / Markdown 的编辑与预览切换
+- 文档 / Markdown 编辑与预览切换
 
 本模块不负责：
 
-- 从笔记生成计划
-- 给计划挂笔记
-- 复杂知识库、AI 自动整理或块编辑器
+- 笔记生成计划
+- 计划与笔记的深度互链
+- 复杂知识库或块编辑器
 
 ---
 
-## 二、入口、路由与页面文件
+## 二、当前代码落点
 
-**入口**：
+当前真实代码文件如下：
 
-- `MainShell` 中的 `Notes` Tab
+- `lib/models/note.dart`
+- `lib/store/notes.dart`
+- `lib/services/notes_service.dart`
+- `lib/pages/notes/index.dart`
+- `lib/pages/notes/controller.dart`
+- `lib/pages/notes/view.dart`
+- `lib/pages/notes/widgets/note_create_actions.dart`
+- `lib/pages/notes/widgets/note_empty_state.dart`
+- `lib/pages/notes/widgets/note_entry_card.dart`
+- `lib/pages/note_folder/index.dart`
+- `lib/pages/note_folder/controller.dart`
+- `lib/pages/note_folder/view.dart`
+- `lib/pages/note_file/index.dart`
+- `lib/pages/note_file/controller.dart`
+- `lib/pages/note_file/view.dart`
 
-**路由**：
+路由：
 
 - `RouteName.notes`
 - `RouteName.noteFolder`
 - `RouteName.noteFile`
 
-**页面文件建议**：
+---
 
-- `lib/pages/notes/view.dart`
-- `lib/pages/notes/controller.dart`
-- `lib/pages/notes/index.dart`
-- `lib/pages/note_folder/view.dart`
-- `lib/pages/note_folder/controller.dart`
-- `lib/pages/note_folder/index.dart`
-- `lib/pages/note_file/view.dart`
-- `lib/pages/note_file/controller.dart`
-- `lib/pages/note_file/index.dart`
+## 三、当前实现判断
 
-**服务 / Store 建议**：
+当前 Notes 模块已经完成核心闭环：
 
-- `lib/services/notes_service.dart`
-- `lib/store/notes.dart`
-- `lib/models/note.dart`
+- 路由可进入 `Notes`
+- 支持根目录和子文件夹浏览
+- 支持创建文件夹、子文件夹和笔记
+- `NoteFile` 支持编辑 / 预览切换
+- 本地 `Hive` 存储与模式偏好已接入
+- v2 中需要从 `ChatHome -> ToolMenu / SideMenu` 到达
+
+因此 Notes 模块当前不是待开发状态，而是已完成状态。
+后续如果有修改，重点应放在：
+
+- 空状态、异常态、同步态补齐
+- Figma 细节对稿
+- 后续真实接口对接预留
+
+这些工作统一归到 `M-10`，不是重新开发 `M-11`。
 
 ---
 
-## 三、依赖前置
+## 四、本轮改造边界
 
-- `01-app-foundation` 已完成
-- `02-splash-shell` 已完成
-- `Global.init()`、`RouteName`、`CustomScaffold`、`GetStorage`、`Hive` 可用
-- Notes 相关 Hive box 已预注册
+只修改以下问题：
+
+1. 三级页面跳转异常
+2. 创建文件夹 / 文件逻辑异常
+3. 编辑 / 预览切换异常
+4. 页面层级、路径感、列表区分度明显偏离 Figma
+5. 空状态、异常态缺失
+6. v2 中仍把 Notes 暴露为底部 Tab 一级入口
+
+本轮不做：
+
+- 将 Notes 挂回 Plan
+- 将 Notes 重新放回 v2 底部 Tab
+- 把 `NoteFile` 重做成复杂富文本编辑器
+- 引入超出当前产品范围的知识库能力
 
 ---
 
-## 四、视觉参考与 Figma 对齐
+## 五、验收标准
 
-### 参考设计
+- 用户能从 `ChatHome` 进入 Notes
+- 根目录、子文件夹、文件页三层关系清楚
+- 文件夹 / 文件创建默认本地可用
+- `NoteFile` 可在同页切换编辑与预览
+- 后续联调阶段只需补状态与测试资料，不需重做骨架
+
+---
+
+## 六、视觉参考
 
 - Figma：`12-Notes`
+- Figma：`V2-07-NotesEntry`
 - Figma：`13-NoteFolder`
 - Figma：`14-NoteFile`
 - `01-需求/references/images/32-笔记-首页.png`
 - `01-需求/references/images/33-笔记-子文件夹.png`
 - `01-需求/references/images/34-笔记-文件.png`
-
-### 页面结构结论
-
-- `Notes` 是主导航独立页面，不附属于 `Plan`
-- `NoteFolder` 强调路径感和层级感
-- `NoteFile` 是沉浸式内容页，顶部必须展示返回、标题与路径
-- 文件夹和文件在列表里必须视觉区分
-- `NoteFile` 必须有 `编辑 / 预览` 切换，不拆独立页面
-
----
-
-## 五、业务内容与数据流
-
-### 5.1 Notes 首页
-
-1. 进入 `Notes`
-2. 读取根目录文件夹与文件
-3. 点击文件夹进入 `NoteFolder`
-4. 点击文件进入 `NoteFile`
-5. 点击 `新建文件夹 / 新建笔记` 时先写本地结构
-
-### 5.2 NoteFolder
-
-1. 根据 `folderId` 读取当前层级
-2. 展示子文件夹和文件混排列表
-3. 继续创建子文件夹或文件
-4. 保留路径上下文
-
-### 5.3 NoteFile
-
-1. 根据 `fileId` 读取文件详情
-2. 默认进入最近一次使用的模式；无记录则进入编辑态
-3. 编辑态优先保存本地内容
-4. 预览态只渲染基础 Markdown 结构
-
----
-
-## 六、公开模型与存储边界
-
-### 6.1 模型建议
-
-- `NoteFolder`
-  - `id`
-  - `name`
-  - `parentId`
-  - `createdAt`
-  - `updatedAt`
-- `NoteFile`
-  - `id`
-  - `title`
-  - `folderId`
-  - `format`
-  - `content`
-  - `createdAt`
-  - `updatedAt`
-
-### 6.2 存储边界
-
-- `Hive`：
-  - `note_folders`
-  - `note_files`
-- `GetStorage`：
-  - 最近一次 `NoteFile` 使用模式等轻量偏好，可选
-
----
-
-## 七、验收标准
-
-- 用户能从主导航直接进入 `Notes`
-- 根目录、子文件夹、文件页三层关系清楚
-- 文件夹 / 文件创建默认本地可用
-- `NoteFile` 可在同页切换编辑与预览
-- 离线情况下不影响浏览与编辑
-
----
-
-## 八、编码注意事项
-
-- 不把 Notes 临时塞进 `Plan` 页
-- 不把 `NoteFile` 做成单纯静态预览页
-- 先完成本地结构和基础交互，再考虑 Plan / Notes 互链
-- Markdown 当前只做基础标题、段落、列表的预览能力
-
----
-
-## 九、当前实现结果
-
-已落地代码：
-
-- `lib/models/note.dart`
-- `lib/store/notes.dart`
-- `lib/services/notes_service.dart`
-- `lib/pages/notes/*`
-- `lib/pages/note_folder/*`
-- `lib/pages/note_file/*`
-
-已完成能力：
-
-- `Notes` 主导航入口与高亮态
-- 根目录、子文件夹与文件页三层跳转
-- 新建文件夹、新建子文件夹、新建笔记
-- Markdown 编辑 / 预览切换
-- 本地 `Hive` 存储与最近模式偏好回写
-- 默认种子数据与离线可用的基础浏览体验

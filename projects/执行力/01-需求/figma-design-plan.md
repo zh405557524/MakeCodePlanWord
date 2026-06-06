@@ -1,7 +1,7 @@
 # 执行力 Figma 设计稿计划
 
-> 版本：v1.0  
-> 更新时间：2026-05-12  
+> 版本：v1.1  
+> 更新时间：2026-06-05  
 > 关联 PRD：[requirements.md](./requirements.md)  
 > 关联产品文档：[references/docs/执行力-产品文档-v1.1-2026-03-31.md](./references/docs/执行力-产品文档-v1.1-2026-03-31.md)  
 > 设计真源：Figma `执行力设计稿 / 手机版`
@@ -20,6 +20,14 @@
 - 与页面直接相关的关键弹层、空态、状态卡、底部导航和通用组件
 
 本文档不是 PRD，也不是开发计划；它服务于“设计稿补齐、对照、复核和后续代码实现”。
+
+### 1.1 v2 设计重构范围（2026-06-05）
+
+本轮新增 v2 Figma 设计区，不覆盖旧 `01-14` frame。v2 目标是把首层体验从 5 Tab 效率工具调整为 ChatGPT 风格的对话主入口：
+
+- `ChatHome` 是唯一一级页面。
+- `TodayFocus` 是二级全屏专注页，只突出一件当前任务。
+- 本轮做到 Figma 正稿与基础原型连线，不进入 Flutter 代码实现。
 
 ---
 
@@ -64,6 +72,24 @@
 | P0 | `11-UserProfile` | `/profile/me` | 是 | 否 | 沉浸式编辑页 |
 | P0 | `13-NoteFolder` | `/notes/folder/:id` | 是 | 是 | 新增二级页 |
 | P0 | `14-NoteFile` | `/notes/file/:id` | 是 | 是 | 新增二级页 |
+
+### 3.1 v2 页面清单
+
+| 优先级 | 页面 / Frame | 对应路由 / 形态 | 是否完整高保真 | 是否需要交互稿 | 备注 |
+|--------|--------------|----------------|----------------|----------------|------|
+| P0 | `V2-01-ChatHome-Entry` | `/` | 是 | 是 | 对话主入口首次/入口态 |
+| P0 | `V2-02-ChatHome-Active` | `/` | 是 | 是 | 执行反馈后的活跃态 |
+| P0 | `V2-03-TodayFocus` | `/today/focus` | 是 | 是 | 二级全屏专注页 |
+| P0 | `V2-04-ToolMenu` | `ChatHome overlay` | 是 | 是 | `+` 工具菜单 |
+| P0 | `V2-05-SideMenu` | `ChatHome drawer` | 是 | 是 | 历史 / 计划库 / 笔记 / 设置 |
+| P1 | `V2-06-PlanCreate` | `/plan/create` | 是 | 是 | 由工具菜单或对话草稿进入 |
+| P1 | `V2-07-NotesEntry` | `/notes` | 是 | 是 | 由工具菜单或侧边菜单进入 |
+
+v2 命名与布局规则：
+
+- 在当前 Figma 页面新增独立区域 `V2-Chat-First`。
+- 旧 `01-14` frame 完整保留，作为 v1 对照。
+- v2 frame 宽度统一为 `375`，核心首屏高度按 `812` 设计；内容较长的二级页允许向下延展。
 
 ---
 
@@ -180,6 +206,16 @@
 - 至少覆盖一条完整主链路：`Plan -> BattleMap -> TrackDetail -> Now`
 - 至少覆盖一条 Notes 链路：`Notes -> NoteFolder -> NoteFile`
 
+### 7.1 v2 原型清单
+
+必须覆盖：
+
+- `V2-01-ChatHome-Entry -> 开启今天计划 -> V2-03-TodayFocus`
+- `V2-03-TodayFocus -> 完成 / 稍后 -> V2-02-ChatHome-Active`
+- `V2-01-ChatHome-Entry -> + -> V2-04-ToolMenu -> V2-06-PlanCreate`
+- `V2-01-ChatHome-Entry -> + -> V2-04-ToolMenu -> V2-07-NotesEntry`
+- `V2-01-ChatHome-Entry -> menu -> V2-05-SideMenu`
+
 ---
 
 ## 8. 设计验收标准
@@ -189,6 +225,15 @@
 - `TrackDetail` 与 `PlanEditor` 保持“单页骨架 + 多视觉态”设计，不拆成无关页面。
 - `Notes` 的三张页面能清楚表达“根目录 -> 子文件夹 -> 文件内容”的层级关系。
 - 设计稿与 PRD 冲突时，以当前版本 PRD 为准，并同步回写设计计划。
+
+### 8.1 v2 设计验收标准
+
+- `ChatHome` 首屏必须像对话 App，不像仪表盘。
+- v2 设计中不出现底部 Tab。
+- `TodayFocus` 不显示 composer、侧边菜单、备用任务列表、统计卡或计划摘要。
+- `TodayFocus` 375x812 首屏只突出一件当前任务和少量操作。
+- `ToolMenu` 与 `SideMenu` 是入口分发层，不把完整计划/笔记内容堆在首页。
+- 已生成效果图只作为探索参考，最终以 Figma `V2-Chat-First` frame 为设计真源。
 
 ---
 
