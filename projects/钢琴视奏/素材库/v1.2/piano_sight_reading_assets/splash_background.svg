@@ -1,0 +1,27 @@
+<svg width="375" height="812" viewBox="0 0 375 812" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="375" y2="812" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FBFF"/>
+      <stop offset="0.48" stop-color="#EEF5FF"/>
+      <stop offset="1" stop-color="#F7F1FF"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(300 210) rotate(120) scale(230 170)">
+      <stop stop-color="#DCE8FF"/>
+      <stop offset="1" stop-color="#DCE8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="375" height="812" fill="url(#bg)"/>
+  <rect width="375" height="812" fill="url(#glow)" opacity="0.9"/>
+  <g opacity="0.33">
+    <path d="M44 548 C110 470 196 430 352 390" stroke="#D8C6FF" stroke-width="1.2"/>
+    <path d="M20 590 C112 504 212 456 396 414" stroke="#C5DBFF" stroke-width="1.2"/>
+    <text x="282" y="245" font-size="34" fill="#9EBBFF">♪</text>
+    <text x="56" y="346" font-size="54" fill="#B9A8FF">𝄞</text>
+  </g>
+  <g transform="translate(60 500)" opacity="0.45">
+    <path d="M38 35 L315 -8 L295 130 L15 156 Z" fill="white"/>
+    <path d="M90 16 L121 11 L105 145 L72 149 Z" fill="#D8E8FF"/>
+    <path d="M150 6 L181 1 L165 136 L132 141 Z" fill="#D9E0FF"/>
+    <path d="M210 -4 L241 -9 L225 126 L192 132 Z" fill="#D8EFFF"/>
+  </g>
+</svg>

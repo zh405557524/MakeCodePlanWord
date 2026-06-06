@@ -1,117 +1,104 @@
 # 执行力 Flutter 模块开发文档 - Splash 与 Main Shell
 
-> 模块编号：`M-02`  
-> 对应总体任务：`F-007 ~ F-008`  
-> 状态：`pending`
+> 模块编号：`M-02`
+> 对应总体任务：`F-007 ~ F-008`
+> 状态：`pending`（v2 壳层重构）
+> 当前策略：Splash 继续沿用，启动后的主壳从底部 Tab 分发改为 ChatHome 根入口
 
 ---
 
-## 一、功能定位与边界
+## 一、模块定位
 
-本模块负责启动过渡与主应用壳层。
+本模块负责启动过渡和主应用壳层，确保用户从启动页顺利进入主导航结构。
 
 本模块负责：
 
-- SplashScreen
-- 自动跳转逻辑
-- MainShell
-- 底部导航
-- 一级页容器与 Chat 入口位
+- `SplashPage`
+- 启动完成后的自动跳转
+- `MainPage`
+- v1 底部导航的迁移处理
+- v2 `ChatHome` 根入口跳转
+- 二级全屏页显示 / 隐藏规则
 
 本模块不负责：
 
-- Now / Plan / Profile 的具体业务
-- Chat 的消息流实现
-- 二级详情页
+- `ChatHome / TodayFocus / Plan / Notes / Profile` 具体业务内容
+- 二级沉浸式页面的内部实现
 
 ---
 
-## 二、入口、路由与页面文件
+## 二、当前代码落点
 
-**路由**：
+当前真实代码文件如下：
 
-- `RouteName.splash`
-- `RouteName.now`
-- `RouteName.chat`
-- `RouteName.plan`
-- `RouteName.notes`
-- `RouteName.profile`
-
-**页面文件**：
-
-- `lib/pages/splash/view.dart`
+- `lib/pages/splash/index.dart`
 - `lib/pages/splash/controller.dart`
-- `lib/pages/main/view.dart`
+- `lib/pages/splash/view.dart`
+- `lib/pages/main/index.dart`
 - `lib/pages/main/controller.dart`
+- `lib/pages/main/view.dart`
 - `lib/pages/main/widgets/bottom_nav.dart`
 
+关键行为：
+
+- `MainPage` 当前用 `IndexedStack` 承载 `Now / Plan / Notes / Profile`
+- 底部导航保留 5 个入口位：`Now / Chat / Plan / Notes / Profile`
+- 点击 `Chat` 时通过 `context.pushNamed(RouteName.chat)` 进入全屏聊天页
+
+v2 目标行为：
+
+- `Splash` 初始化完成后直接进入 `RouteName.chatHome`。
+- `MainPage / BottomNav` 不再出现在首屏。
+- `TodayFocus`、`PlanCreate`、`NotesEntry` 等页面从 `ChatHome` 派生进入。
+
 ---
 
-## 三、依赖前置
+## 三、当前实现判断
 
-- `01-app-foundation` 已完成
-- `Global.init()`、路由表、`CustomScaffold` 可用
+当前代码与 v1 总计划是一致的：
+
+- `Splash` 独立存在，不与业务页混合。
+- `MainShell` 没有把二级页错误塞进壳内。
+- `Chat` 是主导航入口，但进入后是独立沉浸式页面，这一点和总技术文档一致。
+- `Notes` 已进入主导航，而不是挂在 `Plan` 下面。
+
+结论：
+
+- `Splash` 可沿用。
+- `MainShell / BottomNav` 与 v2 信息架构冲突，需要在 `F-024` 中重构或降级。
+- 后续重点是根路由、返回栈、二级页沉浸规则和旧入口兼容。
 
 ---
 
-## 四、视觉参考与 Figma 对齐
+## 四、本轮改造边界
 
-### 参考设计
+本轮只在以下场景修改：
+
+1. v2 根入口仍进入旧 `Now` 或底部 Tab
+2. `ChatHome` 入口行为与设计稿冲突
+3. `Splash -> MainShell` 跳转链路异常
+4. 壳层对 `Notes`、`Profile` 或沉浸页的显示/隐藏规则错误
+
+本轮不做：
+
+- 为了统一风格而重写 Splash
+- 在 v2 首屏继续保留底部 Tab 分发
+
+---
+
+## 五、验收标准
+
+- 启动后能稳定进入主壳
+- 启动后默认进入 `ChatHome`
+- `ChatHome` 首屏没有底部 Tab
+- `TodayFocus` 二级全屏页不复用底部导航
+- 旧 `Plan / Notes / Profile` 能从 `ChatHome` 派生入口到达
+
+---
+
+## 六、视觉参考
 
 - Figma：`01-SplashScreen`
-- Figma：底部导航相关结构
+- Figma：`V2-01-ChatHome-Entry`
+- Figma：`V2-02-ChatHome-Active`
 - `01-需求/references/images/26-开屏页面_执行力-开屏页.png`
-- `01-需求/references/images/31-主页_执行力-底部导航栏.png`
-
-### 页面结构结论
-
-- Splash 是品牌启动页，深色渐变背景 + Logo + 文案 + 加载点
-- MainShell 是浅色底部导航壳，不承载二级页
-- 底部导航需要保留 5 个入口位：Now / Chat / Plan / Notes / Profile
-- Chat 入口位点击后进入全屏 `ChatPage`，不是在壳内长期展示深色聊天页
-
----
-
-## 五、业务内容与数据流
-
-1. 进入 `Splash`
-2. `SplashController` 确认初始化完成并等待展示时长
-3. 跳转到 `MainShell`
-4. `MainController` 管理当前壳页索引
-5. 点击 Chat 入口时 push 到 `RouteName.chat`
-
-`MainShell` 负责承接的一级页：
-
-- `Now`
-- `Plan`
-- `Notes`
-- `Profile`
-
----
-
-## 六、建议实现步骤
-
-1. 创建 `SplashPage / Controller`
-2. 创建 `MainPage / Controller`
-3. 建最小壳页容器
-4. 实现底部导航
-5. 接入 Splash 自动跳转
-6. 接入 Chat 全屏入口
-
----
-
-## 七、验收标准
-
-- 启动先进入 Splash
-- Splash 能自动跳转 MainShell
-- 底部导航 5 个入口位完整
-- Chat 入口进入全屏路由
-- MainShell 不承担二级页面
-
----
-
-## 八、编码注意事项
-
-- Splash 只做品牌和启动过渡
-- MainShell 只做壳层，不写业务
-- 不把 BattleMap / TrackDetail / UserProfile 放进壳层

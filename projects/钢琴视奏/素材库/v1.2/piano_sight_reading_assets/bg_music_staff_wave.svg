@@ -1,0 +1,9 @@
+<svg width="375" height="180" viewBox="0 0 375 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="0.28">
+    <path d="M-10 130 C65 80 145 95 230 55 C290 26 344 36 390 18" stroke="#BFD1FF" stroke-width="1.4"/>
+    <path d="M-10 146 C70 96 155 111 238 73 C300 45 350 50 390 35" stroke="#D7C5FF" stroke-width="1.2"/>
+    <path d="M-10 162 C76 114 160 125 247 91 C307 67 350 67 390 55" stroke="#BFEAFF" stroke-width="1.2"/>
+    <text x="58" y="82" font-size="42" fill="#9B8CFF" opacity="0.35">♪</text>
+    <text x="295" y="62" font-size="34" fill="#42C7C7" opacity="0.35">♫</text>
+  </g>
+</svg>

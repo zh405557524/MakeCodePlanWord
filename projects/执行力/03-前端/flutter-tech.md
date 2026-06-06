@@ -1,13 +1,13 @@
 # 执行力 Flutter 前端技术文档
 
-> 版本：v3.1  
-> 更新时间：2026-05-12  
-> 设计真源：Figma `执行力设计稿 / 手机版`  
-> 关联产品文档：`../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md`  
-> 关联颜色文档：`../01-需求/references/docs/执行力-颜色文档-v1.1.md`  
-> 关联开发计划：[`flutter-dev-plan.md`](./flutter-dev-plan.md)  
-> Flutter 版本：3.24+  
-> 目标平台：iOS / Android  
+> 版本：v3.2
+> 更新时间：2026-06-05
+> 设计真源：Figma `执行力设计稿 / 手机版 / V2-Chat-First`
+> 关联产品文档：`../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md`
+> 关联颜色文档：`../01-需求/references/docs/执行力-颜色文档-v1.1.md`
+> 关联开发计划：[`flutter-dev-plan.md`](./flutter-dev-plan.md)
+> Flutter 版本：3.24+
+> 目标平台：iOS / Android
 > 参考工程：`G:\code\soul\Solfeggio`
 
 ---
@@ -57,7 +57,24 @@
 
 ## 2. Figma 页面与路由映射
 
-当前 Figma `手机版` 页面中的 frame 与 Flutter 页面映射如下：
+v2 优先以 Figma `V2-Chat-First` 区域为实现真源。旧 `01-14` frame 保留为业务能力和视觉细节参考，不再决定一级入口结构。
+
+### 2.0 v2 页面映射
+
+| Figma Frame | Flutter 页面 | 路由 | 底部导航 | 代码目录 |
+|-------------|--------------|------|----------|----------|
+| `01-SplashScreen` | SplashScreen | `RouteName.splash` | 隐藏 | `pages/splash/` |
+| `V2-01-ChatHome-Entry` | ChatHomePage | `/` | 无底部 Tab | `pages/chat_home/` |
+| `V2-02-ChatHome-Active` | ChatHomePage | `/` | 无底部 Tab | `pages/chat_home/` |
+| `V2-03-TodayFocus` | TodayFocusPage | `/today/focus` | 隐藏 | `pages/today_focus/` |
+| `V2-04-ToolMenu` | ChatHome 内部 overlay | 无独立路由 | 无底部 Tab | `pages/chat_home/widgets/` |
+| `V2-05-SideMenu` | ChatHome 内部 drawer | 无独立路由 | 无底部 Tab | `pages/chat_home/widgets/` |
+| `V2-06-PlanCreate` | PlanEditorPage | `/plan/create` | 隐藏 | `pages/plan_editor/` |
+| `V2-07-NotesEntry` | NotesPage / NotesEntryPage | `/notes` | 隐藏 | `pages/notes/` |
+| v1 `04-Plan` | PlanPage / PlanLibraryPage | `/plan` | 隐藏 | `pages/plan/` |
+| v1 `10-Profile` | ProfilePage | `/profile` | 隐藏 | `pages/profile/` |
+
+v1 参考 frame 与既有 Flutter 页面映射如下：
 
 | Figma Frame | Flutter 页面 | 路由 | 底部导航 | 代码目录 |
 |-------------|--------------|------|----------|----------|
@@ -80,17 +97,19 @@
 
 - `TrackDetail` 只有一个页面骨架，`换工作 / 恋爱` 是由 `trackId` 驱动的不同视觉态和文案态，不拆分成两个页面目录。
 - `PlanEditor` 只有一个编辑器页面，`默认 / 恋爱` 是两套表单视觉态和 CTA 颜色，不拆分成两个页面目录。
-- `MainShell` 只承接 `Now / Plan / Notes / Profile` 四个主壳页和入口式 `Chat` Tab；真正进入 `ChatPage` 后使用沉浸式全屏页面，不复用底部导航。
+- v2 不再使用 `MainShell + BottomNav` 作为一级分发结构；根路由直接进入 `ChatHomePage`。
+- 旧 `MainShell / BottomNav / NowPage / ChatPage` 作为迁移来源保留，代码阶段再决定删除、降级或重用。
 - `UserProfile`、`BattleMap`、`TrackDetail`、`PlanEditor` 都按沉浸式二级页处理。
-- `NoteFile` 按沉浸式二级页处理；`NoteFolder` 仍保留主导航高亮 `Notes`。
+- `NoteFile`、`NoteFolder`、`Notes` 在 v2 都从 `ChatHome` 派生进入，不再依赖底部导航高亮。
 
 ### 2.1 路由约束
 
-文档统一以这些公开路由为准：
+v2 文档统一以这些公开路由为准：
 
 - `/`
-- `/chat`
+- `/today/focus`
 - `/plan`
+- `/plan/create`
 - `/notes`
 - `/plan/battle`
 - `/plan/battle/:trackId`
@@ -101,16 +120,19 @@
 - `/notes/folder/:id`
 - `/notes/file/:id`
 
+兼容期可以保留 `/chat` 与 `/plan/editor` 旧入口，但新 UI 不再主动展示 `/chat` 作为一级入口。
+
 建议的 `RouteName` 收口方式：
 
 - `RouteName.splash`
-- `RouteName.now`
-- `RouteName.chat`
+- `RouteName.chatHome`
+- `RouteName.todayFocus`
 - `RouteName.plan`
 - `RouteName.notes`
 - `RouteName.battleMap`
 - `RouteName.trackDetail`
 - `RouteName.planEditorCreate`
+- `RouteName.planCreate`
 - `RouteName.planEditorEdit`
 - `RouteName.profile`
 - `RouteName.userProfile`
@@ -125,9 +147,11 @@
 
 | 场景 | 颜色 / 渐变 | 说明 |
 |------|-------------|------|
+| v2 ChatHome 背景 | `#fefdf9` 或接近白色 | 对话主入口，少卡片、大留白 |
+| v2 TodayFocus 背景 | `#fefdf9` | 二级全屏专注页，一屏一件事 |
 | 通用浅色页 | `#f5f4ff` | Plan、Profile、UserProfile、编辑器基础底色 |
-| Now 页背景 | `linear-gradient(180deg,#eeecff 0%,#f5f4ff 60%,#f9f8ff 100%)` | 整页背景 |
-| Chat 页背景 | `linear-gradient(160deg,#1a1740,#2d2a6e,#4c1d95)` | 沉浸式深色页 |
+| v1 Now 页背景 | `linear-gradient(180deg,#eeecff 0%,#f5f4ff 60%,#f9f8ff 100%)` | 旧稿参考，不作为 v2 首页背景 |
+| v1 Chat 页背景 | `linear-gradient(160deg,#1a1740,#2d2a6e,#4c1d95)` | 旧稿参考，不作为 v2 ChatHome 背景 |
 | Splash 背景 | `linear-gradient(160deg,#0f0d2e,#1a1740,#2d2a6e,#3730a3)` | 全屏品牌页 |
 | 品牌主色 | `#6366f1` | 主按钮、激活态、进度条起点 |
 | 品牌辅色 | `#8b5cf6` | 品牌渐变终点、次级强调 |
@@ -160,15 +184,20 @@ BattleMap、TrackDetail、PlanEditor 的主题色需跟随主线，不允许全�
 | 列表错位入场 | `stagger 0.07s` |
 | 按压反馈 | `scale 0.92-0.97` |
 
-### 3.4 底部导航与页面壳
+### 3.4 v2 页面壳与导航
 
-- `Now / Chat / Plan / Notes / Profile` 是五个一级导航入口。
-- 仅 `Now / Plan / Notes / Profile` 作为主壳页固定在 `MainPage` 中。
-- `Chat` 由主壳的入口按钮进入全屏页，进入后隐藏底部导航。
-- 二级页一律使用独立 `CustomScaffold`，不要把它们塞进 `IndexedStack`。
+- v2 根入口只有 `ChatHomePage`，不显示底部 Tab。
+- `ChatHomePage` 保留底部 composer，左侧 `+` 打开工具菜单，左上 menu 打开侧边菜单。
+- `TodayFocusPage` 是二级全屏页，不显示 composer、底部 Tab、侧边菜单、备用任务列表或统计卡。
+- `Plan / Notes / Profile / BattleMap / TrackDetail / PlanEditor / NoteFolder / NoteFile / UserProfile` 都从 `ChatHome` 的对话、工具菜单或侧边菜单进入。
+- 二级页一律使用独立 `CustomScaffold` 或无干扰全屏容器，不要把它们塞进 `IndexedStack`。
+- 旧 `BottomNavShell` 可在代码迁移期保留，但 v2 首屏不得展示它。
 - 通用页面骨架优先抽为：
   - `AppScaffold`
-  - `BottomNavShell`
+  - `ChatHomeScaffold`
+  - `ChatComposerBar`
+  - `ToolMenuSheet`
+  - `SideMenuDrawer`
   - `GradientHeroCard`
   - `SectionCard`
   - `MetricCard`
@@ -270,30 +299,71 @@ lib/
 - 结构：全屏渐变背景、Logo 卡、应用名、副标题、旋转光环、跳动圆点。
 - 关键规则：
   - 启动约 2 秒
-  - 完成初始化后自动跳 `MainPage`
+  - v2 完成初始化后自动跳 `ChatHomePage`
   - 不在 Splash 中做业务分流判断
 
-### 6.2 NowPage
+### 6.2 ChatHomePage
 
-- 目标：始终告诉用户“现在应该做什么”。
-- Figma 结构：顶部时间与欢迎语、右上状态徽章、AI 建议卡、主任务卡、`开始专注 / 换一个`、备用任务列表。
+- 目标：作为 v2 唯一一级页面，承接对话、今日计划入口、工具入口、侧边入口和结果反馈。
+- Figma 结构：顶部轻导航、中央空态或消息流、底部固定 composer、`+` 工具菜单、侧边菜单。
 - Controller 职责：
-  - `loadNowData()`
-  - `switchCandidate()`
-  - `startFocus()`
-  - `completeTask() / postponeTask() / dropTask()`
-- 需要单独补完专注层或专注弹框，不能只停留在静态卡片。
-
-### 6.3 ChatPage
-
-- 目标：沉浸式消息页，承接草稿生成与应用。
-- Figma 结构：深色全屏背景、消息流、快捷回复、毛玻璃输入栏、发送按钮。
+  - `loadConversation()`
+  - `loadTodaySuggestion()`
+  - `openToolMenu() / closeToolMenu()`
+  - `openSideMenu() / closeSideMenu()`
+  - `startTodayPlan()`
+  - `sendMessage()`
+  - `appendFocusResultMessage()`
 - 关键规则：
-  - 进入页面后隐藏底部导航
-  - 消息先写本地再请求远端
-  - 草稿先落本地，再通过 `draftId` 跳 `PlanEditor`
+  - `/` 必须直接进入 `ChatHomePage`，首屏不能是仪表盘或卡片堆叠页。
+  - composer 是首页主操作入口。
+  - `ChatHome` 只展示当前建议和入口，不展示完整专注 UI。
+  - 工具菜单进入创建计划、写笔记、计划库等能力。
 
-### 6.4 PlanPage
+### 6.3 TodayFocusPage
+
+- 目标：作为二级全屏专注页，只服务当前一件任务。
+- Figma 结构：顶部返回 / 关闭、轻量标题、中央当前任务、预计时长、所属计划、主按钮 `开始专注`、弱化次操作 `换一个 / 稍后`。
+- Controller 职责：
+  - `loadCurrentTask()`
+  - `startFocus()`
+  - `switchTask()`
+  - `postponeTask()`
+  - `completeTask()`
+  - `dropTask()`
+  - `returnToChatHomeWithResult()`
+- 禁止事项：
+  - 不显示聊天 composer。
+  - 不显示底部 Tab。
+  - 不显示侧边菜单。
+  - 不显示备用任务列表、统计卡、计划摘要或旧 Now 卡片堆叠。
+- 完成、推迟或放弃后，必须返回 `ChatHomePage` 并生成一条简短反馈消息。
+
+### 6.4 NowPage（v1 迁移来源）
+
+- 旧 `NowPage` 不再作为 v2 一级首页扩展。
+- 可迁移的能力：
+  - 当前任务推荐
+  - 候选切换
+  - `完成 / 推迟 / 放弃` 写回
+  - 空状态、异常态、同步态
+- 迁移目标：
+  - 推荐入口进入 `ChatHomePage`
+  - 专注执行进入 `TodayFocusPage`
+
+### 6.5 ChatPage（v1 迁移来源）
+
+- 旧 `ChatPage` 不再作为底部导航入口。
+- 可迁移的能力：
+  - 消息流本地读取
+  - composer 输入与发送
+  - 草稿卡与 `PlanEditor` 跳转
+  - 快捷回复
+- 迁移目标：
+  - 首页级对话能力进入 `ChatHomePage`
+  - 历史会话可由 `SideMenu` 进入同一个 `ChatHomePage` 状态
+
+### 6.6 PlanPage
 
 - 目标：计划入口页，不承担详情编辑。
 - Figma 结构：标题栏、`BattleMap` Hero 卡、进度 / Tab 区、计划卡片列表、悬浮新建按钮。
@@ -302,7 +372,7 @@ lib/
   - 计划卡片承接查看详情或继续编辑的主入口
   - 空状态也要保留 `BattleMap` 入口和新建入口
 
-### 6.5 BattleMapPage
+### 6.7 BattleMapPage
 
 - 目标：展示年度计划局势。
 - Figma 结构：年度 Banner、五条主线卡片、状态徽章、7 日节奏、AI 建议。
@@ -311,7 +381,7 @@ lib/
   - 点击卡片统一进入 `TrackDetail(trackId)`
   - 不把 BattleMap 做成列表页或详情页的变体
 
-### 6.6 TrackDetailPage
+### 6.8 TrackDetailPage
 
 - 目标：展示单条主线的长期推进情况，并把“现在去执行”闭合到 `Now`。
 - 统一骨架：
@@ -326,7 +396,7 @@ lib/
   - `恋爱` 使用粉红色关系主题
   - 差异由 `trackId` 驱动主题、文案、指标，不拆分目录
 
-### 6.7 PlanEditorPage
+### 6.9 PlanEditorPage
 
 - 目标：完成计划新建、编辑、草稿校对。
 - 统一骨架：
@@ -347,7 +417,7 @@ lib/
   5. 更新 `PlanStore`
   6. 写入 `SyncStore`
 
-### 6.8 ProfilePage 与 UserProfilePage
+### 6.10 ProfilePage 与 UserProfilePage
 
 - `ProfilePage` 是个人中心摘要页：
   - 深色 Hero 卡
@@ -364,17 +434,15 @@ lib/
   - 固定底部保存栏
 - 两页职责不能混写成一个“设置页”。
 
-### 6.9 NotesPage / NoteFolderPage / NoteFilePage
+### 6.11 NotesPage / NoteFolderPage / NoteFilePage
 
-- `NotesPage` 是一级页：
+- `NotesPage` 在 v2 是从工具菜单或侧边菜单进入的二级能力入口：
   - 顶部标题
   - `新建文件夹 / 新建笔记`
   - 根目录文件夹 / 文件列表
-  - 底部导航高亮 `Notes`
 - `NoteFolderPage` 是带层级上下文的二级页：
   - 路径 / 面包屑
   - 当前层级下的子文件夹与文件
-  - 仍保留 `Notes` 导航高亮
 - `NoteFilePage` 是沉浸式文件页：
   - 返回、标题、路径
   - `编辑 / 预览`
@@ -382,7 +450,7 @@ lib/
 
 关键规则：
 
-- Notes 是主导航独立页面，不并入 `Plan` 或 `Profile`。
+- Notes 是独立能力页，不并入 `Plan` 或 `Profile`，但不再作为底部 Tab 一级入口。
 - `NoteFolder` 允许继续创建子文件夹和文件。
 - `NoteFile` 默认优先进入最近一次使用的模式；若无记录，进入编辑态。
 - 当前版本只要求普通文档和 Markdown 的基础编辑与预览，不引入复杂块编辑器。
@@ -393,7 +461,11 @@ lib/
 
 建议优先抽象以下公共承接单位：
 
-- `BottomNavShell`
+- `ChatHomeScaffold`
+- `ChatComposerBar`
+- `ToolMenuSheet`
+- `SideMenuDrawer`
+- `FocusTaskPanel`
 - `PrimaryGradientButton`
 - `SecondaryGhostButton`
 - `GradientHeroCard`
@@ -423,7 +495,9 @@ lib/
 - `flutter-dev-plan.md` 的阶段与任务必须能直接引用本文件。
 - `TrackDetail`、`PlanEditor`、`Profile / UserProfile` 的页面边界无歧义。
 - `Notes / NoteFolder / NoteFile` 的页面边界、导航显示规则和数据来源无歧义。
+- `ChatHome / TodayFocus` 的页面边界、路由、返回结果和禁止堆叠规则无歧义。
 - 视觉实现不允许把渐变 Hero、固定底部栏、时间线等关键结构简化成普通列表。
+- v2 首屏不允许继续展示底部 Tab 或旧 Now 仪表盘结构。
 
 ### 8.2 禁止事项
 
@@ -432,6 +506,8 @@ lib/
 - 不把二级页塞回 `MainPage` 的 `IndexedStack`
 - 不把业务聚合逻辑写进 `Widget`
 - 不脱离 Figma 与颜色文档自行发明主题色和交互层级
+- 不把 `TodayFocus` 做成任务列表、统计页或旧 Now 卡片堆叠
+- 不把 `Plan / Notes / Profile` 重新暴露为首屏底部 Tab
 
 ---
 
