@@ -1,7 +1,7 @@
 # 执行力 Kotlin 后端技术文档
 
-> 版本：v1.1  
-> 更新时间：2026-05-12  
+> 版本：v1.2
+> 更新时间：2026-06-05
 > 关联技术方案：../02-技术方案/tech-plan.md  
 > 关联需求文档：../01-需求/requirements.md  
 > 关联设计计划：../01-需求/figma-design-plan.md  
@@ -106,6 +106,14 @@ dependencies {
 - 当前版本不引入 JWT、Session、Refresh Token。
 - 当前版本不做账号认证，设备实例通过请求头 `X-Installation-Id` 区分。
 - Notes 接口与计划接口同样遵循“设备级隔离 + 幂等写入 + 本地优先”的原则。
+
+### 2.2 v2 ChatHome / TodayFocus 后端影响
+
+- v2 是前端信息架构重构，不要求后端把接口改名为 `ChatHome` 或 `TodayFocus`。
+- `ChatHome` 需要复用后端现有能力：对话历史、消息写入、计划草稿、计划库、笔记入口、资料设置。
+- `TodayFocus` 需要复用后端现有能力：`GET /api/v1/now` 当前任务校对、`PATCH /api/v1/task-instances/{id}` 执行反馈写回。
+- 后端仍以领域接口命名，不以 UI 页面命名，避免 UI 重构导致 API 大面积返工。
+- 如果后续需要更贴合 v2 的聚合接口，可以新增轻量 `GET /api/v1/home/bootstrap`，但不能替代现有领域接口。
 
 ---
 
@@ -321,7 +329,7 @@ data class ApiResponse<T>(
 
 #### GET /api/v1/now
 
-- **描述**：返回当前设备视角下的推荐任务与候选任务
+- **描述**：返回当前设备视角下的推荐任务与候选任务；v2 中作为 `TodayFocus` 当前任务校对接口
 - **响应体要点**：
   - 当前推荐任务
   - 备用任务列表
@@ -329,7 +337,7 @@ data class ApiResponse<T>(
 
 #### PATCH /api/v1/task-instances/{id}
 
-- **描述**：更新执行实例状态
+- **描述**：更新执行实例状态；v2 中承接 `TodayFocus` 的完成、推迟、放弃反馈
 - **规则**：
   - 支持 `completed / postponed / dropped`
   - 若版本落后，返回 1010
@@ -367,11 +375,11 @@ data class ApiResponse<T>(
 
 #### GET /api/v1/chat/messages
 
-- **描述**：返回当前设备下对话历史
+- **描述**：返回当前设备下对话历史；v2 中供 `ChatHome` 和侧边菜单历史使用
 
 #### POST /api/v1/chat/messages
 
-- **描述**：提交自然语言需求并返回结构化草稿
+- **描述**：提交自然语言需求并返回结构化草稿；v2 中由 `ChatHome` composer 触发
 
 #### POST /api/v1/chat/plan-drafts/apply
 
@@ -467,6 +475,7 @@ data class ApiResponse<T>(
 - 基于 `task_instances` 计算当前推荐任务
 - 输出推荐任务、候选任务和推荐原因
 - 当前版本为补充校对层，不覆盖前端离线主流程
+- v2 中对外仍命名 `NowService`，前端 UI 以 `TodayFocus` 命名呈现
 
 ### 5.5 ChatService
 
@@ -521,6 +530,8 @@ interface DraftGenerator {
 ---
 
 ## 7. 编码任务清单
+
+> 详细断点恢复、任务状态和验收顺序以 [kotlin-dev-plan.md](./kotlin-dev-plan.md) 为准；本节仅保留技术文档中的简表。
 
 - [ ] T-B001：Ktor 项目骨架、插件配置、健康检查
 - [ ] T-B002：`installation_id` 上下文、中间件、统一响应结构

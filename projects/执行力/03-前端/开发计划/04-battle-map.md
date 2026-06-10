@@ -2,89 +2,95 @@
 
 > 模块编号：`M-04`  
 > 对应总体任务：`F-010`  
-> 状态：`pending`
+> 状态：`done`  
+> 当前策略：保留现有总览页结构，只在主线卡片语义、视觉态或进入详情链路有问题时修改
 
 ---
 
-## 一、功能定位与边界
+## 一、模块定位
 
-BattleMap 页负责展示年度主线总览。
+BattleMap 页负责展示年度主线总览，是 `Plan` 和 `TrackDetail` 之间的中间层。
 
 本模块负责：
 
 - 年度总览 Banner
-- 五条主线卡片
-- 状态徽章
-- 7 日执行节奏
-- AI 建议摘要
+- 主线卡片列表
+- 进度和状态分层
 - 进入 `TrackDetail`
 
 本模块不负责：
 
-- 单主线时间线详情
-- PlanEditor 表单
+- 计划编辑表单
+- 单主线的完整时间线与执行数据
 
 ---
 
-## 二、入口、路由与页面文件
+## 二、当前代码落点
 
-**入口**：Plan 页中的 `BattleMap` Hero  
-**路由**：`RouteName.battleMap`
+当前真实代码文件如下：
 
-**页面文件**：
-
-- `lib/pages/battle_map/view.dart`
-- `lib/pages/battle_map/controller.dart`
 - `lib/pages/battle_map/index.dart`
+- `lib/pages/battle_map/controller.dart`
+- `lib/pages/battle_map/view.dart`
 - `lib/pages/battle_map/widgets/overview_banner.dart`
 - `lib/pages/battle_map/widgets/track_card.dart`
 
----
+依赖关系：
 
-## 三、依赖前置
-
-- Plan 模块已完成入口页
-- 主线聚合查询可用
-- `RouteName.trackDetail` 已可用
+- `PlanService`
+- `PlanStore`
+- `RouteName.trackDetail`
 
 ---
 
-## 四、视觉参考与 Figma 对齐
+## 三、当前实现判断
 
-### 参考设计
+当前 BattleMap 模块已经可用：
+
+- 页面独立存在
+- 由 Plan 页进入
+- 可以展示总览和主线卡片
+- 可以进入 `TrackDetail`
+
+原文档里“待开发”的描述已经不准确。  
+当前阶段 BattleMap 的主要问题不在“有没有页面”，而在：
+
+- 主线卡片的信息密度是否够
+- 不同主线视觉主题是否与 Figma 完全一致
+- 与 `TrackDetail` 的跳转和状态承接是否平滑
+
+这些都属于 `M-10` 的联调与对稿范围。
+
+---
+
+## 四、本轮改造边界
+
+只修改以下问题：
+
+1. 主线卡片信息缺失或误导
+2. 点击进入 `TrackDetail` 的参数不对
+3. Banner / 卡片层级明显偏离设计稿
+4. 空数据或异常状态缺失
+
+本轮不做：
+
+- 为了追求组件拆分而重构当前页面
+- 将 BattleMap 和 Plan 合并或改成同页结构
+
+---
+
+## 五、验收标准
+
+- 可从 Plan 稳定进入 BattleMap
+- 主线卡片可区分不同主线
+- 点击卡片能正确进入对应 `TrackDetail`
+- 页面能承接后续 Figma 收口而无需重做骨架
+
+---
+
+## 六、视觉参考
 
 - Figma：`05-BattleMap`
 - `01-需求/references/images/18-计划_计划主页_执行力-作战地图1.png`
 - `01-需求/references/images/19-计划_计划主页_执行力-作战地图2.png`
 - `01-需求/references/images/25-计划_执行力-作战地图.png`
-
-### 页面结构结论
-
-- 页面由年度 Banner + 主线卡片列表组成
-- 五条主线有独立渐变主题，不共享一个卡片配色
-- 每张卡片至少展示：当前阶段、进度、状态、7 日节奏、AI 建议
-
----
-
-## 五、业务内容与数据流
-
-1. 读取本地主线与阶段摘要
-2. 聚合出年度 Banner 数据
-3. 组装五条主线卡片
-4. 点击卡片进入 `RouteName.trackDetail`，参数为 `trackId`
-
----
-
-## 六、验收标准
-
-- 五条主线都能清楚区分
-- 状态 `active / blocked / idle` 清晰可读
-- 每张卡片都可进入 `TrackDetail`
-- 页面整体更像“年度局势总览”，而不是普通列表
-
----
-
-## 七、编码注意事项
-
-- 主题色必须跟随主线
-- 不把 BattleMap 做成 TrackDetail 缩略版

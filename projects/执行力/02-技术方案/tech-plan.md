@@ -1,9 +1,9 @@
 # 执行力 技术方案计划
 
-> 版本：v1.3  
-> 更新时间：2026-05-12  
-> 关联需求文档：[../01-需求/requirements.md](../01-需求/requirements.md)  
-> 关联产品文档：[../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md](../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md)  
+> 版本：v1.4
+> 更新时间：2026-06-05
+> 关联需求文档：[../01-需求/requirements.md](../01-需求/requirements.md)
+> 关联产品文档：[../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md](../01-需求/references/docs/执行力-产品文档-v1.1-2026-03-31.md)
 > 关联设计计划：[../01-需求/figma-design-plan.md](../01-需求/figma-design-plan.md)
 
 ---
@@ -76,19 +76,29 @@ flowchart TB
 - 当前版本没有登录系统，设备实例通过 `installation_id` 区分。
 - `Chat` 草稿生成和 `Notes` 编辑都必须支持本地优先。
 - `Notes` 已进入当前版本，不再作为长期规划功能。
-- 设计与编码的公开路由以当前 PRD 为准：
+- 设计与编码的公开路由以当前 PRD + Figma `V2-Chat-First` 为准：
   - `/`
-  - `/chat`
+  - `/today/focus`
   - `/plan`
-  - `/notes`
-  - `/profile`
+  - `/plan/create`
   - `/plan/battle`
   - `/plan/battle/:trackId`
   - `/plan/editor`
   - `/plan/editor/:id`
-  - `/profile/me`
+  - `/notes`
   - `/notes/folder/:id`
   - `/notes/file/:id`
+  - `/profile`
+  - `/profile/me`
+
+### 1.5 v2 信息架构决策
+
+- `ChatHome` 是 App 根入口和唯一一级页面，承接询问、推荐、工具菜单、侧边菜单和结果反馈。
+- `TodayFocus` 是从 `ChatHome` 进入的二级全屏专注页，只服务当前一件任务。
+- 旧 `NowPage` 不再作为一级首页继续扩展；其推荐、切换、反馈能力迁移为 `TodayFocusService / TodayFocusController` 的业务来源。
+- 旧 `ChatPage` 的消息、本地草稿、输入发送能力迁移到 `ChatHome`；是否保留历史沉浸式 Chat 页由后续代码阶段按成本决定。
+- `Plan / Notes / Profile` 仍保留可路由页面或能力页，但不再通过底部 Tab 作为一级分发入口。
+- 后端接口不因本轮 UI 重构改名，`GET /api/v1/now` 可以继续作为当前任务校对接口，前端以 `TodayFocus` 命名呈现。
 
 ---
 
@@ -212,11 +222,14 @@ flowchart TB
 3. 生成 `sync_operations` 记录，状态为 `pending_sync`。
 4. `Plan / BattleMap / TrackDetail / Now` 订阅本地数据变更并即时刷新。
 
-#### 链路 B：Now 推荐
+#### 链路 B：TodayFocus 推荐与执行
 
-1. `NowService` 从本地读取计划、阶段、任务实例、用户状态。
-2. 本地计算当前推荐任务、备用任务和推荐说明。
-3. 有网络时调用 `/api/v1/now` 做校对或补充。
+1. `TodayFocusService` 或迁移后的 `NowService` 从本地读取计划、阶段、任务实例、用户状态。
+2. 本地计算当前最值得执行的一件任务，并生成简短推荐说明。
+3. `ChatHome` 只展示入口和轻提示，不展示完整专注 UI。
+4. 用户点击“开启今天计划”后进入 `/today/focus`。
+5. `TodayFocus` 完成、推迟或放弃后先写本地 `task_instances`，再返回 `ChatHome` 生成反馈消息。
+6. 有网络时继续调用 `/api/v1/now` 或任务实例接口做远端校对与同步。
 
 #### 链路 C：Chat 草稿
 
@@ -241,29 +254,38 @@ flowchart TB
 | 路由 | 页面 | 说明 |
 |------|------|------|
 | `/splash` | SplashPage | 启动页 |
-| `/` | NowPage | 默认一级页 |
-| `/chat` | ChatPage | 一级入口进入的全屏页 |
-| `/plan` | PlanPage | 一级页 |
-| `/notes` | NotesPage | 一级页 |
-| `/profile` | ProfilePage | 一级页 |
+| `/` | ChatHomePage | v2 唯一一级页面，对话主入口 |
+| `/today/focus` | TodayFocusPage | 二级全屏专注页 |
+| `/plan` | PlanPage / PlanLibraryPage | 从侧边菜单进入的计划库 |
+| `/plan/create` | PlanEditorPage | 从工具菜单或对话草稿进入的新建计划 |
+| `/notes` | NotesPage / NotesEntryPage | 从工具菜单或侧边菜单进入的笔记入口 |
+| `/profile` | ProfilePage | 从侧边菜单进入的设置 / 资料入口 |
 | `/plan/battle` | BattleMapPage | 二级页 |
 | `/plan/battle/:trackId` | TrackDetailPage | 计划详情页 |
-| `/plan/editor` | PlanEditorPage | 新建计划 |
+| `/plan/editor` | PlanEditorPage | 兼容旧入口的新建计划 |
 | `/plan/editor/:id` | PlanEditorPage | 编辑计划 |
 | `/profile/me` | UserProfilePage | 个人资料页 |
 | `/notes/folder/:id` | NoteFolderPage | 子文件夹页 |
 | `/notes/file/:id` | NoteFilePage | 文件页 |
 
+说明：
+
+- `/plan/create` 是 v2 面向用户的创建计划入口，可在代码阶段复用 `PlanEditorPage`。
+- `/plan/editor` 可作为兼容旧跳转的别名保留，避免一次重构打断既有链路。
+- `ToolMenu` 和 `SideMenu` 是 `ChatHome` 内部 overlay / drawer，不强制注册成独立路由。
+
 ### 4.2 核心模块列表
 
 | 模块 | 功能描述 | 优先级 |
 |------|---------|--------|
-| AppShell | 主框架、5 Tab 导航、页面容器 | 高 |
+| AppShell | Splash、根路由、无底部 Tab 的 ChatHome 壳层 | 高 |
 | ThemeSystem | 颜色、字体、组件 Token 映射 | 高 |
 | LocalStore | `GetStorage + Hive` 本地存储基座 | 高 |
 | SyncEngine | 同步队列、重试、状态标记 | 高 |
-| NowModule | 推荐任务计算、专注开始、换一个逻辑 | 高 |
-| ChatModule | 对话消息、草稿管理、应用草稿 | 高 |
+| ChatHomeModule | 对话主入口、composer、工具菜单、侧边菜单、反馈消息 | 高 |
+| TodayFocusModule | 当前任务推荐、全屏专注、完成 / 推迟 / 放弃反馈 | 高 |
+| NowModule | 保留为推荐算法和旧实现迁移来源，不再作为一级页面扩展 | 中 |
+| ChatModule | 保留为消息与草稿能力来源，逐步并入 ChatHome | 中 |
 | PlanModule | 列表、概览、作战地图入口 | 高 |
 | TrackModule | 详情、时间线、阶段与任务聚合 | 高 |
 | PlanEditorModule | 计划、阶段、任务编辑与校验 | 高 |
@@ -275,8 +297,9 @@ flowchart TB
 - 页面状态：使用 `GetxController`
 - 全局状态：使用 `GetxService` / `Store`
 - 数据来源优先级：`Hive / GetStorage > Store 聚合态 > Remote refresh`
-- 主壳页：`Now / Plan / Notes / Profile`
-- Chat：占用一个导航入口，但进入后为独立沉浸页
+- 主入口：`ChatHome`
+- 二级页：`TodayFocus / Plan / PlanEditor / Notes / Profile / BattleMap / TrackDetail / NoteFolder / NoteFile / UserProfile`
+- v2 不再使用底部 Tab 分发能力，`ToolMenu` 与 `SideMenu` 是主要导航骨架
 
 ### 4.4 前端目录建议
 
@@ -287,6 +310,8 @@ lib/
 ├── pages/
 │   ├── splash/
 │   ├── main/
+│   ├── chat_home/
+│   ├── today_focus/
 │   ├── now/
 │   ├── chat/
 │   ├── plan/
@@ -356,15 +381,15 @@ src/main/kotlin/
 | 任务 | 描述 | 预估工作量 | 优先级 |
 |------|------|----------|--------|
 | T-F001 | 工程初始化、主题 Token、基础路由 | 2d | 高 |
-| T-F002 | Splash + MainShell + 5 Tab 导航 | 2d | 高 |
+| T-F002 | Splash + ChatHome 根入口 + 无底部 Tab 壳层 | 2d | 高 |
 | T-F003 | Plan 页面与 BattleMap 入口 | 2d | 高 |
 | T-F004 | BattleMap + TrackDetail | 4d | 高 |
 | T-F005 | PlanEditor 与本地保存链路 | 4d | 高 |
-| T-F006 | Now 推荐与执行反馈 | 4d | 高 |
-| T-F007 | Chat 页、草稿落本地、应用草稿 | 3d | 中高 |
+| T-F006 | TodayFocus 推荐与执行反馈 | 3d | 高 |
+| T-F007 | ChatHome 对话入口、composer、工具菜单、侧边菜单 | 4d | 高 |
 | T-F008 | Notes / NoteFolder / NoteFile | 4d | 高 |
 | T-F009 | Profile + UserProfile | 2d | 中 |
-| T-F010 | 联调、异常态与 Figma 对照修正 | 3d | 高 |
+| T-F010 | v2 链路联调、异常态与 Figma 对照修正 | 3d | 高 |
 
 ### 6.2 后端任务（Kotlin）
 
@@ -386,8 +411,8 @@ src/main/kotlin/
 
 | 阶段 | 前端任务 | 后端任务 | 里程碑 |
 |------|---------|---------|--------|
-| 第一阶段（本地可用） | T-F001 ~ T-F006、T-F008、T-F009 | T-B001 ~ T-B006、T-B008 | 完成离线计划、离线笔记和主导航闭环 |
-| 第二阶段（同步增强） | T-F007、T-F010 | T-B007、T-B009 | 完成 Chat 草稿、Notes 同步和异常态补偿 |
+| 第一阶段（本地可用） | T-F001 ~ T-F009 | T-B001 ~ T-B006、T-B008 | 完成 ChatHome 根入口、TodayFocus、离线计划和离线笔记闭环 |
+| 第二阶段（同步增强） | T-F010 | T-B007、T-B009 | 完成 v2 链路联调、Chat 草稿、Notes 同步和异常态补偿 |
 | 第三阶段（长期预留） | PC 适配、模块拆分 | 登录、多端同步、AI 整理 | 为个人助理型产品打基础 |
 
 ---
@@ -398,9 +423,11 @@ src/main/kotlin/
 |------|------|---------|
 | 文档口径与代码实现不一致 | 编码返工 | 先统一 PRD、Figma、技术方案和开发计划，再进入代码 |
 | 离线与远端状态不一致 | 页面显示偏差 | 引入 `sync_state`、版本号和补偿同步 |
-| Notes 层级与计划层级混淆 | 导航体验混乱 | 明确 `Notes` 是一级页，`NoteFolder / NoteFile` 是二级页 |
+| Notes 层级与计划层级混淆 | 导航体验混乱 | 明确 `Notes` 是独立能力页，`NoteFolder / NoteFile` 是其下级页面 |
 | Chat、Plan、Notes 三条链路相互引用过早 | 状态复杂度上升 | 当前版本先解耦，后续再做互链 |
 | Markdown 预览实现质量不稳定 | 文件页体验下降 | 当前只覆盖标题、段落、列表的基础渲染 |
+| v2 仍沿用底部 Tab 心智 | 用户继续感觉像旧效率仪表盘 | 根路由只显示 `ChatHome`，`Plan / Notes / Profile` 改从工具菜单、侧边菜单或对话意图进入 |
+| 专注页重新堆叠状态卡 | 破坏“一屏一件事”原则 | `TodayFocus` 首屏禁止 composer、底部 Tab、侧边菜单、备用任务列表和统计卡 |
 
 ---
 
@@ -410,7 +437,8 @@ src/main/kotlin/
 
 - Flutter 端以 `GetX + GetStorage + Hive + dio` 为核心，承担本地数据源职责。
 - Kotlin 端以 `Ktor + Exposed + PostgreSQL` 为核心，承担同步与远端持久化职责。
-- MVP 已正式纳入 `Notes`，并与 `Plan / Now / Chat / Profile` 并列成为当前版本能力。
+- MVP 已正式纳入 `Notes`；v2 首层入口调整为 `ChatHome`，`Plan / Notes / Profile` 从对话、工具菜单和侧边菜单进入。
+- `TodayFocus` 取代旧 `Now` 首页的用户可见入口，但可以继续复用旧 `Now` 推荐与反馈业务能力。
 - 后续可以在不推翻当前结构的前提下扩展到 PC、登录、多端同步和 AI 整理能力。
 
 ---
