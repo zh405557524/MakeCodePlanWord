@@ -17,6 +17,7 @@
 | `backendRepo` | `{Java 工程绝对路径或留空}` | 后端代码工程位置 |
 | `flutterChannel` | `stable` | Flutter 通道（stable / beta / master） |
 | `backendFramework` | `Spring Boot` | Java 后端框架（固定：Spring Boot） |
+| `backendBuildTool` | `Gradle` | Java 后端构建工具（固定：Gradle） |
 | `targetStores` | `AppStore, Google Play` | 目标应用商店清单 |
 
 ---

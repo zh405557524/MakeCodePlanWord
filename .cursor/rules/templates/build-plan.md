@@ -71,7 +71,7 @@ buildCode：
 ## 6. 构建后自动化
 
 - [ ] 自动跑 `flutter analyze` / `flutter test`
-- [ ] 自动跑 `./mvnw test`
+- [ ] 自动跑 `./gradlew test`
 - [ ] 自动符号上传（Crashlytics / Bugly / Sentry）
 - [ ] 自动通知（Slack / 飞书 / 钉钉 webhook）
 

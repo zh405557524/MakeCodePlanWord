@@ -79,7 +79,7 @@ Java 编码属于阻塞式代码开发阶段：
 当前 Java 编码步骤完成必须满足：
 
 - 本轮目标代码已落地
-- `./mvnw verify` 通过；必要时 `./mvnw test` 通过
+- `./gradlew build` 通过；必要时 `./gradlew test` 通过
 - 对应模块开发文档与 `java-dev-plan.md` 任务状态已回写
 - 数据库迁移脚本（如有）已落到 `db/migration/` 并通过本地启动验证
 - `change-plan.md` 中本轮变更条目已归档（如有）

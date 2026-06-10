@@ -1,13 +1,15 @@
 ---
 description: Java 后端项目初始化规则，提供通用工程骨架、依赖基线与可直接复用的模板代码（Java 21 + Spring Boot + MyBatis-Plus + PostgreSQL + Redis）
-globs: "**/pom.xml,**/src/main/java/**/Application.java"
+globs: "**/build.gradle,**/settings.gradle,**/src/main/java/**/Application.java"
 alwaysApply: false
 ---
 
 # 项目初始化规则
 
 > 本规则用于创建一个新的 Java 后端工程时，快速建立可持续的 AI 编码基线。  
-> 默认技术栈：Java 21 + Spring Boot 3.x + Maven + MyBatis-Plus + PostgreSQL + Redis + JWT + Logback。
+> 默认技术栈：Java 21 + Spring Boot 3.x + Gradle + MyBatis-Plus + PostgreSQL + Redis + JWT + Logback。
+
+> 项目级覆盖（剧说）：后端工程固定为 `/Users/soul/code/lxwx/lxwx_service/lxwxservice`，包名固定为 `com.lxwx.narrateservice`，构建工具固定使用 Gradle / Gradle Wrapper；不要回退到 Maven，也不要按旧 Kotlin 项目记忆生成后端代码。启动入口使用 `ServerApplication.java`，目录结构按 `common/auth/user/product/order/payment/entitlement/app/admin` 分层。
 
 ---
 
@@ -15,7 +17,7 @@ alwaysApply: false
 
 - 新建 Java 后端项目
 - 把现有工程整理成统一骨架
-- 需要快速建立 `Application/config/controller/service/mapper/domain/common` 基础设施
+- 需要快速建立 `Application/config/controller/service/repository/entity/dto/vo/common` 基础设施
 
 ---
 
@@ -23,13 +25,13 @@ alwaysApply: false
 
 初始化阶段至少要完成：
 
-1. 建立标准 Maven 目录结构
+1. 建立标准 Gradle 目录结构
 2. 建立 `{Project}Application.java`
 3. 建立 `config/`（Redis / Jackson / MyBatis-Plus / Security 配置）
 4. 建立 `controller/`
 5. 建立 `service/`
-6. 建立 `mapper/`
-7. 建立 `domain/`（dto / vo / entity）
+6. 建立 `repository/`
+7. 建立 `entity/`、`dto/`、`vo/` 或项目文档指定的领域目录
 8. 建立 `common/`
 9. 建立 `db/migration/`（迁移脚本目录）
 10. 产出最小可运行健康检查接口
@@ -73,89 +75,52 @@ src/main/resources/
 
 ---
 
-## 四、推荐依赖基线（pom.xml）
+## 四、推荐依赖基线（build.gradle）
 
-```xml
-<project>
-  <modelVersion>4.0.0</modelVersion>
+```groovy
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.x.x'
+    id 'io.spring.dependency-management' version '1.1.x'
+}
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.x.x</version>
-    <relativePath/>
-  </parent>
+group = 'com.example'
+version = '0.1.0'
 
-  <properties>
-    <java.version>21</java.version>
-    <mybatis-plus.version>3.5.x</mybatis-plus.version>
-    <jjwt.version>0.12.x</jjwt.version>
-  </properties>
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-redis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.baomidou</groupId>
-      <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-      <version>${mybatis-plus.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mindrot</groupId>
-      <artifactId>jbcrypt</artifactId>
-      <version>0.4</version>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-api</artifactId>
-      <version>${jjwt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-impl</artifactId>
-      <version>${jjwt.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-jackson</artifactId>
-      <version>${jjwt.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-</project>
+repositories {
+    mavenCentral()
+}
+
+ext {
+    mybatisPlusVersion = '3.5.x'
+    jjwtVersion = '0.12.x'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation "com.baomidou:mybatis-plus-spring-boot3-starter:${mybatisPlusVersion}"
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.mindrot:jbcrypt:0.4'
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
 ```
 
 ---
@@ -294,5 +259,5 @@ spring.flyway.locations=classpath:db/migration
 - [ ] 数据库连接成功，Flyway 迁移脚本可执行
 - [ ] Redis 连接成功且关键缓存键可读写
 - [ ] JWT 配置已就绪（可在测试环境签发并验证）
-- [ ] `./mvnw verify` 通过
+- [ ] `./gradlew build` 通过
 - [ ] 可在此基础上继续新增业务接口

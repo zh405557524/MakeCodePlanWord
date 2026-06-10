@@ -33,7 +33,7 @@ alwaysApply: false
 读取 `projects/{currentProject}/01-需求/requirements.md` 与 `projects/{currentProject}/01-需求/figma-design-plan.md`，重点提取：
 - 所有功能模块及其优先级
 - 页面、状态、组件与交互的设计约束
-- 技术约束（Flutter 版本/平台、Java 框架）
+- 技术约束（Flutter 版本/平台、Java 框架、Gradle 构建工具）
 - 性能和安全要求
 - 里程碑规划
 
@@ -45,7 +45,7 @@ alwaysApply: false
 
 **架构模式**（根据需求选择）：
 - 前端：Flutter + GetX / Riverpod / BLoC
-- 后端：Java + Spring Boot + MyBatis-Plus + PostgreSQL + Redis
+- 后端：Java + Spring Boot + Gradle + MyBatis-Plus + PostgreSQL + Redis
 - 数据库：根据需求选择（SQLite/PostgreSQL/MySQL/Firebase）
 - 通信协议：HTTP REST / WebSocket（如需实时功能）
 
@@ -77,7 +77,8 @@ alwaysApply: false
 |------|------|------|---------|
 | 前端 | Flutter | | |
 | 状态管理 | | | |
-| 后端 | Java + Spring Boot | Java 21 / Spring Boot 3.x | |
+| 后端 | Java + Spring Boot + Gradle | Java 21 / Spring Boot 3.x / Gradle | |
+| 后端构建 | Gradle | build.gradle / settings.gradle | |
 | 数据库 | | | |
 | 部署 | | | |
 
@@ -144,6 +145,10 @@ src/main/java/com/{company}/{project}/
 ├── mapper/        # MyBatis-Plus 数据访问
 ├── domain/        # dto / vo / entity
 └── common/        # ApiResponse / ErrorCode / Exception
+build.gradle
+settings.gradle
+gradlew
+gradlew.bat
 ```
 
 ### 5.2 核心模块列表

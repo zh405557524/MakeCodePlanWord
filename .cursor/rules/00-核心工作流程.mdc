@@ -1,12 +1,12 @@
 ---
-description: 编程流程工作台总调度 - 收到任何输入时第一时间执行，识别当前阶段、读取工作空间状态并加载对应子规则
+description: 编程流程工作台总调度 - 收到任何输入时第一时间执行，识别当前阶段、读取工作空间状态并委托对应流程模块
 globs:
 alwaysApply: true
 ---
 
 # 编程流程工作台 - 核心调度规则
 
-**收到任何用户输入时，必须首先执行本规则。总调度只负责识别阶段、定位工作空间、读取状态记录、加载对应规则和依赖文件，不直接处理具体步骤产物。读取 `workflow.md` 时，必须同时查看“当前流程”和“总体流程列表”，先判断整体工程还差哪些步骤、哪些已经完成、哪些因新需求需要重新同步。**
+**收到任何用户输入时，必须首先执行本规则。总调度只负责识别阶段、定位工作空间、读取状态记录、委托对应流程模块和等待模块返回状态，不直接处理具体步骤产物。读取 `workflow.md` 时，必须同时查看“当前流程”和“总体流程列表”，先判断整体工程还差哪些步骤、哪些已经完成、哪些因新需求需要重新同步。**
 
 ---
 
@@ -22,8 +22,25 @@ alwaysApply: true
 
 - `.cursor/rules/` 只保存抽象规则，不写入具体项目业务状态。
 - `projects/{currentProject}/` 才保存具体任务、生成文件、恢复点、变更登记和项目级注意事项。
-- 总流程像责任链调度器，只决定“进入哪一步”和“加载哪些文件”；具体规则只在进入对应步骤后生效。
+- 总流程像责任链调度器，只决定“进入哪一步”“委托哪个模块”和“等待什么状态”；具体规则只在进入对应步骤后生效。
 - 进入下一步后，不依赖上一轮对话上下文；必须以 `workflow.md`、`change-plan.md`、`change-log.md` 和已生成文件作为恢复来源。
+
+### 责任链模块返回契约
+
+主流程只识别子流程返回状态，不理解子流程内部步骤：
+
+| 子流程状态 | 主流程动作 |
+|------------|------------|
+| `done` | 记录模块完成，按 `workflow.md` 的下一步默认动作进入下一阶段或等待确认 |
+| `blocked` | 记录阻塞原因、阻塞文件和等待条件，不替子流程做内部决策 |
+| `waiting_review` | 停留在当前阶段，等待用户确认或反馈 |
+| `in_progress` | 继续停留在当前阶段，下一轮仍委托同一个子流程模块 |
+
+要求：
+
+- 主流程只加载当前阶段入口规则，例如 Flutter 编码阶段只加载 `13-Flutter编码索引.mdc`。
+- 入口规则负责决定是否继续加载自己的子规则，主流程不得直接跳入 Flutter 初始化、新功能、UI、bug、重构等内部规则。
+- 子流程返回 `blocked` 时，主流程只记录阻塞信息并等待，不尝试替子流程选择 mock、接口、页面结构或实现策略。
 
 ---
 
@@ -47,8 +64,8 @@ alwaysApply: true
 | Java总体开发计划 | Java开发计划、后端总体开发计划、后端编码计划、Java 开发计划 | `10-Java开发计划文档.mdc` |
 | Flutter模块开发文档 | Flutter模块开发文档、前端模块开发文档、Flutter模块计划 | `11-Flutter模块开发文档.mdc` |
 | Java模块开发文档 | Java模块开发文档、后端模块开发文档、Java模块计划、接口模块文档 | `12-Java模块开发文档.mdc` |
-| Flutter编码 | 生成代码、输出项目代码、实现页面、继续编码、搭建前端工程、接入前端、Flutter 编码 | `13-Flutter编码索引.mdc` + `flutter/` 下相关编码规则 |
-| Java编码 | 写后端、实现接口、继续后端、搭建后端工程、Java 编码、后端实现 | `14-Java编码索引.mdc` + `java/` 下相关编码规则 |
+| Flutter编码 | 生成代码、输出项目代码、实现页面、继续编码、搭建前端工程、接入前端、Flutter 编码 | `13-Flutter编码索引.mdc`（Flutter 编码子流程入口） |
+| Java编码 | 写后端、实现接口、继续后端、搭建后端工程、Java 编码、后端实现 | `14-Java编码索引.mdc`（Java 编码子流程入口） |
 | 联调与测试QA | 联调、QA、测试、回归、E2E、集成测试、缺陷登记、测试报告 | `15-联调与测试QA.mdc` |
 | 构建与打包 | 打包、构建、签名、APK、AAB、IPA、构建配置、CI 构建、出包 | `16-构建与打包.mdc` |
 | 应用商店上架 | 上架、应用商店、AppStore、Google Play、华为、小米、应用市场、商店素材、隐私政策、合规、审核 | `17-应用商店上架.mdc` |
@@ -303,14 +320,14 @@ projects/
 
 1. `projects/{currentProject}/workflow.md`
 2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
-3. 当前阶段对应的 `.cursor/rules/` 子规则（13-Flutter编码索引）
-4. `.cursor/rules/flutter/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-导航规则.mdc`，并按需补读 `05-多语言支持.mdc`、`06-第三方依赖参考.mdc`、`07-新功能开发.mdc`、`08-UI处理任务.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
+3. 当前阶段对应的 `.cursor/rules/` 子流程入口规则：`13-Flutter编码索引.mdc`
+4. Flutter 内部初始化、功能开发、UI、bug、重构等规则由 `13-Flutter编码索引.mdc` 在子流程内部按状态加载，主流程不得直接加载或替它选择
 5. 当前项目的技术文档与开发计划：
    - `projects/{currentProject}/03-前端/flutter-tech.md`
    - `projects/{currentProject}/03-前端/flutter-dev-plan.md`
    - `projects/{currentProject}/03-前端/开发计划/*.md`
    - 若存在后端接口文档，也必须读取 `projects/{currentProject}/04-后端/java-tech.md`
-6. 若技术文档指定 `referenceProject`，必须先检查参考工程真实目录结构和入口文件，再生成代码。
+6. 若技术文档指定 `referenceProject`，由 Flutter 编码子流程检查参考工程真实目录结构和入口文件，再生成代码。
 
 #### 6.1.2 必须先确认架构清单
 
@@ -348,8 +365,8 @@ lib/
 
 1. `projects/{currentProject}/workflow.md`
 2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
-3. 当前阶段对应的 `.cursor/rules/` 子规则（14-Java编码索引）
-4. `.cursor/rules/java/01-项目初始化规则.mdc`、`02-项目结构目录.mdc`、`03-编码规范.mdc`、`04-路由与控制器规则.mdc`，并按需补读 `05-数据库与持久化.mdc`、`06-第三方依赖参考.mdc`、`07-新接口开发.mdc`、`08-鉴权与安全.mdc`、`09-大功能先规划再编码.mdc`、`10-编码工作流程.mdc`
+3. 当前阶段对应的 `.cursor/rules/` 子流程入口规则：`14-Java编码索引.mdc`
+4. Java 内部初始化、新接口、数据库、安全、重构等规则由 `14-Java编码索引.mdc` 在子流程内部按状态加载，主流程不得直接加载或替它选择
 5. 当前项目的技术文档与开发计划：
    - `projects/{currentProject}/04-后端/java-tech.md`
    - `projects/{currentProject}/04-后端/java-dev-plan.md`
@@ -382,7 +399,7 @@ src/main/resources/
 1. 扫描 `src/main/java/{packageName}/` 顶层目录，确认与规则一致。
 2. 扫描 `controller/`，确认仅做参数解析和返回拼装。
 3. 扫描 `service/`，确认承担业务逻辑且没有直接的 SQL 字符串拼接。
-4. 至少跑过 `./mvnw verify` 与必要的 `./mvnw test`。
+4. 至少跑过 `./gradlew build` 与必要的 `./gradlew test`。
 5. 更新 `workflow.md` 中的恢复点、执行记录和下一步。
 
 ---
