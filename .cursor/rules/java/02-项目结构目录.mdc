@@ -6,6 +6,19 @@ alwaysApply: false
 
 # 项目结构目录
 
+## 项目文档优先
+
+本规则提供通用 Spring Boot 结构参考。若当前项目的 `projects/{currentProject}/04-后端/java-tech.md` 或 `java-dev-plan.md` 已声明具体包名、构建工具和模块目录，则以项目文档为准。
+
+剧说项目级覆盖：
+
+- 后端工程：`/Users/soul/code/lxwx/lxwx_service/lxwxservice`
+- 基础包名：`com.lxwx.narrateservice`
+- 构建工具：Gradle / Gradle Wrapper，不使用 Maven
+- 后端语言：Java，不沿用旧 Kotlin 项目结构
+- 启动入口：`ServerApplication.java`
+- 顶层业务分层：`common`、`auth`、`user`、`product`、`order`、`payment`、`entitlement`、`app/*`、`admin`
+
 ## 一、工程根目录
 
 ```text
@@ -17,9 +30,10 @@ project/
 │   │   └── resources/
 │   └── test/
 │       └── java/
-├── pom.xml
-├── mvnw
-└── mvnw.cmd
+├── build.gradle
+├── settings.gradle
+├── gradlew
+└── gradlew.bat
 ```
 
 ---
@@ -91,7 +105,7 @@ src/test/java/com/{company}/{project}/
 
 ## 六、模块化拆分（大型项目）
 
-当项目变大、单 Maven 模块不堪重负时：
+当项目变大、单 Gradle 模块不堪重负时：
 
 ```text
 project/

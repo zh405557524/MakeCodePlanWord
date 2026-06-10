@@ -1,6 +1,6 @@
 ---
 description: Java 后端通用第三方依赖参考，按依赖类别而不是业务包名组织
-globs: "**/pom.xml"
+globs: "**/build.gradle"
 alwaysApply: false
 ---
 
@@ -18,7 +18,7 @@ alwaysApply: false
 
 - 先确认用途，再引入依赖
 - 不因为参考项目依赖很多就全部照搬
-- 版本统一通过 Maven `properties`、Spring Boot BOM 或公司级 dependency management 管理
+- 版本统一通过 `gradle.properties`、`ext` 变量、Spring Boot 插件或公司级版本约束管理
 
 ---
 
@@ -146,26 +146,32 @@ alwaysApply: false
 
 ## 六、版本统一
 
-推荐使用 Maven `properties` 与 Spring Boot BOM 统一管理：
+推荐使用 Gradle 插件、`ext` 变量或 `gradle.properties` 统一管理：
 
-```xml
-<properties>
-  <java.version>21</java.version>
-  <mybatis-plus.version>3.5.x</mybatis-plus.version>
-  <jjwt.version>0.12.x</jjwt.version>
-</properties>
+```groovy
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.x.x'
+    id 'io.spring.dependency-management' version '1.1.x'
+}
 
-<dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-dependencies</artifactId>
-      <version>3.x.x</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-  </dependencies>
-</dependencyManagement>
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+ext {
+    mybatisPlusVersion = '3.5.x'
+    jjwtVersion = '0.12.x'
+}
+
+dependencies {
+    implementation "com.baomidou:mybatis-plus-spring-boot3-starter:${mybatisPlusVersion}"
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+}
 ```
 
 ---

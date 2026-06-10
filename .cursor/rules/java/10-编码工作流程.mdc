@@ -1,6 +1,6 @@
 ---
 description: Java 编码工作流程规则，仅用于进入 Java 代码阶段后的执行、验证与回写，不负责整体项目流程调度
-globs: "**/src/main/java/**/*.java,**/pom.xml,**/src/test/java/**/*.java"
+globs: "**/src/main/java/**/*.java,**/build.gradle,**/settings.gradle,**/src/test/java/**/*.java"
 alwaysApply: false
 ---
 
@@ -126,8 +126,8 @@ alwaysApply: false
 
 至少做：
 
-- `./mvnw verify`
-- `./mvnw test`（必要时）
+- `./gradlew build`
+- `./gradlew test`（必要时）
 - 若是接口或链路改动，做最小链路验证（curl / Postman / 集成测试）
 
 ### 4.5 回写
@@ -223,7 +223,7 @@ Java 编码属于阻塞式代码开发阶段。
 当前 Java 编码步骤要满足以下条件，才可认为本轮完成：
 
 - 本轮目标代码已落地
-- `./mvnw verify` / `./mvnw test` 已通过或已明确说明无法执行原因
+- `./gradlew build` / `./gradlew test` 已通过或已明确说明无法执行原因
 - 数据迁移脚本（如有）已通过本地验证
 - 当前步骤相关文档已回写
 - 当前步骤的阻塞与风险已记录

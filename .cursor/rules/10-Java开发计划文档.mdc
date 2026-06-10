@@ -69,7 +69,7 @@ alwaysApply: false
 
 ## 技术口径
 
-- 按 `Java + Spring Boot + MyBatis-Plus + PostgreSQL + Redis + JWT + 自定义 ApiResponse`（如技术方案未另行指定）
+- 按 `Java + Spring Boot + Gradle + MyBatis-Plus + PostgreSQL + Redis + JWT + 自定义 ApiResponse`（如技术方案未另行指定）
 - 数据库迁移使用 Flyway 或 Liquibase，由 `java-tech.md` 中明确
 - 恢复点与任务必须贴合该技术路线
 - 不在本文档发明前后端通信协议

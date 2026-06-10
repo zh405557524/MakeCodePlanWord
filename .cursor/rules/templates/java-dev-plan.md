@@ -95,7 +95,7 @@
 
 ## 9. 编码约束
 
-- 默认 `Java + Spring Boot + MyBatis-Plus + PostgreSQL + Redis + JWT + 自定义 ApiResponse`
+- 默认 `Java + Spring Boot + Gradle + MyBatis-Plus + PostgreSQL + Redis + JWT + 自定义 ApiResponse`
 - 分层：Controller → Service → Mapper，禁止跨层
 - 接口契约必须与 `java-tech.md` 一致；若需变更先走 `change-plan.md`
 

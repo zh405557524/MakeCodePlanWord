@@ -105,6 +105,6 @@ Optional<UserEntity> findByEmail(String email);
 
 ## 十、验证要求
 
-- 改动后至少通过 `./mvnw verify`
+- 改动后至少通过 `./gradlew build`
 - 关键链路改动后补单元测试或集成测试
 - 文件、命名、目录、依赖关系必须保持一致

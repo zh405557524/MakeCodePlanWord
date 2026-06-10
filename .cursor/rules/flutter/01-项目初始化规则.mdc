@@ -1,13 +1,13 @@
 ---
-description: Flutter 项目初始化规则，提供通用工程骨架、依赖基线与可直接复用的模板代码
+description: Flutter 项目初始化规则，只负责复制项目规则模板与搭建基础工程结构
 globs: "**/pubspec.yaml,**/lib/main.dart,**/lib/global.dart"
 alwaysApply: false
 ---
 
 # 项目初始化规则
 
-> 本规则用于创建一个新的 Flutter 工程时，快速建立可持续的 AI 编码基线。
-> 目标不是只搭目录，而是同时给出可直接复用的模板代码。
+> 本规则只负责 Flutter 编码子流程中的初始化分支。
+> 初始化只做两件事：把总体 Flutter 规则模板复制到项目 `.cursor/rules/`，以及搭建基础工程结构。
 
 ---
 
@@ -19,24 +19,45 @@ alwaysApply: false
 
 ---
 
-## 二、初始化目标
+## 二、职责边界
 
-初始化阶段至少要完成：
+初始化阶段只处理：
 
-1. 建立标准目录结构
-2. 建立 `main.dart`
-3. 建立 `global.dart`
-4. 建立 `theme.dart`
-5. 建立 `routes/`
-6. 建立 `services/`
-7. 建立 `store/`
-8. 建立 `utils/`
-9. 建立 `widgets/`
-10. 产出最小可运行首页或壳页
+1. 从总体 Flutter 规则模板复制一套到目标工程 `.cursor/rules/`。
+2. 搭建可继续功能开发的 Flutter 基础结构。
+
+初始化阶段不处理：
+
+- 业务功能开发
+- 页面 UI 对稿
+- bug 修复
+- 业务逻辑修改
+- 重构
+- 支付、短信、一键登录、上传、播放、对象存储、CDN、APM、客服等未确定 SDK 接入
+
+初始化完成后，控制权返回 `13-Flutter编码索引.mdc`，由编码索引继续进入功能开发循环；除非初始化本身阻塞，否则不直接返回主流程。
 
 ---
 
-## 三、推荐目录骨架
+## 三、初始化目标
+
+初始化阶段至少要完成：
+
+1. 建立项目 `.cursor/rules/`，并写入 Flutter 项目规则。
+2. 建立标准目录结构。
+3. 建立 `main.dart`。
+4. 建立 `global.dart`。
+5. 建立 `theme.dart`。
+6. 建立 `routes/`。
+7. 建立 `services/`。
+8. 建立 `store/`。
+9. 建立 `utils/`。
+10. 建立 `widgets/`。
+11. 产出最小可运行首页或壳页。
+
+---
+
+## 四、推荐目录骨架
 
 ```text
 lib/
@@ -90,7 +111,7 @@ lib/
 
 ---
 
-## 四、推荐依赖基线
+## 五、推荐依赖基线
 
 基础依赖通常包括：
 
@@ -116,9 +137,9 @@ lib/
 
 ---
 
-## 五、模板代码
+## 六、模板代码
 
-### 5.1 `lib/main.dart`
+### 6.1 `lib/main.dart`
 
 ```dart
 import 'package:flutter/material.dart';
@@ -186,7 +207,7 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-### 5.2 `lib/global.dart`
+### 6.2 `lib/global.dart`
 
 ```dart
 import 'package:get/get.dart';
@@ -216,7 +237,7 @@ class Global {
 }
 ```
 
-### 5.3 `lib/routes/index.dart`
+### 6.3 `lib/routes/index.dart`
 
 ```dart
 library routes;
@@ -234,7 +255,7 @@ part 'transitions.dart';
 export 'package:go_router/go_router.dart';
 ```
 
-### 5.4 `lib/routes/name.dart`
+### 6.4 `lib/routes/name.dart`
 
 ```dart
 part of 'index.dart';
@@ -244,7 +265,7 @@ abstract class RouteName {
 }
 ```
 
-### 5.5 `lib/routes/router.dart`
+### 6.5 `lib/routes/router.dart`
 
 ```dart
 part of 'index.dart';
@@ -273,7 +294,7 @@ abstract class CustomRouter {
 }
 ```
 
-### 5.6 `lib/routes/observers.dart`
+### 6.6 `lib/routes/observers.dart`
 
 ```dart
 part of 'index.dart';
@@ -281,7 +302,7 @@ part of 'index.dart';
 class RouteObservers extends RouteObserver<Route<dynamic>> {}
 ```
 
-### 5.7 `lib/services/index.dart`
+### 6.7 `lib/services/index.dart`
 
 ```dart
 library services;
@@ -295,7 +316,7 @@ part 'storage.dart';
 part 'event.dart';
 ```
 
-### 5.8 `lib/services/http.dart`
+### 6.8 `lib/services/http.dart`
 
 ```dart
 part of 'index.dart';
@@ -315,7 +336,7 @@ class HttpService extends GetxService {
 }
 ```
 
-### 5.9 `lib/services/storage.dart`
+### 6.9 `lib/services/storage.dart`
 
 ```dart
 part of 'index.dart';
@@ -341,7 +362,7 @@ class StorageService extends GetxService {
 }
 ```
 
-### 5.10 `lib/services/event.dart`
+### 6.10 `lib/services/event.dart`
 
 ```dart
 part of 'index.dart';
@@ -349,7 +370,7 @@ part of 'index.dart';
 class EventService extends GetxService {}
 ```
 
-### 5.11 `lib/store/index.dart`
+### 6.11 `lib/store/index.dart`
 
 ```dart
 library store;
@@ -361,7 +382,7 @@ part 'user.dart';
 part 'config.dart';
 ```
 
-### 5.12 `lib/store/user.dart`
+### 6.12 `lib/store/user.dart`
 
 ```dart
 part of 'index.dart';
@@ -374,7 +395,7 @@ class UserStore extends GetxController {
 }
 ```
 
-### 5.13 `lib/store/config.dart`
+### 6.13 `lib/store/config.dart`
 
 ```dart
 part of 'index.dart';
@@ -384,7 +405,7 @@ class ConfigStore extends GetxController {
 }
 ```
 
-### 5.14 `lib/utils/index.dart`
+### 6.14 `lib/utils/index.dart`
 
 ```dart
 library utils;
@@ -394,7 +415,7 @@ export 'logger.dart';
 export 'assets.dart';
 ```
 
-### 5.15 `lib/utils/constants.dart`
+### 6.15 `lib/utils/constants.dart`
 
 ```dart
 abstract class Constants {
@@ -403,7 +424,7 @@ abstract class Constants {
 }
 ```
 
-### 5.16 `lib/utils/logger.dart`
+### 6.16 `lib/utils/logger.dart`
 
 ```dart
 import 'package:flutter/foundation.dart';
@@ -426,7 +447,7 @@ abstract class Logger {
 }
 ```
 
-### 5.17 `lib/utils/assets.dart`
+### 6.17 `lib/utils/assets.dart`
 
 ```dart
 abstract class AssetImages {
@@ -435,7 +456,7 @@ abstract class AssetImages {
 }
 ```
 
-### 5.18 `lib/widgets/index.dart`
+### 6.18 `lib/widgets/index.dart`
 
 ```dart
 library widgets;
@@ -444,7 +465,7 @@ export 'toast.dart';
 export 'custom_scaffold.dart';
 ```
 
-### 5.19 `lib/widgets/toast.dart`
+### 6.19 `lib/widgets/toast.dart`
 
 ```dart
 import 'package:flutter/material.dart';
@@ -465,7 +486,7 @@ class CustomToast {
 }
 ```
 
-### 5.20 `lib/widgets/custom_scaffold.dart`
+### 6.20 `lib/widgets/custom_scaffold.dart`
 
 ```dart
 import 'package:flutter/material.dart';
@@ -499,7 +520,7 @@ class CustomScaffold extends StatelessWidget {
 }
 ```
 
-### 5.21 `lib/pages/main/index.dart`
+### 6.21 `lib/pages/main/index.dart`
 
 ```dart
 library pages.main;
@@ -512,7 +533,7 @@ part 'controller.dart';
 part 'view.dart';
 ```
 
-### 5.22 `lib/pages/main/controller.dart`
+### 6.22 `lib/pages/main/controller.dart`
 
 ```dart
 part of 'index.dart';
@@ -520,7 +541,7 @@ part of 'index.dart';
 class MainController extends GetxController {}
 ```
 
-### 5.23 `lib/pages/main/view.dart`
+### 6.23 `lib/pages/main/view.dart`
 
 ```dart
 part of 'index.dart';
@@ -542,7 +563,7 @@ class MainPage extends StatelessWidget {
 
 ---
 
-## 六、强约束
+## 七、强约束
 
 - 优先使用 `index.dart + part / part of`
 - `main.dart` 只保留应用级编排
@@ -552,12 +573,20 @@ class MainPage extends StatelessWidget {
 
 ---
 
-## 七、完成后的检查清单
+## 八、完成后的检查清单
 
+- [ ] 项目 `.cursor/rules/` 已存在，且 Flutter 项目规则已写入
 - [ ] 项目目录结构完整
+- [ ] `pubspec.yaml` 可识别
 - [ ] `main.dart` 可启动
 - [ ] `Global.init()` 清晰可读
 - [ ] 路由基础链路可运行
 - [ ] `services/store/utils/widgets` 均有入口文件
 - [ ] `flutter analyze` 无错误
+- [ ] 初始化结果已写入开发记录或 `workflow.md` 执行记录
 - [ ] 可在此基础上继续新增业务功能
+
+完成标志：
+
+- 上述检查清单全部满足时，向 `13-Flutter编码索引.mdc` 返回 `initialized`。
+- 若缺少工程目录、包名、规则写入位置或基础结构无法创建，返回 `blocked`，并写明阻塞原因。

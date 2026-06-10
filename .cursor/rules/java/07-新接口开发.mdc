@@ -16,7 +16,7 @@ alwaysApply: false
 4. 写 Service 方法（业务逻辑）
 5. 写 Controller
 6. 写测试（集成测试 + 必要时单元测试）
-7. 跑 `./mvnw verify`，回写文档与 `workflow.md`
+7. 跑 `./gradlew build`，回写文档与 `workflow.md`
 
 不允许：先写 Controller 占位后再回头补 Service / Mapper。
 
@@ -183,4 +183,4 @@ class UserServiceTest {
 - [ ] Controller 已提供完整 REST 路径并通过验证注解校验
 - [ ] 至少 1 个成功路径 + 1 个错误路径测试
 - [ ] `java-tech.md` 接口列表与 `java-dev-plan.md` 任务表已回写
-- [ ] `./mvnw verify` 通过
+- [ ] `./gradlew build` 通过

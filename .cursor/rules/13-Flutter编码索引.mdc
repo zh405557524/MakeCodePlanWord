@@ -1,85 +1,206 @@
 ---
-description: Flutter 编码阶段薄入口 - 触发编码时按本规则加载 flutter/ 子规则与项目文档，确保变更管控与架构门禁
+description: Flutter 编码子流程唯一入口 - 负责判断初始化状态、进入项目初始化或功能开发循环，并向主流程返回状态
 globs:
 alwaysApply: false
 ---
 
 # Flutter 编码索引规则
 
-> 本规则是 Flutter 编码阶段的薄入口，只负责「加载哪些规则、读哪些文档、按什么顺序」。
-> 编码具体执行流程仍由 `.cursor/rules/flutter/10-编码工作流程.mdc` 负责。
+> 本规则是 Flutter 编码模块的唯一入口。
+> 主流程只负责委托到本规则并等待 `done / blocked / waiting_review / in_progress`，不关心 Flutter 初始化、新功能、UI、bug、重构等内部细节。
 
-## 通用执行契约
+---
 
-执行本规则前，必须先完成核心规则中的工作空间定位：
+## 一、模块职责
 
-- 读取 `projects/{currentProject}/workflow.md`；若不存在，先按 `.cursor/rules/templates/workflow.md` 创建。
-- 读取本规则，以及 `workflow.md` 中“当前步骤依赖文件”列出的材料。
-- 必须先检查 `change-plan.md` 顶部「进行中变更」区块；若有 `in_progress` 条目，先按变更条目的最小改动清单执行。
-- 执行后更新 `workflow.md` 的当前阶段、状态、恢复点、依赖文件、生成文件、注意事项和执行记录。
+本规则负责：
 
-## 前置条件
+- 判断 Flutter 工程是否已经初始化。
+- 未初始化时进入项目初始化分支。
+- 已初始化时进入功能开发循环。
+- 在功能开发循环内按任务类型加载项目规则和任务规则。
+- 编码完成、阻塞或等待审核时，向主流程返回明确状态。
 
-执行本规则前，必须确认：
+本规则不负责：
 
-1. `projects/{currentProject}/03-前端/flutter-tech.md` 已存在
-2. `projects/{currentProject}/03-前端/flutter-dev-plan.md` 已存在
-3. 当前模块对应的 `projects/{currentProject}/03-前端/开发计划/{module}.md` 已存在
-4. `00-核心工作流程.mdc` 第六步「Flutter 架构门禁」已通过
+- 需求分析、PRD、技术方案、开发计划和模块文档的生成。
+- 替主流程推进到 Java、联调、构建、上架等后续阶段。
+- 在主流程层面直接决定 UI、接口、mock、SDK 或页面结构细节。
 
-## 必读规则清单（按序加载）
+---
 
-进入 Flutter 编码阶段时，必须按以下顺序读取规则：
+## 二、进入前上下文
 
-1. `.cursor/rules/00-核心工作流程.mdc` 第六步 6.1 Flutter 架构门禁
-2. `.cursor/rules/flutter/01-项目初始化规则.mdc`（首次搭建工程时必读）
-3. `.cursor/rules/flutter/02-项目结构目录.mdc`
-4. `.cursor/rules/flutter/03-编码规范.mdc`
-5. `.cursor/rules/flutter/04-导航规则.mdc`
-6. `.cursor/rules/flutter/10-编码工作流程.mdc`（编码执行流程）
+执行本规则前，必须已经由主流程完成：
 
-按任务类型补读：
+1. 定位 `currentProject`。
+2. 读取或创建 `projects/{currentProject}/workflow.md`。
+3. 读取或创建 `projects/{currentProject}/change-plan.md` 与 `change-log.md`。
+4. 确认当前阶段为 `Flutter编码`，或用户明确要求进入 Flutter 编码。
 
-| 任务类型 | 补读规则 |
-|----------|----------|
-| 新功能模块开发 | `flutter/07-新功能开发.mdc` |
-| UI 对稿 / 状态补齐 | `flutter/08-UI处理任务.mdc` |
-| 多语言接入 | `flutter/05-多语言支持.mdc` |
-| 依赖调整 | `flutter/06-第三方依赖参考.mdc` |
-| 跨模块联动 / 大功能 | `flutter/09-大功能先规划再编码.mdc` |
-
-## 必读项目文档清单
-
-进入 Flutter 编码阶段前，必须读取：
+进入本规则后，先读取：
 
 1. `projects/{currentProject}/workflow.md`
-2. `projects/{currentProject}/change-plan.md`（顶部「进行中变更」区块）
+2. `projects/{currentProject}/change-plan.md` 顶部「进行中变更」区块
 3. `projects/{currentProject}/03-前端/flutter-tech.md`
 4. `projects/{currentProject}/03-前端/flutter-dev-plan.md`
 5. 当前恢复点对应的 `projects/{currentProject}/03-前端/开发计划/{module}.md`
-6. 涉及 UI 时：`projects/{currentProject}/01-需求/figma-design-plan.md` 与 `projects/{currentProject}/01-需求/references/images/` 中相关图片
-7. 涉及接口时：`projects/{currentProject}/04-后端/java-tech.md` 与对应 `projects/{currentProject}/04-后端/开发计划/{module}.md`
 
-## 变更管控接入点
+若上述文档缺失且无法从用户输入补齐，返回 `blocked`，并把缺失项写入 `workflow.md` 阻塞项。
 
-- 若 `change-plan.md` 顶部存在 `in_progress` 条目，编码阶段必须先完成该条目「最小改动清单」中的工作，不允许并行做无关任务。
-- 完成一条变更后，把条目状态置为 `done`，从 `change-plan.md` 顶部区块挪到底部「本迭代历史变更」，并追加到 `change-log.md` 对应版本号下。
-- 若编码过程中发现实际影响超出条目「最小改动清单」，必须先回写 `change-plan.md` 再继续。
+---
 
-## 阻塞式编码阶段规则
+## 三、初始化状态判断
 
-Flutter 编码属于阻塞式代码开发阶段：
+进入 Flutter 编码模块后，先判断目标 Flutter 工程是否已初始化。
 
-- 只要用户没有明确说「进入下一步」或「切换阶段」，就默认还停留在当前 Flutter 编码步骤
-- 默认继续做当前步骤内的修改、调试、验证和回写
-- 不自动跳到 14 Java 编码或 15 联调 QA
+### 3.1 初始化完成条件
 
-## 完成判定
+同时满足以下条件，才视为已初始化：
 
-当前 Flutter 编码步骤完成必须满足：
+1. 真实 Flutter 工程目录可识别，且存在 `pubspec.yaml`。
+2. 工程内存在 `.cursor/rules/` 项目级 Flutter 规则。
+3. 工程内至少存在以下基础文件或目录：
+   - `lib/main.dart`
+   - `lib/global.dart`
+   - `lib/routes/`
+   - `lib/services/`
+   - `lib/store/`
+   - `lib/utils/`
+   - `lib/widgets/`
+   - `lib/pages/`
+4. `workflow.md` 或技术文档能定位 `frontendRepo` / `referenceProject` / Flutter 工程目录。
 
-- 本轮目标代码已落地
-- `flutter analyze` 通过；必要时 `flutter test` 通过
-- 对应模块开发文档与 `flutter-dev-plan.md` 任务状态已回写
-- `change-plan.md` 中本轮变更条目已归档（如有）
-- `workflow.md` 已更新恢复点、执行记录、下一步默认动作
+### 3.2 未初始化
+
+若任一初始化完成条件不满足，进入「项目初始化分支」。
+
+项目初始化只加载：
+
+1. `.cursor/rules/flutter/01-项目初始化规则.mdc`
+2. `.cursor/rules/flutter/02-项目结构目录.mdc`
+3. `.cursor/rules/flutter/03-编码规范.mdc`
+4. `.cursor/rules/flutter/04-导航规则.mdc`
+5. `.cursor/rules/flutter/10-编码工作流程.mdc`
+
+初始化完成后不自动返回主流程，而是继续进入「功能开发循环」。只有出现缺失工程目录、无法确定包名、无法确认项目规则写入位置等阻塞时，才返回 `blocked`。
+
+### 3.3 已初始化
+
+若已初始化，跳过项目初始化分支，直接进入「功能开发循环」。
+
+---
+
+## 四、项目初始化分支
+
+初始化分支只做两件事：
+
+1. 把总体 Flutter 规则模板复制或同步到目标工程 `.cursor/rules/`。
+2. 搭建 Flutter 工程基础结构。
+
+禁止在初始化分支中处理：
+
+- 业务页面开发
+- UI 对稿
+- bug 修复
+- 业务逻辑修改
+- 支付、短信、视频、对象存储等未确定 SDK 接入
+
+初始化完成后必须确认：
+
+- 项目 `.cursor/rules/` 已存在，且包含 Flutter 项目规则。
+- `pubspec.yaml` 可识别。
+- `lib/main.dart`、`lib/global.dart`、`lib/routes/`、`lib/services/`、`lib/store/`、`lib/utils/`、`lib/widgets/`、`lib/pages/` 可识别。
+- 初始化结果已写入项目开发记录或 `workflow.md` 执行记录。
+
+若全部满足，内部状态记为 `initialized`，继续进入功能开发循环。
+
+---
+
+## 五、功能开发循环
+
+功能开发是 Flutter 编码模块内部循环。只要用户没有明确要求暂停、切换阶段或进入下一步，就持续停留在本循环中完成编码、验证和回写。
+
+### 5.1 每轮先加载项目规则
+
+功能开发时，必须先加载目标 Flutter 工程内 `.cursor/rules/` 的项目规则。若项目规则与总体 Flutter 规则冲突，以项目规则为准。
+
+默认读取：
+
+1. `{frontendRepo}/.cursor/rules/01-项目初始化规则.mdc`（只用于确认项目已初始化，不再重复初始化）
+2. `{frontendRepo}/.cursor/rules/02-项目结构目录.mdc`
+3. `{frontendRepo}/.cursor/rules/03-编码规范.mdc`
+4. `{frontendRepo}/.cursor/rules/04-导航规则.mdc`
+5. `{frontendRepo}/.cursor/rules/08-UI处理任务.mdc`（涉及 UI 时必读）
+6. `{frontendRepo}/.cursor/rules/10-编码工作流程.mdc`
+
+### 5.2 再判断任务类型
+
+每轮功能开发先判断任务类型：
+
+| 场景 | 默认任务类型 | 补充规则 |
+|------|--------------|----------|
+| 用户要求新增页面、模块、能力，或模块文档中的 pending 功能 | 新功能开发 | `task-new_feature.mdc`、必要时 `07-新功能开发.mdc` |
+| 用户多轮反馈视觉、布局、图标、间距、状态 UI | UI 处理 | `task-ui_task.mdc`、`08-UI处理任务.mdc` |
+| 用户反馈报错、崩溃、测试失败、行为异常 | Bug 修复 | `task-bug_fix.mdc` |
+| 用户调整业务规则、状态流转、接口调用顺序 | 逻辑修改 | `task-logic_change.mdc` |
+| 用户明确要求整理结构且不改变行为 | 重构 | `task-refactor.mdc` |
+| 无法归类的 Flutter 代码任务 | 其他 | `task-other.mdc` |
+
+默认规则：
+
+- 首轮编码或模块开发默认按「新功能开发」处理。
+- 多轮交互、返工或验收反馈时，再按输入内容细分 UI、bug、逻辑修改、重构或其他。
+- 功能开发循环内的任务规则仅指 `task-new_feature.mdc`、`task-ui_task.mdc`、`task-bug_fix.mdc`、`task-logic_change.mdc`、`task-refactor.mdc`、`task-other.mdc`，只用于辅助判断任务类型，不参与主流程阶段调度。
+- 若功能开发任务规则与项目规则冲突，以项目规则、模块文档和已确认技术方案为准。
+
+### 5.3 UI 任务门禁
+
+涉及 UI 时必须遵守：
+
+- 先读取项目内 `08-UI处理任务.mdc`。
+- 进入页面编码前先读取 Figma frame 或已沉淀的设计图。
+- Figma 无法通信且没有可替代设计材料时，返回 `blocked` 并等待用户处理。
+- 不允许在不知道 UI 的情况下凭空实现界面。
+
+### 5.4 功能开发闭合条件
+
+每轮功能开发完成必须满足：
+
+1. 本轮代码已实现。
+2. 必要验证已执行，或无法执行的原因已记录。
+3. `flutter analyze` 已执行；改到登录态、路由、Store、API 切换或测试覆盖范围时执行 `flutter test`。
+4. 模块开发文档、`flutter-dev-plan.md` 或项目 README/开发记录已按实际进度更新。
+5. 若本轮来源于 `change-plan.md`，变更条目状态已更新。
+
+满足后向主流程返回 `done` 或 `waiting_review`；若仍需继续编码，返回 `in_progress`。
+
+---
+
+## 六、返回主流程的状态
+
+Flutter 编码子流程只向主流程返回以下状态：
+
+| 状态 | 返回条件 |
+|------|----------|
+| `done` | 本轮编码目标、验证和记录均已闭合，可以由主流程等待用户确认或进入下一阶段 |
+| `blocked` | 缺工程、缺规则、缺 Figma、缺接口信息、验证无法自行修复等，且需要用户或外部条件介入 |
+| `waiting_review` | 规则输出、架构确认、阶段性实现需要用户验收 |
+| `in_progress` | 编码尚未闭合，下一轮仍应回到 Flutter 功能开发循环 |
+
+返回 `blocked` 时必须写明：
+
+- 阻塞原因
+- 阻塞位置
+- 已尝试的处理方式
+- 用户或外部系统需要提供什么
+
+---
+
+## 七、强约束
+
+- 主流程不得直接读取或选择 Flutter 子规则；只能委托本索引。
+- 初始化不是普通功能开发任务；初始化只在工程未初始化时执行。
+- 功能开发循环内才允许读取功能开发任务规则；初始化不通过 `task-project_init.mdc` 分派。
+- 初始化完成后默认继续功能开发，不自动跳回主流程。
+- Flutter 编码阶段是阻塞式阶段，用户没有明确说进入下一步时，继续停留在本子流程。
