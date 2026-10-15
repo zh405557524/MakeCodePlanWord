@@ -1,5 +1,7 @@
 # 喵喵漫剧接口契约
 
+> 2026-10-15 T-37-IF-01：用户确认“补齐只读字段”。§3.2 的订单积分快照及流水原始操作/业务编号已实施并做本机检测；其余接口实施状态以开发计划和测试证据为准。没有新增支付路径、数据库结构或结算规则。
+
 > 2026-10-14补充S-28至S-32：Catsinger工程基础与分层规则迁移、Figma视觉主依据、相册视频提取音频、免费资产描述帮写。当前仅文档，未实现接口或数据库；设计节点见[索引](../02-设计/设计说明.md#figma-pages)。
 
 > v1.0.0 现行规划契约，本轮已确认规则已同步（尚未实现），2026-10-13；新增接口尚未实现。公共接口按当前Controller/DTO保留，字段只在本文件定义；其他技术文档引用小节。
@@ -140,12 +142,16 @@ S-21的39条逐项确认及S-22作品名称分类，已按S-23同步到本文正
 | 类型 | 字段、类型、可空、单位 |
 |---|---|
 | PointAccount | availablePoints:int、frozenPoints:int均非空≥0 |
-| Ledger | id:Id、title:string、amount:int、direction:string、createdAt:公共时间均非空；amount积分，direction按公共IN/OUT等实际映射，不能自行用符号猜冻结/退回 |
+| Ledger | id:Id、title:string、amount:int、direction:string、createdAt:公共时间均非空；amount为带符号整数积分。只读可空operation:string、bizType:string、bizId:string来自原聚合流水；非catdrama省略。direction仍按公共IN/OUT等实际映射，不能用符号猜冻结/结算/退回 |
 | Product | id:string（公共原ID格式）、appCode:string、productCode:string、productName:string、productType:string、purchaseType:string非空；requiresActiveSubscription:bool非空（本AppPOINTS为false）；amountCents:int非空≥0分；priceText:string非空；priority:int非空；pointsAmount:int非空≥0；vipDays:int、pointsCycleDays:int、status:int可空；source:string、persisted:bool、editable:bool非空；publishedAt/createdAt/updatedAt:公共时间可空 |
 | OrderCreate | productType:string必填POINTS；productId:string必填服务端productCode/ID；channel:string必填ios/alipay/alipay_web/wechat的有效渠道，响应可能为公共存储码IOS/ZFB/ZFB_WEB/WX，前端统一解析；价格/积分不由请求提交 |
 | OrderProof | storeProductId:string、transactionId:string、signedTransactionInfo:string、iapAccountToken:string在Apple确认时均必填非空，直接采用StoreKit真实交易及已保存订单绑定；其他渠道body可空，由公共服务可信主动查询，不提交客户端success布尔 |
 | OrderPayment | orderNo:string、channel:string、amountCents:int非空；payParams:object非空；currency未在旧创建响应出现，App取得Order.currency并与配置CNY和StoreKit商品价格核对后发起支付 |
-| Order | orderNo:string、appCode:string、userId:int（旧公共）、productId/productCode/productType/productName:string、amountCents:int、currency:string、channel:string、status:string非空；cardType:int、providerOrderNo:string可空；payParams:object可空；paidAt/expiresAt/createdAt/updatedAt:公共时间按原VO可空；userId不作为访问入参 |
+| Order | orderNo:string、appCode:string、userId:int（旧公共）、productId/productCode/productType/productName:string、amountCents:int、currency:string、channel:string、status:string非空；只读pointsAmount:int可空，为购买时积分快照，非catdrama或旧单未捕获时省略；cardType:int、providerOrderNo:string可空；payParams:object可空；paidAt/expiresAt/createdAt/updatedAt:公共时间按原VO可空；userId不作为访问入参 |
+
+T-37-IF-01（2026-10-15已确认）：新建catdrama积分订单时将购买时积分数保存到既有订单JSON，续取支付参数保留该快照。响应只暴露顶层pointsAmount，内部快照不作为SDK参数返回。旧单缺失时不补0、不读最新商品推算；可查看，若本机也没有原购买意图则不能盲目续付。跨设备对当前本人PENDING原单保存本机恢复记录后回统一充值页，重新核对真实状态、协议与平台能力；不创建第二笔订单。存在另一未结束意图时先核对原意图。
+
+聚合流水沿用原金额、方向、排序与合并算法：operation取原展示行的FREEZE/FREEZE_ADJUST、CONFIRM/DEDUCT、REFUND、GRANT等实际值，分别展示冻结、结算、退回及充值/奖励。PAYMENT的bizId为原订单号，可打开同一订单详情；GENERATION/CREATEIMAGE编号是计费业务编号，只展示并回作品入口，不猜成项目或镜头ID。未知操作保留业务说明和公共方向，旧字段不改。检测及授权见[T-37证据](../05-测试/evidence/T-37/result.json)。
 
 旧Public Product未提供currency，catdrama公开运行配置声明CNY，付款以Order.currency和商店真实币种为权威。公共 `payParams` 不二次发明全渠道结构，其SDK类型定义/字段见§3.5对应现有模型；新App只开放服务端+平台共同可用渠道。公共订单状态为PENDING/PAID/FAILED/CANCELLED/CLOSED/EXPIRED；只以PAID判到账。客户端取消不覆盖晚到的可信成功交易。
 
@@ -594,10 +600,10 @@ App在第一次发请求前持久化原请求和幂等键；取得Job.id后只�
 ```json
 {
   "session":{"accessToken":"access-token-example","refreshToken":"refresh-token-example","profile":{"id":"101","phoneMasked":null,"inviteCode":"ABCD1234","pointsBalance":30,"vipStatus":"NONE","endAt":null,"cardType":null,"accountType":"GUEST"}},
-  "ledger":{"id":"102","title":"首次创建账号","amount":30,"direction":"IN","createdAt":"2026-10-12T20:00:00"},
+  "ledger":{"id":"102","title":"首次创建账号","amount":30,"direction":"IN","createdAt":"2026-10-12T20:00:00","operation":"GRANT","bizType":"NEW_USER","bizId":"101"},
   "product":{"id":"points_1000","appCode":"catdrama","productCode":"points_1000","productName":"1000积分","productType":"POINTS","purchaseType":"CONSUMABLE","requiresActiveSubscription":false,"amountCents":1000,"priceText":"10元","priority":1,"pointsAmount":1000},
   "orderPayment":{"orderNo":"063000000000000000000000000001","channel":"IOS","amountCents":1000,"payParams":{"productId":"本App真实StoreKit商品ID"}},
-  "orderDetail":{"orderNo":"063000000000000000000000000001","appCode":"catdrama","userId":101,"productCode":"points_1000","productType":"POINTS","productName":"1000积分","amountCents":1000,"currency":"CNY","channel":"IOS","status":"PENDING"},
+  "orderDetail":{"orderNo":"063000000000000000000000000001","appCode":"catdrama","userId":101,"productId":"points_1000","productCode":"points_1000","productType":"POINTS","productName":"1000积分","pointsAmount":1000,"amountCents":1000,"currency":"CNY","channel":"IOS","status":"PENDING"},
   "taskCenter":{"enabled":true,"totalPoints":30,"checkIn":{"signedToday":false,"consecutiveDays":0,"cycleDay":1,"todayRewardPoints":3,"days":[]},"dailyTasks":[]}
 }
 ```
