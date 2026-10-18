@@ -1,0 +1,1 @@
+诊断增强编译失败：误用NativeMediaOperation不存在的toJson方法。未安装/启动App，不计设备方法。归档APK是上次构建遗留文件且本次exitCode=1，不作为本次构建产物或通过证据。改为读取已有字段后重新analyze/build。锁与宿主server已清理。
