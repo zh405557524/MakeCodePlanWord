@@ -14,7 +14,7 @@ flutter build ios --simulator --debug --dart-define=CATDRAMA_ENV=1 --dart-define
 
 Android模拟器可显式使用 `http://10.0.2.2:8080`；物理手机使用当前电脑可达LAN地址。授权串继续从本机私有配置注入，公开命令不放凭据。这里没有验证新的Android/物理机地址。本轮实际构建使用已有私密配置文件加本地地址参数。
 
-9项既有启动/存储隔离方法在自定义本地地址下通过；另外默认/测试/正式三种模式各执行同2项启动方法，验证覆盖只作用本地环境，不累计成15个不同用例。analyze无问题、format及普通iOS模拟器构建通过；[源码摘要](local-address-source.json)、[分析](analyze.log)、[构建](ios-build.log)、[默认](bootstrap-default.log)/[测试](bootstrap-test.log)/[正式](bootstrap-prod.log)记录在此。9项执行回执来自本轮工具会话75162（退出0），没有重新跑全套App测试。
+9项既有启动/存储隔离方法在自定义本地地址下通过；另外默认/测试/正式三种模式各执行同2项启动方法，验证覆盖只作用本地环境，不累计成15个不同用例。analyze无问题、format及普通iOS模拟器构建通过；[源码摘要](local-address-source.json)、[分析](analyze.log)、[构建](ios-build.log)、[默认](bootstrap-default.log)/[测试](bootstrap-test.log)/[正式](bootstrap-prod.log)记录在此。9项执行回执来自本轮工具会话75162（退出0），没有重新跑全套App测试。公开analyze/build日志仅移除工具输出的行尾空格，原始字节保留在本机忽略目录，前后摘要见verification.json，不修改测试内容或结果。
 
 同App覆盖安装，未卸载/清数据；按既有后台地址隔离不直接恢复旧地址token，通过公共游客登录正常找回自建账号2，30积分/冻结0。此前个人图片仍存在。本轮未改其他对话的启动图/平台资源；普通构建使用工作树已有视觉资源，本轮没有做像素验收。
 
