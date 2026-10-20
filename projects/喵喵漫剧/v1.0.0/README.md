@@ -8,8 +8,8 @@
 | 功能开发 | 45 | 0 | 45 |
 | 检测验收 | 7 | 40 | 47 |
 
-- **最近完成：**T-23/T-08 豆包 Seedream Flash/Pro、按厂商分包及私有配置拆分；漫剧保持 ASR，caption speech 为可选测试能力。112 项本机回归通过，真实供应商与 App 验收待执行。
-- **当前安排：**T-23 Flash / Pro 专用 Key 已配置；各实调一次均返回 ModelNotOpen，待对应账号开通模型后再验证。已停止该项调用，未将不可用模型加入 App 选项。
+- **最近完成：**T-23 豆包 Seedream 5.0 Flash / Pro 开通后各真实调用一次，均生成有效 PNG；两把独立 Key 已验证，ModelNotOpen 阻塞已解除。
+- **当前安排：**T-23 后端双型号真实生图验证已通过；App 模型选项启用、运行服务更新及完整业务验收待处理。未重启共享服务或修改数据库。[本轮证据](05-测试/evidence/T-23/seedream-enabled/README.md)。
 - **交付依据：**前端dev `909a946`、后端dev `6096e7eb`；受影响Java检查31项、Flutter检查101项及analyze通过，另有1次H3真实生成样片。样片和构建不计整项验收通过，详见[本轮证据](05-测试/evidence/T-26/dynamic-model-audio/README.md)。
 - **进度口径：**45项按功能交付登记；T-42/T-43属检测任务，不计开发分母。检测验收仍7/47，当前没有新增整项验收通过项。
 <!-- current-task:end -->
