@@ -9,7 +9,7 @@
 | 检测验收 | 7 | 40 | 47 |
 
 - **最近完成：**T-23/T-08 豆包 Seedream Flash/Pro、按厂商分包及私有配置拆分；漫剧保持 ASR，caption speech 为可选测试能力。112 项本机回归通过，真实供应商与 App 验收待执行。
-- **当前安排：**本轮扩展已交付；等待用户填写/核对图片凭据并按需做真实联调。不切换现有漫剧 ASR 路由，缺外部条件的验收停止该项并登记。
+- **当前安排：**T-23 等待用户填写图片专用 image-api-key；独立配置与错误诊断已开发完成，52 项本机检查通过。真实生图及漫剧模型启用待新 Key 验证，停止继续使用旧共用 Key 调用。
 - **交付依据：**前端dev `909a946`、后端dev `6096e7eb`；受影响Java检查31项、Flutter检查101项及analyze通过，另有1次H3真实生成样片。样片和构建不计整项验收通过，详见[本轮证据](v1.0.0/05-测试/evidence/T-26/dynamic-model-audio/README.md)。
 - **进度口径：**45项按功能交付登记；T-42/T-43属检测任务，不计开发分母。检测验收仍7/47，当前没有新增整项验收通过项。
 <!-- current-task:end -->
@@ -392,3 +392,7 @@ T-23本地图片实际链路（2026-10-19）：原公共Service给自建游客1�
 **T-23/T-08 扩展交付（2026-10-19）：**公共图片能力新增 Seedream 5.0 Flash / Pro，手动测试按厂商与能力分包；本机私有配置按厂商拆分，原值保留。用户最新确认：漫剧先用 ASR，保持任务预存身份与自动恢复；caption speech 保留为独立测试备选，写歌 singing 保持。未将 caption 接入当前漫剧路由，未改 App 默认模型、用户定价或已发布配置。112 项本机自动回归通过；真实 Seedream 生成、caption 比较与 App 验收未执行。功能开发 45/45、验收 7/47 保持，不因局部测试增加整项通过数。
 后端 dev `b1c9a03c` 已提交、未推送；[本轮记录与测试摘要](v1.0.0/05-测试/evidence/T-23/seedream-caption-options/README.md)。
 <!-- seedream-caption-options:end -->
+
+<!-- seedream-image-key:2026-10-19 -->
+T-23 图片配置修正：用户指出没有清晰的 Key 填写位置。新增私有 `config/ai-model-provider/doubao.yml` 第 8 行 `image-api-key`，Flash / Pro 共用；留空不调用，不回退到旧共用 Key 或 ASR。原账号池凭据隔离保持。旧共用 Key 的真实请求结果为 Flash HTTP 404 / ModelNotOpen、Pro HTTP 404；不能用旧 Key 的结果判断尚未填写的新 Key 是否开通。当前等待填写图片专用 Key，再做真实生图与漫剧联验；未启用本地模型选项、未修改数据库或重启共享服务。52 项相关自动检查通过，后端 dev `dbbb91d5` 已提交未推送；开发 45/45、验收 7/47 保持。
+<!-- seedream-image-key:end -->
