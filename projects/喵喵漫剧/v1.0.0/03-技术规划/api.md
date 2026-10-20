@@ -234,7 +234,7 @@ T-37-IF-01（2026-10-15已确认）：新建catdrama积分订单时将购买时�
 | Home | categories:Category[]、cases:Case[]、configVersion:string非空；Category={code:string,name:string}非空 |
 | Case | id/title/categoryCode:string非空；cover:Media、video:Media、description:string、styleCode:string可空；reusableStyle:bool非空；不能把案例视频资源赋给用户镜头成功版本 |
 | StaticPage | code/title/contentFormat/content/version:string非空；contentFormat=MARKDOWN/HTML；仅可信已配置正文，HTML禁动态脚本 |
-| ProductionSettings | providerCode/modelCode/contractVersion:string必填非空；resolution:string720P/1080P；durationSeconds:int10/15/30；aspectRatio:string16:9/9:16；styleCode:string非空。组合必须在当前有效能力列表中 |
+| ProductionSettings | providerCode/modelCode/contractVersion:string必填非空；resolution:string取当前模型原生清晰度；durationSeconds:正整数、须位于当前模型单次生成能力范围；aspectRatio:string16:9/9:16；styleCode:string非空。组合必须在当前有效能力列表中 |
 | UnitPrice | points:int≥0、unit:stringIMAGE/SECOND、pricingVersion:string非空；图片初120/IMAGE，视频120/SECOND；720/1080等不自行增加未确认倍率 |
 | Rational | numerator/denominator:int>0，表示精确帧率，不以四舍五入整数替代实际时间基准 |
 | GenerationCapabilitySnapshot | providerCode/modelCode/contractVersion:string、capturedAt:Time、supportsAudio:bool、outputFormats:VideoFormat[]均非空；视频生成时锁定的已验证能力，后续配置变更不修改旧快照 |
@@ -762,3 +762,7 @@ OpenAPI为完整定义，前后端模型由本契约对照；验证所有新ID�
 §9.1的POST与SubtitleJobCreate/SubtitleResult/RecognizedCue已实现，继续复用本人Job查询。严格字符串ID/UUID/64HEX/整数版本，未知字段或JSON类型错误返回400；目标或资源归属/用途不符不受理。同键先恢复旧请求，再判断当前配置与媒体；同输入已成功可重取，不再识别。固定实际WAV摘要/字节/时长、原模型与本机版本；后台不读取或应用工程。公共门面追加只读`supportsRecoverableSubtitleRecognition`检查异步身份及毫秒分段能力，旧公共调用兼容。
 
 本轮26项新增、214项相关后端通过，0失败/跳过。真实ASR/OSS和手机T-33仍待验收；默认发布开关关闭。此前“拟实施”属于成稿时状态，当前以[T-08实际检测](../05-测试/evidence/T-08/result.json)与[T-45公共恢复](../05-测试/evidence/T-45/result.json)为准，无新增其他HTTP路由。
+
+**2026-10-19 T-26 技术同步（U-20261019-VIDEO）：**`DramaVideoModelOptionsService`只读复用公共模型配置/场景映射及`AiModelCallService.describeVideoGeneration`，不依赖带货业务类、不按本机默认密钥目录硬编码全部平台模型。合法组合和契约摘要按真实Provider能力、有效风格及参考图边界形成，公开响应不带渠道私密参数；报价与原任务恢复按冻结模型身份核实。现有`ProductionSettings`字符串/整数类型保持，取消720P/1080P与10/15/30秒固定枚举。原生P类清晰度对应真实短边像素；内部样片验收允许显式、据样片确定的`maximumAspectErrorPixels`，旧快照缺失取0，仍精确核对已验证的尺寸、编码和帧率，不转成虚假高清。对白/旁白以有序确认清单拼入捕获提示词，无口播不重建原文台词；不增加AI请求、独立TTS或字幕前置生成。原任务未知状态只查询原任务。
+
+本地配置：H3/768P/10秒/16:9/ANIME已接通，样片实际1344×768、24fps、10.125秒及AAC音轨；像素对齐值22仅对应该样片配置。其他模型/规格依各自配置与验收依据开放，完整App和逐字声音验收仍未完成。数据库结构/Entity/迁移无改动；本地只新增catdrama视频绑定、更新drama.production与drama.features，私密配置及积分账务未改。
