@@ -16,7 +16,7 @@
 | 检查 | 结果 | 证据 |
 |---|---|---|
 | 静态页面、邀请页资源与链接、复制成功/拒绝/无API/双失败 | 22项通过 | web-tests.log |
-| 固定链接、设置、充值、登录、凭证失败与用户反馈定向测试 | 串行144项通过 | flutter-tests-serial.log |
+| 固定链接、设置、充值、登录、凭证失败与用户反馈定向测试 | 串行144项通过；HTTP回调补测5项通过（同一组子集） | flutter-tests-serial.log、http-response-tests.log |
 | Flutter静态分析 | 0问题 | flutter-analyze.log |
 | 普通Android Debug构建 | 通过 | android-build.log |
 | iOS模拟器预览入口构建 | 通过 | ios-preview-build.log |
@@ -54,7 +54,7 @@ flutter build apk --debug --no-pub
 
 ## 提交与并行工作
 
-- App：`279eb9d8b033b7962d439af04f5e628c0c2df16b`（dev）。
+- App：`279eb9d8b033b7962d439af04f5e628c0c2df16b`及`1c78136`（dev）；后者补充WKWebView仅有响应信息时的子资源错误区分。
 - Web：`972698aaaeafd4c7533bb6d48aaf5fc895310d33`（main）。
 - 均为本地提交，未推送、未正式部署。共享充值、订单及后台文件中的其他任务修改继续保留。
 - App提交通过开工前快照分离本任务差异后暂存；没有提交M04并行新增的充值结果UI、语义控件或订单逻辑。上述自动化与构建验证针对当前合并工作区；不把未提交的M04工作记为本任务交付。
