@@ -771,3 +771,12 @@ OpenAPI为完整定义，前后端模型由本契约对照；验证所有新ID�
 **2026-10-19 T-26 技术同步（U-20261019-VIDEO）：**`DramaVideoModelOptionsService`只读复用公共模型配置/场景映射及`AiModelCallService.describeVideoGeneration`，不依赖带货业务类、不按本机默认密钥目录硬编码全部平台模型。合法组合和契约摘要按真实Provider能力、有效风格及参考图边界形成，公开响应不带渠道私密参数；报价与原任务恢复按冻结模型身份核实。现有`ProductionSettings`字符串/整数类型保持，取消720P/1080P与10/15/30秒固定枚举。原生P类清晰度对应真实短边像素；内部样片验收允许显式、据样片确定的`maximumAspectErrorPixels`，旧快照缺失取0，仍精确核对已验证的尺寸、编码和帧率，不转成虚假高清。对白/旁白以有序确认清单拼入捕获提示词，无口播不重建原文台词；不增加AI请求、独立TTS或字幕前置生成。原任务未知状态只查询原任务。
 
 本地配置：H3/768P/10秒/16:9/ANIME已接通，样片实际1344×768、24fps、10.125秒及AAC音轨；像素对齐值22仅对应该样片配置。其他模型/规格依各自配置与验收依据开放，完整App和逐字声音验收仍未完成。数据库结构/Entity/迁移无改动；本地只新增catdrama视频绑定、更新drama.production与drama.features，私密配置及积分账务未改。
+
+
+## 视频编辑参数保存范围（2026-10-28）
+
+当前镜头沿用 `PATCH /api/drama/shots/{shotId}`，body 仅 expectedRevision（镜头正整数版本）和 productionSettings。新增 `PUT /api/drama/episodes/{episodeId}/shot-settings`，body 为 expectedRevision（分集聚合正整数版本）和非空 productionSettings，响应 `ApiResponse<List<DramaShotResponse>>` 按镜头顺序返回全部有效镜头。参数复用 providerCode/modelCode/contractVersion/resolution/durationSeconds/aspectRatio/styleCode，durationSeconds 是上限。
+
+登录和 X-App-Code: catdrama 沿既有机制。父作品事务锁下校验归属、有效分集及版本，验证全部镜头模型/声音/明确参考图上限，再统一保存覆盖及核对状态，一次更新分集版本；异常全部回滚。复用 BAD_REQUEST、NOT_FOUND、CATDRAMA_REVISION_CONFLICT、CATDRAMA_OBJECT_EXPIRED、CATDRAMA_CAPABILITY_UNAVAILABLE、CATDRAMA_REFERENCE_INVALID，提示具体镜头和修正方式。
+
+客户端草稿隔离账号/环境/作品/集/镜头。未知结果先查询；冲突保留选择并再次确认；成功清除受影响镜头的旧参数草稿，保留描述/素材草稿和既有真实冲突。原视频和任务快照不变。

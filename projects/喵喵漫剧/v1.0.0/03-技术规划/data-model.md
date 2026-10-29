@@ -471,3 +471,8 @@ NativeMediaEngine新增extractSourceAudio(request)，复用T-07的probe、events
 **2026-10-19 T-26 技术同步（U-20261019-VIDEO）：**`DramaVideoModelOptionsService`只读复用公共模型配置/场景映射及`AiModelCallService.describeVideoGeneration`，不依赖带货业务类、不按本机默认密钥目录硬编码全部平台模型。合法组合和契约摘要按真实Provider能力、有效风格及参考图边界形成，公开响应不带渠道私密参数；报价与原任务恢复按冻结模型身份核实。现有`ProductionSettings`字符串/整数类型保持，取消720P/1080P与10/15/30秒固定枚举。原生P类清晰度对应真实短边像素；内部样片验收允许显式、据样片确定的`maximumAspectErrorPixels`，旧快照缺失取0，仍精确核对已验证的尺寸、编码和帧率，不转成虚假高清。对白/旁白以有序确认清单拼入捕获提示词，无口播不重建原文台词；不增加AI请求、独立TTS或字幕前置生成。原任务未知状态只查询原任务。
 
 本地配置：H3/768P/10秒/16:9/ANIME已接通，样片实际1344×768、24fps、10.125秒及AAC音轨；像素对齐值22仅对应该样片配置。其他模型/规格依各自配置与验收依据开放，完整App和逐字声音验收仍未完成。数据库结构/Entity/迁移无改动；本地只新增catdrama视频绑定、更新drama.production与drama.features，私密配置及积分账务未改。
+
+
+## 视频参数范围保存（2026-10-28）
+
+数据库结构无改动，不新增 SQL 或迁移。单镜头及整集均写 catdrama_shots.production_override，整集仅含当前用户当前集 ACTIVE 且未移出的镜头。参数变化递增镜头 revision、清除 description_ack_hash，调用原项目 Service 更新分集聚合版本及阶段。无变化不递增；不修改作品默认、素材关联、镜头描述或视频历史，无集级默认或数据回填。
