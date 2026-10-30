@@ -1,1 +1,28 @@
 .DS_Store
+
+# Local test artifacts: keep written plans/reports, exclude generated evidence.
+projects/**/05-测试/**
+!projects/**/05-测试/**/
+!projects/**/05-测试/**/*.md
+projects/**/05-联调与测试/**
+!projects/**/05-联调与测试/**/
+!projects/**/05-联调与测试/**/*.md
+projects/**/evidence/**
+!projects/**/evidence/**/
+!projects/**/evidence/**/*.md
+projects/**/artifacts/**
+!projects/**/artifacts/**/
+!projects/**/artifacts/**/*.md
+projects/**/test-materials/**
+!projects/**/test-materials/**/
+!projects/**/test-materials/**/*.md
+projects/**/asset-test-data/**
+!projects/**/asset-test-data/**/
+!projects/**/asset-test-data/**/*.md
+
+# Build outputs and dependencies are local artifacts.
+projects/**/*.apk
+projects/**/*.aab
+projects/**/*.ipa
+projects/**/node_modules/
+projects/**/.dart_tool/
