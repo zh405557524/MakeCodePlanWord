@@ -780,3 +780,12 @@ OpenAPI为完整定义，前后端模型由本契约对照；验证所有新ID�
 登录和 X-App-Code: catdrama 沿既有机制。父作品事务锁下校验归属、有效分集及版本，验证全部镜头模型/声音/明确参考图上限，再统一保存覆盖及核对状态，一次更新分集版本；异常全部回滚。复用 BAD_REQUEST、NOT_FOUND、CATDRAMA_REVISION_CONFLICT、CATDRAMA_OBJECT_EXPIRED、CATDRAMA_CAPABILITY_UNAVAILABLE、CATDRAMA_REFERENCE_INVALID，提示具体镜头和修正方式。
 
 客户端草稿隔离账号/环境/作品/集/镜头。未知结果先查询；冲突保留选择并再次确认；成功清除受影响镜头的旧参数草稿，保留描述/素材草稿和既有真实冲突。原视频和任务快照不变。
+
+
+## 2026-11-02 个人资产图片生成后自动应用
+
+现有 POST /api/drama/generation/quotes 的 QuoteCreate 增加可选 boolean autoApplyAssetResult，缺省 false（显式 null/非 boolean 拒绝）。true 仅支持 IMAGE / SINGLE / 单个 ASSET 且资产 scope=PERSONAL，否则 BAD_REQUEST（-400）；登录、所属用户及 App 隔离沿原接口。true 返回 QuoteItem.applyPolicy=REPLACE_IF_UNCHANGED，并冻结进原任务快照；缺省/false 保留 CANDIDATE_ONLY 或 FIRST_SUCCESS_IF_EMPTY。提交接口及幂等键不变。
+
+后台在原图片入库事务持有资产锁，比较 imageInput.assetRevision 与 appliedImageVersionId；未变化则应用并置 READY，和入库共用一次 revision+1；冲突只保存候选。仅后处理发布后生效。现有个人资产 images/{versionId}/apply 每个新键推进一次 revision，包括确认当前图，原键重放返回最新资源且不推进。
+
+App 新请求保存策略，服务端策略完成后只刷新，不再次应用；旧本机授权任务仅在入库后的 revision=原 revision+1 时按该版本应用，原键重放与手选保护保持。旧快照不升级、无历史数据回填。先部署支持新策略的后端再发布 App；新策略任务耗尽前不回退到不识别它的后端。无数据库结构、迁移、路径及计费变化。
