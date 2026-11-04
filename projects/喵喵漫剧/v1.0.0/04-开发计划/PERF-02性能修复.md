@@ -85,3 +85,26 @@ App `a468883` 已本地提交，未推送。代码完成，待设备验收：
 ## 8. 失败处理约定
 
 持久化失败仍停留原页，保留用户输入/工程候选；不删除 await 或可靠写盘屏障。控制器关闭后的回调不能修改新页面。大型默认 KV 拆分和启动依赖调整继续单独跟踪，不标已修复。
+
+## 2026-11-03 视频编辑请求解析移出主 isolate
+
+用户明确要求 JSON 复制、数据转模型不在 UI 线程执行。本增量为单批性能修复，沿现有界面与协议；Flutter 的响应式状态发布和 Widget 绘制仍在主 isolate。
+
+范围：`lib/services/{http.dart,http_json.dart,index.dart}` 实现请求快照、JSON 编解码和带会话校验的后台解析；`lib/apis/{drama_shots,drama_projects,drama_jobs,drama_config,drama_assets,generation_quotes}.dart` 将视频页使用的作品、镜头、历史、任务、配置、素材列表和报价解析及集合校验交给纯函数。测试限定 HTTP 会话/编解码、对应 API/页面已有回归及转圈动画后台计算测试。保留工作树已有生成与页面改动，不改布局、后端、数据格式、收费和任务恢复规则。
+
+```mermaid
+flowchart LR
+ A[固定账号与原请求] --> B[后台复制和编码]
+ B --> C[异步网络]
+ C --> D[后台解码和模型校验]
+ D --> E{账号环境仍一致?}
+ E -->|是| F[UI 发布结果并绘制]
+ E -->|否| G[拒绝迟到结果]
+ D -->|解析失败| H[沿原异常反馈]
+```
+
+核心签名：`Future<R> parseResponse<Q, R>(Q input, R Function(Q) parser)`；仅传纯数据与静态函数，不传 Dio、GetX 控制器或平台句柄。后台异常继续抛出，结果返回前再次检查账号/环境。
+
+验收：`dart format`、`flutter analyze --no-pub`；HTTP 原输入/401重放/会话切换，镜头历史严格校验、生成与延迟返回回归；真实 isolate 工作期间转圈组件仍推进。既有组件测试改为同时推进真实 IO 与模拟帧并等待业务状态，保持原断言，不在测试中关闭 isolate。
+
+状态：代码与范围内开发检查完成，待设备验收。App `58f477b`，未推送；profile 构建完成，未安装到手机。范围回归最终 467 项通过，1 项原有媒体时长校验失败已在改动前源码副本复现；[证据与边界](../05-测试/evidence/PERF-02/network-isolate/README.md)。
