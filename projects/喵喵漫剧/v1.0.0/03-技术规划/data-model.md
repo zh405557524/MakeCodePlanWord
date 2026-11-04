@@ -476,3 +476,9 @@ NativeMediaEngine新增extractSourceAudio(request)，复用T-07的probe、events
 ## 视频参数范围保存（2026-10-28）
 
 数据库结构无改动，不新增 SQL 或迁移。单镜头及整集均写 catdrama_shots.production_override，整集仅含当前用户当前集 ACTIVE 且未移出的镜头。参数变化递增镜头 revision、清除 description_ack_hash，调用原项目 Service 更新分集聚合版本及阶段。无变化不递增；不修改作品默认、素材关联、镜头描述或视频历史，无集级默认或数据回填。
+
+## 2026-11-03 M08 视频批次并行
+
+数据库改动：在尚未正式执行的 catdrama/V4.19__catdrama_episode_cover.sql 重建 uq_catdrama_job_active_object，将 BATCH_VIDEO 排除出按 target_type/target_id/kind 的活动唯一约束。BATCH_VIDEO 是 USER 聚合父任务，不应限制该用户向不同镜头提交新批次。VIDEO、BATCH_IMAGE 及其他既有约束保持；user_id/kind/idempotency_key 仍唯一。无新增列、无账务回填。
+
+仅对本任务新建的隔离测试 PostgreSQL 执行验证。运行库后续升级需要同步索引；本轮未执行运行库 DDL/Flyway repair，未部署。
