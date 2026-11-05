@@ -806,3 +806,9 @@ Shot 新增 latestVideo: VideoVersion?、candidateVideo: VideoVersion?、candida
 `GET /api/drama/config` 的 `imageModels` 和 `videoModels` 首项是当前可用默认，后续项来自同场景有效公开映射，按 `providerCode + modelCode` 去重。公开目录要求当前默认也有有效启用映射；否则仅返回默认。默认模型缺少有效价格或能力时对应数组为空，视频 `defaults` 为空。能力配置限制模型参数，开放范围由当前模型和公开映射决定。
 
 `POST /api/drama/generation/quotes` 继承的视频型号失效时使用当前默认。优先匹配原分辨率、时长、比例、风格的完整组合，否则取默认组合，再执行镜头时长规则。显式指定的非公开型号沿用不可用错误。作品按视频通道自动匹配的图片型号未公开时使用图片默认。省略图片设置可继承兼容的作品风格，传入图片设置且 `styleCode` 为 null 表示无风格。确认时使用新报价返回的实际型号、参数和价格；接受后查询仍定位原任务。
+
+## 2026-11-05 图片失败原因与提示词修改
+
+任务详情与批量子项的 `errorMessage` 返回安全的中文失败原因，素材 `latestGeneration.message` 与已创建图片版本的 `failureMessage` 沿原任务读取。个人详情和编辑读取 `GET /api/drama/assets/{id}?includeGeneration=true`，在同一次详情请求中取得最近生成摘要。已应用图片仍从现有版本字段读取。
+
+BigLongXia 与豆包按已知错误类别和 HTTP 状态映射原因。既有补偿流程按实际账务状态追加积分说明。已确认失败后使用现有报价接口读取保存后的描述及目标版本，当前设备可复用同一失败任务保留的参考资源、模型和风格。结果未知仍以原幂等请求恢复。数据库改动为无。
