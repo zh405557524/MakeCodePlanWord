@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 3,
+  "_说明": "flow: v2=按 workflow/00-总流程.md 的八个阶段，项目文档在 workspace（工作台 projects/{项目名}，按版本分文件夹）；v1-legacy=尚未迁移，旧文档在 legacyWorkspace（只读）。appCode=后端多 App 共用时的 App 标识，也用于工作台 tag 前缀。appRepo=App 仓库；backendRepos=后端仓库（可能多 App 共用）；repositories 字段保留给 legacy 脚本兼容。",
+  "canonicalRoot": "projects",
+  "forbiddenRoots": [
+    "/Users/soul/code/lxwx/projects"
+  ],
+  "projects": [
+    {
+      "name": "喵喵写歌",
+      "aliases": [
+        "catsinger"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "/Users/soul/code/lxwx/catsinger",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin",
+        "/Users/soul/code/lxwx/lxwx_ai_service",
+        "/Users/soul/code/lxwx/lxwx_music_factory"
+      ],
+      "workspace": null,
+      "legacyWorkspace": "projects/喵喵写歌",
+      "repositories": [
+        "/Users/soul/code/lxwx/catsinger",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin",
+        "/Users/soul/code/lxwx/lxwx_ai_service",
+        "/Users/soul/code/lxwx/lxwx_music_factory"
+      ]
+    },
+    {
+      "name": "喵喵带货",
+      "aliases": [
+        "catseller"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "/Users/soul/code/lxwx/catseller",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ],
+      "workspace": null,
+      "legacyWorkspace": "projects/喵喵带货",
+      "repositories": [
+        "/Users/soul/code/lxwx/catseller",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ]
+    },
+    {
+      "name": "剧说",
+      "aliases": [
+        "narrate"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "/Users/soul/code/lxwx/narrate",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ],
+      "workspace": null,
+      "legacyWorkspace": "projects/剧说",
+      "repositories": [
+        "/Users/soul/code/lxwx/narrate",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ]
+    },
+    {
+      "name": "喵喵漫画",
+      "aliases": [
+        "comic",
+        "make_drama"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "/Users/soul/code/lxwx/make_drama",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ],
+      "workspace": null,
+      "legacyWorkspace": "projects/喵喵漫画",
+      "repositories": [
+        "/Users/soul/code/lxwx/make_drama",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ]
+    },
+    {
+      "name": "漫剧制作",
+      "aliases": [],
+      "flow": "v1-legacy",
+      "appRepo": null,
+      "backendRepos": [],
+      "workspace": null,
+      "legacyWorkspace": "projects/漫剧制作",
+      "repositories": []
+    },
+    {
+      "name": "钢琴视奏",
+      "aliases": [
+        "solfeggio"
+      ],
+      "appCode": "solfeggio",
+      "flow": "v2",
+      "appRepo": "/Users/soul/code/soul/Solfeggio",
+      "backendRepos": [
+        "/Users/soul/code/soul/service"
+      ],
+      "workspace": "/Users/soul/work/MakeCodePlanWord/projects/钢琴视奏",
+      "legacyWorkspace": null,
+      "repositories": [
+        "/Users/soul/code/soul/Solfeggio",
+        "/Users/soul/code/soul/service"
+      ],
+      "designWorkspace": "/Users/soul/work/CreateDesignApp/projects/钢琴视奏v2.0版本"
+    },
+    {
+      "name": "执行力",
+      "aliases": [
+        "doflow"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "G:\\code\\soul\\DoFlow",
+      "backendRepos": [],
+      "workspace": null,
+      "legacyWorkspace": "projects/执行力",
+      "repositories": [
+        "G:\\code\\soul\\DoFlow"
+      ]
+    },
+    {
+      "name": "喵喵穿搭",
+      "aliases": [
+        "catoutfit"
+      ],
+      "flow": "v1-legacy",
+      "appRepo": "/Users/soul/code/lxwx/catoutfit",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ],
+      "workspace": null,
+      "legacyWorkspace": "projects/喵喵穿搭",
+      "repositories": [
+        "/Users/soul/code/lxwx/catoutfit",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ]
+    },
+    {
+      "name": "喵喵漫剧",
+      "aliases": [
+        "catdrama"
+      ],
+      "appCode": "catdrama",
+      "flow": "v2",
+      "appRepo": "/Users/soul/code/lxwx/catdrama",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ],
+      "workspace": "/Users/soul/work/MakeCodePlanWord/projects/喵喵漫剧",
+      "legacyWorkspace": null,
+      "repositories": [
+        "/Users/soul/code/lxwx/catdrama",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ]
+    },
+    {
+      "name": "GPU集群",
+      "aliases": [
+        "gpu-worker",
+        "ai-generation-worker",
+        "GPU 集群"
+      ],
+      "flow": "v2",
+      "appRepo": "/Users/soul/code/soul/ai-generation-worker",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ],
+      "workspace": "/Users/soul/work/MakeCodePlanWord/projects/GPU集群",
+      "legacyWorkspace": null,
+      "repositories": [
+        "/Users/soul/code/soul/ai-generation-worker",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ]
+    },
+    {
+      "name": "喵喵漫剧网页端",
+      "aliases": [
+        "喵喵漫剧网页版",
+        "喵喵漫剧Web"
+      ],
+      "appCode": "catdrama-studio",
+      "backendAppCode": "catdrama",
+      "flow": "v2",
+      "appRepo": "/Users/soul/code/lxwx/catdrama-studio",
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ],
+      "workspace": "/Users/soul/work/MakeCodePlanWord/projects/喵喵漫剧网页端",
+      "legacyWorkspace": null,
+      "repositories": [
+        "/Users/soul/code/lxwx/catdrama-studio",
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice"
+      ]
+    },
+    {
+      "name": "灵犀万象后端与后台",
+      "aliases": [
+        "lxwx后端与后台"
+      ],
+      "flow": "v2",
+      "appRepo": null,
+      "backendRepos": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ],
+      "workspace": "/Users/soul/work/MakeCodePlanWord/projects/灵犀万象后端与后台",
+      "legacyWorkspace": null,
+      "repositories": [
+        "/Users/soul/code/lxwx/lxwx_service/lxwxservice",
+        "/Users/soul/code/lxwx/lxwx_admin"
+      ]
+    }
+  ]
+}

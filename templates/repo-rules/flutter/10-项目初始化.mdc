@@ -1,0 +1,66 @@
+---
+description: 【任务剧本】Flutter 项目初始化。新建工程、或把现有工程整理成统一骨架时加载。只搭基础结构，不碰业务。
+alwaysApply: false
+---
+
+# 10 · 任务剧本：项目初始化
+
+## 一、职责边界
+
+现有工程不重复初始化。工程来源、迁入方式按项目已批准计划执行。`templates/scaffold/` 是旧版通用样例，只作目录和文件清单的参考：其中与 01–07 不一致的写法（状态刷新、全局提示、本地存储、凭证保存）以规则为准，不照抄。
+
+**只做两件事**：
+1. 把本规则目录复制到目标工程 `.cursor/rules/`
+2. 搭建可继续功能开发的基础结构
+
+**不做**：业务功能、页面对稿、bug 修复、业务逻辑修改、重构，以及支付/短信/一键登录/上传/播放/对象存储/CDN/APM/客服等**未确定的 SDK 接入**。
+
+初始化完成后按用户已授权范围继续；仅授权初始化时交付结果，不自行开始后续业务。
+
+## 二、交付清单
+
+| # | 产物 | 实际入口 / 规则 |
+|---|---|---|
+| 1 | `.cursor/rules/` 已写入本规则 | 本目录 |
+| 2 | `lib/` 标准目录骨架 | `01-架构与目录` 第一节 |
+| 3 | `main.dart` | `lib/main.dart` |
+| 4 | `global.dart` | `lib/global.dart` |
+| 5 | `theme.dart` | `lib/theme.dart` |
+| 6 | `routes/`（index/name/router/observers） | `lib/routes/` |
+| 7 | `services/`（index/http/storage/event） | `lib/services/` |
+| 8 | `store/`（index/user/config） | `lib/store/` |
+| 9 | `utils/`（index/constants/logger/assets） | `lib/utils/` |
+| 10 | `widgets/`（index/toast/custom_scaffold） | `lib/widgets/` |
+| 11 | 最小可运行首页 `pages/main/` | `lib/pages/main/` |
+| 12 | `pubspec.yaml` 基线依赖 | `pubspec.yaml` |
+| 13 | 填好的 `90-项目专属规则.mdc` | 本目录 |
+
+以已批准工程来源为准，核对包名、应用名、环境及版本；不能从旧模板覆盖公共基础设施。
+
+## 三、Android 包名一致性（高频事故点）
+
+以下四处**必须完全一致**，格式为反向域名如 `com.example.app`：
+
+1. `android/app/build.gradle.kts` 的 `namespace` 与 `applicationId`
+2. `android/app/src/main/kotlin/<包名路径>/MainActivity.kt` 的 `package` 声明
+3. `MainActivity.kt` 的**实际文件路径**与包名匹配
+4. `AndroidManifest.xml`（如声明了 `package` 属性）
+
+改完执行 `flutter clean`。
+
+> 报 `ClassNotFoundException: Didn't find class "xxx.MainActivity"` 基本都是这四处不一致。
+
+## 四、初始化完成检查（在 `00-规则总索引` DoD 之外的增量项）
+
+- [ ] `.cursor/rules/` 已存在且规则已写入
+- [ ] `lib/` 目录结构完整，`services/store/utils/widgets` 均有入口文件
+- [ ] `pubspec.yaml` 可识别，`flutter pub get` 通过
+- [ ] `main.dart` 可启动，路由基础链路可运行
+- [ ] `Global.init()` 清晰可读，注入顺序正确（Storage 先于依赖它的 Store）
+- [ ] `90-项目专属规则.mdc` 已填写：包名、设计稿尺寸、色板、存储选型、是否多语言
+- [ ] `flutter analyze` 无 error
+
+## 五、返回值
+
+- 全部满足 → 返回 `initialized`，回到 `00-规则总索引` 分派表
+- 缺少工程目录、包名未定、规则写入位置不明或基础结构无法创建 → 返回 `blocked`，写明阻塞原因，**不要绕过去猜**

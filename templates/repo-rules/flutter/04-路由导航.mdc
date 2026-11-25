@@ -1,0 +1,95 @@
+---
+description: go_router 导航规则：路由目录、命名、注册、子路由、三种传参方式与回传、路由守卫
+globs: "**/lib/routes/**/*.dart"
+alwaysApply: false
+---
+
+# 04 · 导航（go_router）
+
+## 一、基础约定
+
+- 统一使用 `go_router`，路由配置全部在 `lib/routes/`
+- 路由名集中在 `RouteName`，**业务代码不写裸路径字符串**
+- 所有被注册为路由的页面类，必须能从 `lib/routes/index.dart` 访问到（`part` 聚合下由 `index.dart` 统一 `import` 页面模块）
+
+```text
+lib/routes/
+├── index.dart      import 页面 + part 声明 + export go_router
+├── name.dart       RouteName
+├── router.dart     CustomRouter.config + 守卫
+├── observers.dart  RouteObservers
+└── transitions.dart 自定义转场（可选）
+```
+
+已有工程以当前 `lib/routes/` 的实际实现为准；新建工程按 `10-项目初始化.mdc` 搭建。
+
+## 二、路径与命名
+
+- 路径：语义化英文小写，多词用下划线，与页面目录名一致
+- 一级页面用一级路径；子流程注册为**父路由的子路由**
+- 子路由路径用**相对写法**（不以 `/` 开头）
+- 路由名保持主从语义一致
+
+```text
+/                       RouteName.main
+/login                  RouteName.login
+/ai_picture             RouteName.aiPicture
+/ai_picture/records     RouteName.aiPictureRecords   ← 子路由 path: 'records'
+/notes/file/:id         RouteName.noteFile
+```
+
+## 三、传参（三选一，禁止全局变量）
+
+| 方式 | 适用 | 跳转 | 取值 |
+|---|---|---|---|
+| `pathParameters` | 唯一标识、资源 ID | `pathParameters: {'id': fileId}` | `state.pathParameters['id']` |
+| `queryParameters` | 简单 key-value 字符串 | `queryParameters: {'url': url}` | `state.uri.queryParameters['url']` |
+| `extra` | 复杂对象、模型、Map | `extra: EditParams(...)` | `state.extra` 运行时检查后使用 |
+
+> 注意 API 版本：go_router 6.0 起为 `pathParameters` / `state.pathParameters`。
+> 旧写法 `params:` / `state.params[...]` 已移除，**不要再用**。
+
+`extra` 取值要做防御，不要裸强转：
+
+```dart
+pageBuilder: (context, state) {
+  final params = state.extra;
+  if (params is! EditParams) {
+    return CupertinoPage<void>(
+      key: state.pageKey,
+      child: const InvalidRoutePage(), // 替换为项目已有无效参数页面/反馈
+    );
+  }
+  return CupertinoPage<void>(
+    name: state.fullPath,
+    key: state.pageKey,
+    child: EditPage(params: params),
+  );
+},
+```
+
+**禁止**通过全局单例、静态字段、import 传递页面间参数。
+
+## 四、跳转与回传
+
+| 场景 | 写法 |
+|---|---|
+| 替换主导航 / 主路径 | `context.goNamed(RouteName.x)` |
+| 打开详情或子流程 | `context.pushNamed(RouteName.x)` |
+| 需要返回值 | `final r = await context.pushNamed(RouteName.x, extra: ...);` |
+| 页面返回 | `context.pop(result)` |
+
+允许从任意页面直接 `pushNamed` 到子路由，go_router 会构造正确的栈；父跳子同样走命名路由，不手工拼路径。
+
+## 五、路由守卫
+
+- 登录态、首启态、实验态等守卫逻辑**集中在 `router.dart` 的 `redirect`**
+- 不把登录判断散落到每个页面
+- 守卫依赖的状态从 `store/` 读，例如 `UserStore.to.isLogin`
+
+## 六、禁止事项
+
+- 拼裸路径字符串到处跳转
+- 把路由参数藏进全局变量或静态字段
+- 在页面里自建一套局部导航规范
+- 只建页面文件不注册路由

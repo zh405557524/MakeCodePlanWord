@@ -1,0 +1,46 @@
+---
+description: Flutter 多语言支持规则：启用判定、目录落点、main.dart 配置与开发约束
+globs: "**/lib/l10n/**/*,**/lib/generated/**/*"
+alwaysApply: false
+---
+
+# 06 · 多语言
+
+## 一、何时启用
+
+满足任一条件即纳入基础工程：面向多地区用户 / 产品明确要求多语言 / 参考工程已把多语言作为基础设施。
+
+明确是单语言、内部工具或一次性原型时可不启用，但必须在 `90-项目专属规则.mdc` 写清：**当前是否启用**、**是否预留 `l10n/` + `generated/` 结构**。
+
+## 二、目录
+
+```text
+lib/
+├── l10n/        源文案
+└── generated/   生成结果，只读不手改
+```
+
+## 三、main.dart 配置
+
+```dart
+localizationsDelegates: const [
+  GlobalMaterialLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  // 生成式本地化再加对应 delegate
+],
+supportedLocales: const [
+  Locale.fromSubtags(languageCode: 'zh'),
+  Locale.fromSubtags(languageCode: 'en'),
+],
+locale: WidgetsBinding.instance.platformDispatcher.locale,
+```
+
+`supportedLocales` 首项作为 fallback。跟随系统时保留 `locale:`，强制单语言时写死并在 `90-项目专属规则.mdc` 注明。
+
+## 四、开发约束
+
+- 用户可见文本一律走本地化入口，不在页面硬编码大量文案
+- 日期、时间、数字按 locale 格式化
+- 布局要容纳不同语言的长度差异（中英长度差常在 1.5–2 倍）
+- 新增文案时同步补齐所有已启用语种，不留空键

@@ -1,0 +1,70 @@
+---
+description: Flutter 多语言支持规则，提供目录落点、main.dart 配置与开发约束
+globs: "**/lib/main.dart,**/lib/l10n/**/*,**/lib/generated/**/*"
+alwaysApply: false
+---
+
+# 多语言支持
+
+## 一、适用场景
+
+当项目存在以下任一条件时，应把多语言纳入基础工程：
+
+- 面向多地区用户
+- 产品文档明确要求中英或更多语言
+- 参考工程已把多语言作为基础设施
+
+---
+
+## 二、工程落点
+
+常见目录：
+
+```text
+lib/
+├── generated/
+└── l10n/
+```
+
+说明：
+
+- `l10n/` 维护源文案
+- `generated/` 维护生成结果
+
+---
+
+## 三、main.dart 配置模板
+
+```dart
+localizationsDelegates: const [
+  GlobalMaterialLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+],
+supportedLocales: const [
+  Locale.fromSubtags(languageCode: 'zh'),
+  Locale.fromSubtags(languageCode: 'en'),
+],
+```
+
+如果项目使用生成式本地化，还应接入对应 delegate。
+
+---
+
+## 四、开发约束
+
+- 所有用户可见文本优先走本地化入口
+- 日期、时间、数字格式按 locale 处理
+- 设计与布局要考虑不同语言长度差异
+- 不在页面里硬编码大量中文文案
+
+---
+
+## 五、何时可以不启用
+
+若项目明确是单语言、内部工具或一次性原型，可暂不启用。
+
+但技术文档里应写清：
+
+- 当前是否启用多语言
+- 后续是否预留 `l10n/generated` 结构

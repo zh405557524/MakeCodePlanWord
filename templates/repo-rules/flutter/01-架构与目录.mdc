@@ -1,0 +1,106 @@
+---
+description: Flutter 工程分层与模块结构约定：lib 顶层职责、页面模块三件套、子功能拆分、index.dart 聚合
+globs: "**/lib/**/*.dart"
+alwaysApply: false
+---
+
+# 01 · 架构与目录
+
+## 一、lib 顶层分层
+
+```text
+lib/
+├── apis/        接口封装：请求路径、参数封装、响应解析入口
+├── components/  业务组件：可跨页面复用的中型业务组件
+├── config/      环境与三方能力配置
+├── enums/       全局枚举
+├── generated/   生成代码，只读不手改（仅启用代码生成时存在，未启用的项目可无）
+├── l10n/        多语言源文案（手写文案集中式项目可直接放 Dart 文案文件）
+├── models/      params/ responses/ data/ + index.dart
+├── pages/       页面及所属业务模块（logic/）
+├── plugins/     平台能力与第三方插件包装
+├── routes/      路由名、路由表、观察器、转场
+├── services/    公共能力（网络、存储、登录等）；不承载具体业务流程
+├── store/       全局状态、会话状态、配置状态
+├── utils/       常量、日志、资源映射、格式化
+├── widgets/     与业务解耦的基础 UI
+├── global.dart  公共能力装配与模块关闭入口
+├── main.dart    只放应用级编排
+└── theme.dart   主题与设计令牌
+```
+
+**边界判定**：业务归所属模块，与是否跨页面无关。
+
+- 同一业务多个页面复用的动作、任务查询、重试和恢复，放所属 `pages/.../logic/`；共享响应式状态用模块 Store。
+- `services/` 仅保留网络、凭证、登录、存储、资源缓存、事件总线、分享、统计、更新等与具体业务无关的公共能力（项目自己的清单见 `90-项目专属规则.mdc`）。
+- UI 复用放 `widgets/`（无业务）或 `components/`（业务组件）；通用确认类组件只接收所属业务传入的数据和回调。
+- 跨模块协作在 `module.dart` 装配处注入窄接口或回调；业务实现不得自行查找其他模块。通用组件只处理展示与选择，不持有业务对象或编排任务恢复。
+- `apis/` 只封装单次请求，不承担轮询、恢复决策。禁止统一业务任务管理器，也不能将其改名后搬到其他目录。
+
+## 二、页面模块标准结构
+
+```text
+lib/pages/{feature_name}/
+├── index.dart      唯一 import 入口 + part 声明
+├── controller.dart 页面状态、交互与订阅
+├── logic/          业务对象、模块 Store、任务与恢复（独立库）
+├── view.dart       页面 UI
+├── widgets/        本页私有组件
+├── dialog/         本页私有弹层
+└── {sub_feature}/  子功能，自成标准三件套
+```
+
+- 目录与文件 `snake_case`，类名 `PascalCase`
+- **`index.dart` / `controller.dart` / `view.dart` 三件套是硬性最小集**，哪怕 Controller 暂时是空的也要建
+
+## 三、容器页面与子功能
+
+当一个页面是多个业务入口的外层容器时：
+
+- **外层仍保留完整三件套**，只负责模式切换与入口分发
+- 子功能凡具备独立业务状态、独立提交逻辑或私有弹窗，**必须拆成自己的三件套**
+- 公共 `widgets/`、`dialog/` 放外层；只服务某个子功能的放对应子目录
+
+## 四、子模块的依赖关系（重要）
+
+子功能模块是**独立小单元**：
+
+- 子模块 `index.dart` 自己 `import` 外部依赖（flutter、get、全局 widgets 等）
+- **子模块不与父模块建立 `part` / `part of` 关系**
+- 父子需要共享状态时，注入模块 Store / 业务对象，不走 Controller 继承或 part 链
+
+## 五、聚合入口
+
+以下目录默认提供 `index.dart`：`models/` `pages/{feature}/` `routes/` `services/` `store/` `utils/` `widgets/`
+
+两种聚合风格按成员职责选择：独立库可从入口导出；`part` 成员不能再独立导入。入口可以同时导出独立子模块并声明自身成员，`export` 放在 `part` 前：
+
+| 风格 | 用法 | 适用 |
+|---|---|---|
+| `part` 聚合 | `index.dart` 写 `import` + `part 'x.dart'`，成员文件写 `part of 'index.dart';` | 模块成员互相引用密集：`pages/*`、`routes/`、`services/`、`store/` |
+| `export` 聚合 | `index.dart` 只写 `export 'x.dart';` | 成员彼此独立：`utils/`、`widgets/`、`components/` |
+
+`part of` **一律写相对路径**，指向声明了 `part` 的那个文件：
+
+| 成员文件位置 | 写法 |
+|---|---|
+| 与 `index.dart` 同级（`view.dart`、`controller.dart`） | `part of 'index.dart';` |
+| 在子目录里（`widgets/x.dart`、`dialog/y.dart`） | `part of '../index.dart';` |
+
+不写 `part of 'package:...'`，也不写 library 名。
+
+> 若遇到 `part of` 报错，先检查它指向的是不是**声明了 `part` 的那个文件**，而不是改成完整包路径。
+
+## 六、模型目录
+
+```text
+lib/models/
+├── params/     请求参数
+├── responses/  服务端响应
+├── data/       纯本地/视图模型（可选）
+└── index.dart
+```
+
+## 七、结构变更时必须同步
+
+新增顶层目录、`pages` 组织方式变化、聚合模式变化、引入 `l10n/generated/plugins/packages` 等新层次时，同步更新本规则与 `90-项目专属规则.mdc` 的页面索引。

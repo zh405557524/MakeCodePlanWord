@@ -1,0 +1,49 @@
+---
+description: Flutter 第三方依赖分层与引入规则，按用途而非按参考项目照搬
+globs: "**/pubspec.yaml"
+alwaysApply: false
+---
+
+# 07 · 依赖管理
+
+## 一、三层分类
+
+引入任何依赖前先归类，**先确认用途再引入，不因为参考项目有就照搬**。
+
+### 基础必选
+
+| 用途 | 包 |
+|---|---|
+| 路由 | `go_router` |
+| 状态管理 | `get` |
+| 网络 | `dio` |
+| 应用信息 | `package_info_plus` |
+
+### 通用可选（按项目选型，选定后写进 `90-项目专属规则.mdc`）
+
+| 用途 | 候选 | 说明 |
+|---|---|---|
+| 本地存储 | `get_storage` / `shared_preferences` / `hive` | 同一用途只用一种；项目明确分工时按90-项目专属规则执行 |
+| 国际化 | `flutter_localizations` + `intl` | 启用多语言时 |
+| 屏幕适配 | `flutter_screenutil` | 要么全用要么不用 |
+| 全局提示 | `flutter_easyloading` / `bot_toast` / `fluttertoast` | 统一封装为 `CustomToast`，业务层不直接调底层库 |
+| 系统能力 | `permission_handler` `url_launcher` `share_plus` `image_picker` `file_picker` | 按需 |
+
+### 业务专用（业务明确后才引入）
+
+登录 / 支付 / 广告 / 统计 APM / 音视频 / 富文本 / 文档 / 地图蓝牙外设 SDK。
+
+**桌面端 `window_manager`、启动屏 `flutter_native_splash` 等同样属于此类**，不进通用基线。
+
+## 二、引入新依赖时必须说明
+
+1. 解决什么问题，为什么现有依赖做不到
+2. 归属哪一层
+3. 是否引入平台侧配置（权限、Podfile、Gradle、混淆规则）
+4. 是否有更轻的替代
+
+## 三、禁止
+
+- 初始化阶段夹带未确定的业务 SDK
+- 同一用途并存两个包（两套toast、重复KV）；已确认的不同职责见 `90-项目专属规则.mdc`
+- 只加 `pubspec.yaml` 不做封装，让第三方类型直接渗透到页面层

@@ -1,0 +1,199 @@
+---
+description: Flutter UI 实现规则：设计输入、页面骨架、组件复用、尺寸适配、主题令牌、颜色 API、资源引用、弹框规范与状态完整性
+globs: "**/lib/pages/**/*.dart,**/lib/widgets/**/*.dart,**/lib/components/**/*.dart"
+alwaysApply: false
+---
+
+# 05 · UI 实现
+
+## 一、设计输入优先级
+
+1. Figma 真源（有链接就必须读，流程见 `12-界面对稿`）
+2. 用户确认的设计说明及已留存设计素材
+3. PRD / 产品文档
+4. 参考图
+5. 现有同类页面风格
+
+以上排序仅适用于视觉；交互、收费、状态流转以已批准产品/接口契约为准。不要只凭单张截图猜交互。
+
+按页面及具体状态核对设计稿：已有专属空态、错误态、加载态或弹框时按专属稿实现；通用状态组件只作为缺少对应状态稿时的兜底，不能全局覆盖专属样式。
+
+## 二、实现顺序
+
+拆页面主区块 → 判断组件复用 → 建立页面状态（Controller 字段先于 UI 写）→ 落主题与样式 → 补齐交互反馈与边界状态
+
+## 三、组件复用优先级
+
+`lib/widgets/`（基础无业务） → `lib/components/`（跨页面业务组件） → 当前模块 `widgets/` → 新建局部组件
+
+新建前先查 `90-项目专属规则.mdc` 的可复用资产清单。
+
+## 四、页面骨架
+
+默认 `StatelessWidget` + `GetBuilder` + `CustomScaffold`：
+
+```dart
+class UserProfilePage extends StatelessWidget {
+  const UserProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<UserProfileController>(
+      init: UserProfileController(),
+      builder: (controller) => Obx(
+        () => CustomScaffold(
+          appBar: AppBar(title: const Text('个人资料')),
+          body: _buildBody(context, controller),
+        ),
+      ),
+    );
+  }
+
+  // 复杂 UI 拆成 _buildXxx 方法或独立 Widget，不要堆在一个 build 里
+  Widget _buildBody(BuildContext context, UserProfileController controller) { ... }
+}
+```
+
+**仅在确实需要 State 生命周期时才用 `StatefulWidget`**（`AnimationController`、`WidgetsBindingObserver`、需要 `mounted` 的定时跳转）。
+不使用 `GetView<T>`——它要求外部先 `Get.put`，与「页面自带 `init:`」和直接 push 的用法冲突。
+
+## 五、尺寸适配
+
+启用 `flutter_screenutil` 时，**四个单位各司其职，不可混用**：
+
+| 单位 | 用于 | 示例 |
+|---|---|---|
+| `.w` | 宽度、水平间距 | `width: 100.w`、`SizedBox(width: 8.w)` |
+| `.h` | 高度、垂直间距 | `height: 56.h`、`SizedBox(height: 12.h)` |
+| `.r` | 圆角半径 | `BorderRadius.circular(12.r)` |
+| `.sp` | 字体大小 | `fontSize: 14.sp` |
+
+```dart
+// ✗ 硬编码
+Container(width: 100, height: 56, child: Text('文本', style: TextStyle(fontSize: 14)))
+
+// ✓ 适配单位
+Container(width: 100.w, height: 56.h, child: Text('文本', style: TextStyle(fontSize: 14.sp)))
+```
+
+要么全用要么不用，**不得半启用**。设计稿基准写在 `90-项目专属规则.mdc`。
+
+## 六、主题与颜色
+
+- 颜色优先 `Theme.of(context).colorScheme.xxx`
+- 其次用 `CustomTheme` 中已定义的令牌
+- 都没有时才写字面色值，并在同一轮把它补进 `theme.dart`
+- 重复使用的颜色、间距、字号不得散落成魔法数字
+- **具体色值属于项目专属**，写在 `90-项目专属规则.mdc` 和 `theme.dart`，不写进通用规则
+
+### 透明度 API（Flutter 3.27+）
+
+`withOpacity()` 已废弃（有精度损失），一律改用：
+
+```dart
+// ✗ 已废弃
+Colors.black.withOpacity(0.6)
+
+// ✓ 固定透明度 → 常量写法（编译期确定，性能更优）
+const Color(0x99000000)            // ARGB，0x99 ≈ 60%
+const Color.fromRGBO(0, 0, 0, 0.6)
+
+// ✓ 动态透明度 → withValues
+Colors.black.withValues(alpha: controller.opacity)
+```
+
+## 七、资源引用
+
+### 7.1 命名
+
+本地资源统一**英文小写下划线**，以资源类型为前缀，功能或场景为主体。不允许中文、空格、特殊字符。
+
+| 类型 | 示例 |
+|---|---|
+| 图片 | `icon_user_avatar.png`、`banner_text_translation.png` |
+| 音频 | `audio_success.mp3`、`effect_click.wav` |
+| 字体 | `font_title_bold.ttf` |
+
+多处共用的资源加场景后缀区分：`icon_share_global.png`。
+
+### 7.2 常量类同步（高频遗漏点）
+
+所有图片路径在 `lib/utils/assets.dart` 的 `AppAssets` 里以静态常量声明，**禁止硬编码路径**。
+
+> **写下 `AppAssets.xxx` 的同一轮，必须在 `AppAssets` 里补上对应常量定义**，否则编译不过。
+> 格式：`static const String iconAi = 'assets/images/icon_ai.png'; // ai 图标`
+> 新常量名不要与现有的冲突；资源文件必须实际存在并被打包；缺图登记待补，不能用不存在的路径宣称已完成。
+
+```dart
+// ✗ 硬编码
+Image.asset('assets/images/icon_back.png')
+
+// ✓ 常量引用
+Image.asset(AppAssets.iconBack, width: 22.w, height: 22.h)
+// 同时在 assets.dart 补：
+// static const String iconBack = 'assets/images/icon_back.png'; // 返回图标
+```
+
+### 7.3 图标与复杂图形
+
+- **图标必须从对应 Figma 设计稿的原始节点导出**，保留 1x/2x/3x，记录源节点并走 `AppAssets`。这是用户明确要求的硬规则，不是默认偏好。
+- **禁止擅自生成、手绘或拼接图标**，包括 AI 出图、CustomPainter、手写 SVG、用边框补形状，以及 Material/Cupertino/第三方图标或其他页面近似图标替代。
+- 找不到、无法导出或无法确定对应 Figma 图标时，明确列出缺项并询问用户；不得自行设计或降级替代。复用现有资源前必须确认它来自同一源图标且外观一致。
+- 导出后检查透明底、裁切边界、可见尺寸、颜色和像素密度；点击热区与图标视觉尺寸分开设置，按同视口截图核对。用户另行明确授权的例外仅限其指定范围。
+- **复杂图形等用户明确说明再实现**，不要自行尝试 `CustomPainter`
+- 简单几何图形（圆、矩形、分割线）可直接用代码
+
+## 八、弹框
+
+弹框放 `{feature_name}/dialog/{dialog_name}.dart`，头部写 `part of '../index.dart';`（注意是 `../`）。
+
+**硬性约定**：
+
+1. 类名以 `Dialog` 结尾，提供静态 `show` 方法
+2. **`show` 只接收 `BuildContext` 和数据参数，禁止传 Controller**
+3. 弹框只负责收集用户输入并返回结果，**业务逻辑在调用处处理**
+4. 编辑控制器由弹框自身的 State 创建并在 `dispose` 释放，或等待实际路由移除再释放；不使用固定延时猜测动画结束
+
+```dart
+// View 收集选择，再交给 Controller；输入弹框由自身 State 管理编辑器。
+final confirmed = await AppConfirmDialog.show(
+  context,
+  title: '删除',
+  message: '确定删除？',
+);
+if (confirmed == true && context.mounted) {
+  await controller.delete(context);
+}
+```
+
+## 九、全局提示
+
+操作成功、操作失败、输入校验及临时提醒，统一使用 `CustomToast` 浮层展示。禁止将这类提示作为文字、提示条或卡片嵌入页面、表单或弹框布局，不占用布局空间、不挤动内容。输入过程中不提示；点击提交时按字段顺序校验，只用 Toast 提示首个错误并保留输入，字段非法不单独禁用提交入口。空态、加载进度、页面错误态和重试入口按原规范保留。
+
+**失败提示统一用 `CustomToast.fail(text, {error, stackTrace})`。**
+
+`fail()` 会自动写 `AppLogger.error`，所以调用时**不需要再手写一遍日志**，把 `error` / `stackTrace` 传进去即可：
+
+```dart
+} catch (e, s) {
+  CustomToast.fail('生成失败，请稍后重试', error: e, stackTrace: s);
+}
+```
+
+加载提示用 `CustomToast.loading()` / `dismiss()`，不要直接调底层 EasyLoading。
+
+## 十、状态完整性
+
+默认至少覆盖 `loading`、`empty`、`error`、`success`；涉及表单/提交再加 `disabled`、`submitting`；涉及详情加 `not_found`。
+
+**只做 happy path 视为未完成。**
+
+## 十一、View 与 Controller 联动
+
+UI 改动时同步检查 Controller 是否需要：新增状态字段 / 新增交互方法 / 补空态与错误态 / 补路由返回处理。
+
+**禁止在 View 层做临时 patch 绕过 Controller。** 找不到 Controller 时，先看本模块 `index.dart` 的 `part` 声明确认位置，不要另起一份。
+
+## 十二、对稿清单
+
+背景层次 · 标题与正文层级 · 区块顺序 · 留白与间距 · 卡片圆角边框阴影 · 主次按钮层级 · 空态/错误态/加载态 · 小屏无溢出

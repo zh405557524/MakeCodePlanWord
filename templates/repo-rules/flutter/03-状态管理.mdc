@@ -1,0 +1,157 @@
+---
+description: GetX 状态管理统一口径：Controller / Store / Service 分工，.obs 与 Obx 的正确组合，GetBuilder 的定位，生命周期与 context 约束
+globs: "**/lib/**/*.dart"
+alwaysApply: false
+---
+
+# 03 · GetX 状态管理
+
+## 一、口径：`.obs` + `Obx`
+
+页面状态和全局状态**统一用 `.obs` 声明、用 `Obx` 消费**。
+
+> 为什么不是 `update()` + `GetBuilder`：后者性能更可控，但漏调一次 `update()` 就是静默不刷新，
+> 而 `.obs` 是订阅即生效，心智负担更低，也是 GetX 的主流写法。两套机制各有道理，
+> **但必须二选一**——混用才是真正的坑（见第二节）。选定 `.obs` 后不要再回头。
+
+`GetBuilder` 在本工程里**只承担一个职责：通过 `init:` 创建并托管 Controller 的生命周期**，不承担刷新。
+所以标准骨架是 `GetBuilder` 外壳 + `Obx` 内层：
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return GetBuilder<UserProfileController>(
+    init: UserProfileController(),   // 只管生命周期
+    builder: (controller) => Obx(() {     // 由 Obx 管刷新
+      return CustomScaffold(body: _buildBody(context, controller));
+    }),
+  );
+}
+```
+
+从 `Obx` 闭包里同步调用的方法，其内部响应式读取会被追踪。`itemBuilder`、`LayoutBuilder` 等稍后执行的闭包需要在实际读取处使用局部 `Obx`，不能依赖已结束的外层订阅。
+
+## 二、唯一的硬性禁忌
+
+> **`.value` 不得在 `GetBuilder` 的 `builder` 里、却在任何 `Obx` 之外被读取。**
+
+`GetBuilder` 只响应 `update()`，不监听 `.obs`。而本工程页面层**不调用 `update()`**，
+所以落在 `Obx` 之外的 `.value` 等于永远不会刷新——这是静默 bug，UI 不报错，只是不动。
+
+```dart
+// ✗ 错：GetBuilder 不监听 .obs，本工程又不调 update()，这里永远不刷新
+GetBuilder<XController>(
+  init: XController(),
+  builder: (c) => c.isLoading.value ? Loading() : Body(),
+)
+
+// ✓ 对：Obx 包住读 .value 的范围
+GetBuilder<XController>(
+  init: XController(),
+  builder: (c) => Obx(() => c.isLoading.value ? Loading() : Body()),
+)
+```
+
+排查手法：看 `GetBuilder` 的 `builder` 到第一个 `Obx` 之间有没有 `.value`。
+
+### `Obx` 的粒度
+
+- 页面级：`builder:` 直接返回 `Obx`，整页重建，写起来省事，适合中小页面
+- 局部级：只把变化的那块包进 `Obx`，适合长列表、进度条、高频输入等重建代价大的场景
+
+同一页面里两种可以并存。不确定就先页面级，出现卡顿再往下收。
+
+## 三、Controller 职责
+
+**负责**：页面状态、数据加载、用户操作响应、与模块业务对象/Store 交互、路由参数解析后的初始化。
+
+**不负责**：复杂 UI 拼装、直接持有 `BuildContext`、在页面之外再造一套全局状态。
+
+约定：
+
+- 每个页面的 Controller 必须独立定义，直接继承 `GetxController`，页面与 Controller 一一对应；禁止继承其他业务 Controller。
+- 业务逻辑通过所属模块的独立对象复用，跨页面共享状态由模块 Store 管理（职责见第六节），不通过 Controller 继承复用。
+- 可变状态一律 `.obs`，对外暴露 `RxT` 本身或 getter，不要把 `.value` 拷成普通字段
+- 外部参数（路由 extra、父页面数据）通过**构造方法**接收
+- 数据加载在 `onInit()` 触发，或由公开方法手动触发
+- 同类页面可并存或切换对象时，用路由实例和对象身份区分 Controller 的 `key/tag`，避免旧页面释放或覆盖新页面状态。
+- 需要释放的资源（`TextEditingController`、`ScrollController`、`AnimationController`、定时器、订阅）在 `onClose()` 里 `dispose` / `cancel`
+- Controller 方法里的耗时活（IO、解析、重计算）先异步化或 `compute` 移出主 isolate，拿到结果再回写 `.obs`；不能因为「数据加载在 Controller」就把阻塞调用留在主线程（见 `02-编码约定` 第五节）
+
+```dart
+class UserProfileController extends GetxController {
+  UserProfileController({required this.userId});
+
+  final String userId;
+
+  final loading = true.obs;
+  final errorMessage = RxnString();
+  final detail = Rxn<UserDetail>();
+
+  final textController = TextEditingController();
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadData();
+  }
+
+  @override
+  void onClose() {
+    textController.dispose();
+    super.onClose();
+  }
+
+  Future<void> loadData() async {
+    loading.value = true;
+    errorMessage.value = null;
+    try {
+      detail.value = await UserApi.detail(userId);
+    } catch (e, s) {
+      AppLogger.error('加载用户详情失败', e, s);
+      errorMessage.value = '加载失败，请稍后重试';
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /// context 由 View 传入，禁止 Get.context
+  void openDetail(BuildContext context) {
+    context.pushNamed(RouteName.userDetail, extra: detail.value);
+  }
+}
+```
+
+## 四、Context 规则
+
+- **禁止在 Controller 中使用 `Get.context` / `Get.context!`**，构建时机不确定时可能为 null
+- 需要 context 的 Controller 方法，签名里带 `BuildContext context`，由 View 传入
+- 异步后使用 context 前检查 `context.mounted`
+
+## 五、弹窗
+
+职责切分：**弹框只收集输入并返回结果，业务在调用处处理。**
+
+- 弹框提供静态 `show`，只接 `BuildContext` 和数据参数，**禁止把 Controller 传进去**
+- View 拿到返回值后再调 Controller 的方法处理业务
+
+```dart
+// View 层
+final ok = await AppConfirmDialog.show(context, title: '删除', message: '确定删除？');
+if (ok == true && context.mounted) {
+  await controller.delete(context);
+}
+```
+
+弹框文件位置、`part of '../index.dart'`、`TextEditingController` 生命周期等写法见 `05-界面实现` 第八节。
+
+## 六、模块状态与公共能力
+
+| 对象 | 职责与生命周期 |
+|---|---|
+| 页面 Controller | 直接继承 `GetxController`，持有页面状态和订阅；离页释放页面资源 |
+| 模块业务对象 / Store | `pages/.../logic/` 内构造注入依赖；按需创建，同业务页面复用；离页后模块继续持有执行中的动作 |
+| 公共 Store | `store/` 仅登录态、用户资料、配置；应用装配注册 |
+| 公共 Service | `services/` 仅公共能力，可使用 `GetxService`；应用装配注册 |
+
+业务对象不得声明 `GetxService` 或启动时永久注册。业务对象不得提供 `.to` / `Get.find` 回退；页面从所属模块取得实例，模块在构造时注入业务依赖。测试通过模块显式装配替身，不能依赖全局注册覆盖生产对象。各模块 `module.dart` 独立拥有对象，账号、环境、后台变化或隐私撤回时关闭。模块生命周期对象（示例名 `ModuleLifetime`）只负责资源释放，不保存任务、调用 API 或提供恢复策略。关闭失败仍须逐项释放剩余资源并报告错误，关闭错误不能阻断后续模块或下次初始化。

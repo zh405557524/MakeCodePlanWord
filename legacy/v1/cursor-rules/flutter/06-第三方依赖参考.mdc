@@ -1,0 +1,98 @@
+---
+description: Flutter 通用第三方依赖参考，按依赖类别而不是业务包名组织
+globs: "**/pubspec.yaml"
+alwaysApply: false
+---
+
+# 第三方依赖参考
+
+## 一、依赖分层
+
+第三方依赖分为三类：
+
+1. 基础必选
+2. 通用可选
+3. 业务专用
+
+规则：
+
+- 先确认用途，再引入依赖
+- 不因为参考项目依赖很多就全部照搬
+
+---
+
+## 二、基础必选
+
+### 2.1 路由
+
+- `go_router`
+
+### 2.2 状态管理
+
+- `get`
+
+### 2.3 网络
+
+- `dio`
+
+### 2.4 应用信息
+
+- `package_info_plus`
+
+---
+
+## 三、通用可选
+
+### 3.1 本地存储
+
+- `shared_preferences`
+- `get_storage`
+- `hive`
+
+### 3.2 国际化
+
+- `flutter_localizations`
+- `intl`
+
+### 3.3 屏幕适配
+
+- `flutter_screenutil`
+
+### 3.4 全局提示
+
+- `bot_toast`
+- `fluttertoast`
+
+### 3.5 常用系统能力
+
+- `permission_handler`
+- `url_launcher`
+- `share_plus`
+- `image_picker`
+- `file_picker`
+
+---
+
+## 四、业务专用
+
+只有业务明确时才引入：
+
+- 登录 SDK
+- 支付 SDK
+- 广告 SDK
+- 统计 / APM SDK
+- 音视频 SDK
+- 富文本 SDK
+- 文档阅读 / 编辑 SDK
+- 地图 / 蓝牙 / 外设 SDK
+
+---
+
+## 五、推荐写法
+
+在技术文档中至少写清：
+
+1. 基础必选依赖
+2. 当前项目启用的通用可选依赖
+3. 当前项目启用的业务专用依赖
+4. 参考工程中哪些依赖被排除，为什么排除

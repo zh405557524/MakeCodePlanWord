@@ -1,0 +1,111 @@
+---
+description: Flutter 编码约定：命名、导入顺序、注释、错误处理与提交前验证
+globs: "**/lib/**/*.dart"
+alwaysApply: false
+---
+
+# 02 · 编码约定
+
+## 一、命名
+
+| 对象 | 规范 | 示例 |
+|---|---|---|
+| 目录、文件 | `snake_case` | `user_profile/`、`confirm_dialog.dart` |
+| 类、枚举 | `PascalCase` | `UserProfilePage` |
+| 变量、函数 | `camelCase` | `isLoading`、`loadData()` |
+| 页面类 | `{FeatureName}Page` | `UserProfilePage` |
+| 页面 Controller | `{FeatureName}Controller` | `UserProfileController` |
+| 路由名常量 | `RouteName.{featureName}` | `RouteName.userProfile` |
+| 常量集合 | 集中在 `utils/constants.dart` | |
+
+页面类与 Controller 类名**强关联**：类名去掉 `Page` 加 `Controller` 即为对应 Controller。
+
+## 二、导入顺序
+
+1. Dart SDK（`dart:io`）
+2. Flutter SDK（`package:flutter/...`）
+3. 第三方包（`package:get/...`）
+4. 项目内部（`package:your_project/...`）
+
+`part` 聚合的模块里：
+
+- **只有 `index.dart` 写 `import`**，成员文件一行 `part of 'index.dart';`
+- `export` 指令必须写在所有 `part` 指令**之前**
+- `part` 指令按依赖顺序排，被依赖的在前（通常 `controller.dart` 在 `view.dart` 之前）
+- 新增成员文件时**必须同步在 `index.dart` 补 `part` 声明**
+
+## 三、注释
+
+至少为以下内容写注释，用中文，说明「负责什么 / 为什么这样做」，不复述代码字面：
+
+- 文件职责、类职责、关键方法职责
+- 状态切换的原因
+- 特殊路由参数的含义与来源
+
+## 四、错误处理
+
+- 异步调用统一 `try / catch / finally`，`finally` 里恢复 loading 态
+- 错误必须有去向：`CustomToast.fail(msg, error: e, stackTrace: s)` 会同时给用户提示并写日志，通常一句就够；纯后台失败至少要 `AppLogger.error`
+- 不允许空 `catch {}`，不允许吞掉关键失败
+- 网络层额外处理：超时、无网络、响应结构不符预期
+- 用户主动进入页面的首轮加载、点击、提交、手动刷新和重试产生的接口失败，统一通过一次性的用户操作反馈对象（示例名 `UserActionFeedback`，项目实际封装见 `90-项目专属规则.mdc`）弹 Toast；覆盖断网、超时、HTTP 4xx/5xx 和服务端业务错误，同时保留原页面错误态、缓存与重试入口。
+- 后台轮询、启动预加载、前后台切换触发的自动刷新只更新状态并记录日志，不弹 Toast。页面、账号或环境已变化的迟到结果以及调用方主动取消的请求也不提示。
+- 每次用户操作新建一个 `UserActionFeedback`；同一操作包含恢复、核实或多接口组合时复用同一个实例，避免重复提示。优先使用 `ApiException.userMessage`，没有可读服务端文案时使用当前业务的中文兜底。
+
+```dart
+Future<void> loadData() async {
+  loading.value = true;
+  try {
+    data.value = await UserApi.detail(id);
+  } catch (e, s) {
+    CustomToast.fail('加载失败，请稍后重试', error: e, stackTrace: s);
+  } finally {
+    loading.value = false;
+  }
+}
+```
+
+## 五、主 isolate 纪律
+
+UI 在主 isolate 绘制，任何**阻塞或重计算**压在这条线程上都会掉帧。两类风险分开处理：
+
+- **IO 型（文件 / 网络 / 数据库 / 偏好存储）**：只用异步 API 并 `await`，**禁用读写内容的 `*Sync` 变体**（`readAsStringSync`、`readAsBytesSync`、`writeAsStringSync` 等会随数据量阻塞的调用）。异步等待本身不占线程，不需要 isolate。`existsSync`、`lengthSync`、`statSync` 等廉价元数据调用在 UI build 路径之外可接受，不强制异步化。
+- **CPU 型（大 `jsonDecode`、加解密、压缩、图片/音视频处理、长列表排序过滤）**：同步执行照样卡 UI，用 `compute()` 或 `Isolate.run` 移出主 isolate，结果回来再回写 `.obs`。
+- `build()`、`itemBuilder`、`Obx` 闭包只做读状态和拼 Widget，**不得**在其中读文件、查库、发请求或跑重计算；这类数据在 Controller 里提前算好存进状态。
+- 频繁或大数据量的本地存储走后台 isolate 批量落盘（项目的具体封装见 `90-项目专属规则.mdc`），不要在交互路径上同步写盘。
+
+```dart
+// ✗ 错：同步读文件 + 主 isolate 解析大 JSON，交互路径直接卡住
+final raw = File(path).readAsStringSync();
+data.value = (jsonDecode(raw) as List).map(Model.fromJson).toList();
+
+// ✓ 对：异步 IO + 重解析丢给 compute
+final raw = await File(path).readAsString();
+data.value = await compute(_parseModels, raw);
+
+// 顶层或静态函数，compute 的入参出参必须可跨 isolate 传递
+List<Model> _parseModels(String raw) =>
+    (jsonDecode(raw) as List).map(Model.fromJson).toList();
+```
+
+## 六、代码清理
+
+- 删除未使用的 import 与变量
+- 重复出现 3 次以上的字面量抽成常量或主题令牌
+- 复杂布尔表达式先命名再判断
+
+```dart
+// 不清晰
+if (a && b || c && !d) { }
+
+// 清晰
+final isOwner = a && b;
+final isSharedEditable = c && !d;
+if (isOwner || isSharedEditable) { }
+```
+
+## 七、验证
+
+- Flutter/Dart 代码改动后运行 `flutter analyze`，必须无 error；纯规则/文档改动检查内容与链接，不要求 App 构建
+- 关键链路改动后补最小运行验证或 `flutter test`
+- 无法执行验证时，写明原因，不得默认「应该没问题」

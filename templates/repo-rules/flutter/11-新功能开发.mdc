@@ -1,0 +1,72 @@
+---
+description: 【任务剧本】新功能开发。新建页面模块、子功能、弹层、路由、Controller 时加载；任务类型按 00-规则总索引 分派，不作为未分类任务的默认剧本。
+alwaysApply: false
+---
+
+# 11 · 任务剧本：新功能开发
+
+## 一、开工前
+
+1. 读 `90-项目专属规则.mdc` 的**可复用资产清单**与**页面索引**，确认没有已存在的等价实现
+2. 确认设计输入（涉及 UI 时按 `05-界面实现` 第一节）
+3. 确认接口契约（路径、参数、响应结构）
+4. 判断规模：跨多页面 / 同时动路由+服务+Store+模型 / 预计多轮联调 → 先走 `16-先规划再编码`
+
+## 二、实现顺序（按此顺序，不跳步）
+
+```
+1. 模型与参数        models/params/ models/responses/
+2. API 静态方法      apis/
+3. 模块业务对象 / Store / 公共 Service   按第五节判定归属与新增条件
+4. Controller        状态字段 → onInit → 加载方法 → 交互方法
+5. Controller 接真实 API 并处理 loading/error
+6. View / widgets / dialog
+7. 补齐边界状态
+8. 路由注册
+9. flutter analyze
+10. 回写文档与页面索引
+```
+
+**先有状态字段再写 UI**，不要先画完页面再倒推状态。
+
+## 三、模块产物清单
+
+新建 `{feature_name}` 时必须完整产出，不得只给片段：
+
+```text
+lib/pages/{feature_name}/
+├── index.dart        import 外部依赖 + part 声明（新增文件必须同步加 part）
+├── controller.dart   {FeatureName}Controller
+├── view.dart         {FeatureName}Page
+├── widgets/          本页私有组件（有才建）
+├── dialog/           本页私有弹层（有才建）
+└── {sub_feature}/    独立三件套，不与父模块 part
+```
+
+模板见 `templates/feature/`。
+
+## 四、路由接入（必查四项）
+
+1. `RouteName` 是否新增常量
+2. `router.dart` 是否注册 `GoRoute`
+3. 是否应注册为父路由的子路由
+4. 参数走 `pathParameters` / `queryParameters` / `extra` 哪一类，取值处是否做了防御
+
+## 五、何时新增配套层
+
+路由参数复杂、API 有明确结构或页面需要领域/视图对象时新增 Model。
+
+模块业务对象、Store 与公共 Service 的归属按 [01-架构与目录.mdc](01-架构与目录.mdc) 第一节，职责与生命周期按 [03-状态管理.mdc](03-状态管理.mdc) 第六节，按需新增。
+
+条件不成立就不要建——过早抽象和不抽象一样有害。
+
+## 六、增量完成检查
+
+- [ ] 三件套齐全，新增文件已在 `index.dart` 声明 `part`
+- [ ] Controller 按 `03-状态管理` 第三节独立定义、直接继承 `GetxController`，不继承其他业务 Controller；无 `Get.context`，资源在 `onClose` 释放
+- [ ] 数据加载在 Controller，View 不直接调 API
+- [ ] 刷新机制符合 `03-状态管理` 第一节（页面和全局响应式状态均用 `.obs` + `Obx`）
+- [ ] 路由已注册且能跳转，传参与回传验证过
+- [ ] 弹层有静态 `show(BuildContext context, {...})`
+- [ ] 子模块独立组织，未与父模块 part
+- [ ] 已把新页面补进 `90-项目专属规则.mdc` 的页面索引

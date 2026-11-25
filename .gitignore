@@ -1,4 +1,6 @@
 .DS_Store
+.vscode/
+.idea/
 
 # Local test artifacts: keep written plans/reports, exclude generated evidence.
 projects/**/05-测试/**
@@ -7,9 +9,6 @@ projects/**/05-测试/**
 projects/**/05-联调与测试/**
 !projects/**/05-联调与测试/**/
 !projects/**/05-联调与测试/**/*.md
-projects/**/evidence/**
-!projects/**/evidence/**/
-!projects/**/evidence/**/*.md
 projects/**/artifacts/**
 !projects/**/artifacts/**/
 !projects/**/artifacts/**/*.md
@@ -26,3 +25,56 @@ projects/**/*.aab
 projects/**/*.ipa
 projects/**/node_modules/
 projects/**/.dart_tool/
+
+# 测试证据一律不进 git，包括里面的 .md；测试结论写在 05-测试/测试.md（2026-11-25）
+**/evidence/
+
+# 设计稿、素材、过程资料不进 git
+**/design-assets/
+**/content-assets/
+**/参考素材/
+**/99-过程资料/
+
+# 二进制文件不进 git：图片、视频、音频、压缩包、设计源文件、Office/PDF、安装包、程序库
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.heic
+*.bmp
+*.ico
+*.svg
+*.fig
+*.sketch
+*.psd
+*.ai
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.mp4
+*.mov
+*.m4v
+*.webm
+*.avi
+*.mp3
+*.wav
+*.aiff
+*.m4a
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.key
+*.apk
+*.aab
+*.ipa
+*.dylib
+*.so
+*.dll
+*.exe
