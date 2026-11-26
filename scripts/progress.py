@@ -74,7 +74,9 @@ def state_word(text, col=""):
     return ALIAS.get(f"{word}@{col}", word)
 
 
-OTHERS = []
+OTHERS = []     # 不在开发阶段的版本
+OVERVIEW = []   # 所有没归档的版本：项目、版本、阶段、模块进度
+QUEUES = []     # 不按版本走的项目（如后端与后台）：三个文件夹里各有几份计划
 
 
 def collect():
@@ -86,6 +88,12 @@ def collect():
         ws = ROOT / "projects" / proj["name"]
         if not ws.is_dir():
             continue
+        if (ws / "开发计划" / "待执行").is_dir():   # 没有版本文件夹、直接用三个文件夹的项目
+            def names(folder):
+                d = ws / "开发计划" / folder
+                return sorted(str(f.relative_to(d)) for f in d.rglob("*.md")) if d.is_dir() else []
+            QUEUES.append({"项目": proj["name"], "待执行": names("待执行"), "待检验": names("待检验"),
+                           "已执行": len(names("已执行")), "路径": f"{MAC_ROOT}/projects/{proj['name']}/开发计划"})
         for vdir in sorted(p for p in ws.iterdir() if p.is_dir() and re.match(r"v\d", p.name)):
             vstate = version_state(vdir)
             if any(d in vstate for d in DONE_STATES):
@@ -95,6 +103,7 @@ def collect():
             stage = re.split(r"[·•\s]", vstate)[0] if vstate else ""
             if stage not in DEV_STAGES or not rows:
                 OTHERS.append(f"{proj['name']} {vdir.name}（{vstate or '状态未写'}）")
+                OVERVIEW.append((proj["name"], vdir.name, vstate or "状态未写", ""))
                 continue
             mods = []
             for r in rows:
@@ -117,6 +126,8 @@ def collect():
                 if (vdir / "04-开发计划" / "待执行").is_dir() else []
             review = sorted(p.name for p in (vdir / "04-开发计划" / "待检验").glob("*.md")) \
                 if (vdir / "04-开发计划" / "待检验").is_dir() else []
+            done = sum(1 for m in mods if state_word(m["状态"], "状态") == "通过")
+            OVERVIEW.append((proj["name"], vdir.name, vstate, f"{done} / {len(mods)} 个模块通过"))
             out.append({"项目": proj["name"], "版本": vdir.name, "阶段": vstate, "模块": mods,
                         "待执行": todo, "待检验": review,
                         "路径": f"{MAC_ROOT}/projects/{proj['name']}/{vdir.name}/04-开发计划"})
@@ -143,6 +154,19 @@ def to_md(data):
         if waiting.get(w):
             L.append(f"- **{w}**（{len(waiting[w])}）：" + "；".join(waiting[w]))
     L.append("")
+    L += ["## 所有没归档的版本", "", "| 项目 | 版本 | 阶段 | 模块 |", "|---|---|---|---|"]
+    L += [f"| {a} | {b} | {short(c, 30)} | {d} |" for a, b, c, d in OVERVIEW]
+    L.append("")
+    for q in QUEUES:
+        L += [f"## {q['项目']}（不按版本走）", "",
+              f"待执行 {len(q['待执行'])} 份，待检验 {len(q['待检验'])} 份，已执行 {q['已执行']} 份。", ""]
+        if q["待执行"]:
+            L.append("**该交给 Codex 的（待执行）**：")
+            L += [f"- `{q['路径']}/待执行/{n}`" for n in q["待执行"]]
+            L.append("")
+        if q["待检验"]:
+            L.append("**等你和 Claude 看的（待检验）**：" + "、".join(q["待检验"]))
+            L.append("")
     for v in data:
         L += [f"## {v['项目']} {v['版本']}（{v['阶段'] or '状态未写'}）", ""]
         if v["待执行"]:
@@ -160,8 +184,6 @@ def to_md(data):
         if any(m["问题"] for m in v["模块"]):
             L += ["", "⚠ = 这一栏没用规定的词，已截短显示；原文见总计划。"]
         L.append("")
-    if OTHERS:
-        L += ["## 其他没归档的版本（不在开发阶段，或总计划里读不出模块表）", "", "；".join(OTHERS), ""]
     return "\n".join(L) + "\n"
 
 
@@ -222,6 +244,20 @@ def to_html(data):
     for w, label in (("用户", "等你"), ("Claude", "等 Claude"), ("Codex", "等 Codex")):
         H.append(f'<div class="card"><span class="muted">{label}</span><b>{waiting[w]}</b><span class="muted">个模块</span></div>')
     H.append("</div>")
+    H.append('<h2>所有没归档的版本</h2><div class="wrap"><table><tr><th>项目</th><th>版本</th><th>阶段</th><th>模块</th></tr>')
+    for a, b, c, d in OVERVIEW:
+        H.append(f'<tr><td>{html.escape(a)}</td><td>{html.escape(b)}</td><td class="name" title="{html.escape(c)}">{html.escape(short(c, 40))}</td><td>{html.escape(d) or "—"}</td></tr>')
+    H.append("</table></div>")
+    for q in QUEUES:
+        H.append(f"<h2>{html.escape(q['项目'])} <span class=\"muted\">不按版本走 · 待执行 {len(q['待执行'])} · 待检验 {len(q['待检验'])} · 已执行 {q['已执行']}</span></h2>")
+        if q["待执行"]:
+            H.append("<div><b>该交给 Codex 的（待执行）</b><ul>")
+            H += [f"<li><code>{html.escape(q['路径'])}/待执行/{html.escape(n)}</code></li>" for n in q["待执行"]]
+            H.append("</ul></div>")
+        if q["待检验"]:
+            H.append("<div><b>等你和 Claude 看的（待检验）</b><ul>")
+            H += [f"<li>{html.escape(n)}</li>" for n in q["待检验"]]
+            H.append("</ul></div>")
     for v in data:
         H.append(f"<h2>{html.escape(v['项目'])} {html.escape(v['版本'])} <span class=\"muted\">{html.escape(v['阶段'] or '状态未写')}</span></h2>")
         if v["待执行"]:
@@ -241,8 +277,6 @@ def to_html(data):
             H.append('<div class="muted">⚠ = 这一栏没用规定的词，已截短；鼠标停在上面看原文。</div>')
     if not data:
         H.append("<p>没有开发中的版本。</p>")
-    if OTHERS:
-        H.append("<h2>其他没归档的版本</h2><div class=\"muted\">不在开发阶段，或总计划里读不出模块表：" + html.escape("；".join(OTHERS)) + "</div>")
     H.append("</body></html>")
     return "\n".join(H) + "\n"
 
@@ -252,7 +286,7 @@ def main():
     (ROOT / "进行中.md").write_text(to_md(data), encoding="utf-8")
     (ROOT / "进行中.html").write_text(to_html(data), encoding="utf-8")
     n = sum(len(v["模块"]) for v in data)
-    print(f"已生成 进行中.md、进行中.html：{len(data)} 个版本，{n} 个模块")
+    print(f"已生成 进行中.md、进行中.html：开发中 {len(data)} 个版本、{n} 个模块；没归档的版本共 {len(OVERVIEW)} 个")
     return 0
 
 
