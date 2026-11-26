@@ -9,6 +9,7 @@
 | 知道每个阶段做什么、用哪个提示词、我要确认什么 | `工作说明.md` |
 | 了解整个流程和文件放在哪 | `workflow/00-总流程.md` |
 | 复制提示词 | `prompts/提示词.md` |
+| 看所有项目的模块做到哪了、现在等谁 | `进行中.html`（运行 `python3 scripts/progress.py` 刷新） |
 | 看有哪些项目、各用哪种流程 | `projects/README.md` |
 | 开一个新版本 | `prompts/提示词.md` P1-1 |
 | 修线上 bug | `prompts/提示词.md` P10 |

@@ -232,6 +232,7 @@ done
 render "$TPL/02-设计/设计计划.md"       "$DEST/02-设计/设计计划.md"
 render "$TPL/03-技术规划/技术方案.md"   "$DEST/03-技术规划/技术方案.md"
 render "$TPL/04-开发计划/开发计划.md"   "$DEST/04-开发计划/开发计划.md"
+mkdir -p "$DEST/04-开发计划/待执行" "$DEST/04-开发计划/待检验" "$DEST/04-开发计划/已执行"   # 给 Codex 的检验、复检、修复计划（workflow/04 第 12 节）
 mkdir -p "$DEST/04-开发计划/模块"        # 模块计划由写计划的人按 模块/模块计划.md 模板逐个新建
 render "$TPL/05-测试/测试.md"           "$DEST/05-测试/测试.md"
 render "$TPL/06-上线/上线记录.md"       "$DEST/06-上线/上线记录.md"
