@@ -4,11 +4,13 @@
 用法：python3 scripts/progress.py            全部项目 → 进行中.md / 进行中.html
       python3 scripts/progress.py 喵喵漫剧   只看名字或别名里带“喵喵漫剧”的项目 → 进行中-喵喵漫剧.md / .html
 读：workspace-registry.json 里 flow=v2 的项目 → 各版本 04-开发计划/开发计划.md 的“模块清单”表。
+另外只读各代码仓库的提交记录（git log），找提交信息里带模块号的提交，用来发现清单没跟上的情况；不改任何仓库。
 规则见 workflow/05-开发.md 第 12 节、workflow/04-开发计划.md 第 2 节。
 """
 import html
 import json
 import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -114,6 +116,55 @@ def newer_files(plan_dir, master_mtime):
     return late
 
 
+def repo_dir(mac_path):
+    """登记表里写的是 Mac 上的路径；在 Claude 的环境里同一个仓库挂在 ~/mnt/<文件夹名>。"""
+    if not mac_path:
+        return None
+    for cand in (Path(mac_path), Path.home() / "mnt" / Path(mac_path).name):
+        if (cand / ".git").exists():
+            return cand
+    return None
+
+
+def created_date(vdir):
+    readme = vdir / "README.md"
+    if readme.exists():
+        m = re.search(r"\|\s*创建日期\s*\|\s*(\d{4}-\d{2}-\d{2})", readme.read_text(encoding="utf-8"))
+        if m:
+            return m.group(1)
+    return ""
+
+
+def module_commits(proj, version, since):
+    """只读各仓库的提交记录，找提交信息里带模块号（M08）的提交。返回 (每个模块最近一次提交, 读不到的仓库)。
+    后端是几个 App 共用的：提交信息里带本版本号或本 App 标识的才算；一个都不带时才退回只看模块号。"""
+    repos = [("前端", proj.get("appRepo"))] + [("后端", r) for r in proj.get("backendRepos", [])]
+    marks = [x.lower() for x in [version, proj.get("appCode"), proj.get("backendAppCode")] + proj.get("aliases", []) if x]
+    latest, missing = {}, []
+    for side, mac_path in repos:
+        if not mac_path:
+            continue
+        d = repo_dir(mac_path)
+        if d is None:
+            missing.append(Path(mac_path).name)
+            continue
+        cmd = ["git", "-C", str(d), "log", "--all", "-n", "2000", "--format=%ct%x09%h%x09%s"]
+        if since:
+            cmd.insert(5, f"--since={since}")
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=15).stdout
+        except Exception:
+            missing.append(Path(mac_path).name)
+            continue
+        rows = [l.split("\t", 2) for l in out.splitlines() if l.count("\t") >= 2]
+        tagged = [r for r in rows if any(m in r[2].lower() for m in marks)]
+        for ts, sha, subject in (tagged or rows):
+            for mid in set(re.findall(r"(?<![A-Za-z0-9])M\d{2}(?!\d)", subject)):
+                if mid not in latest or int(ts) > latest[mid][0]:
+                    latest[mid] = (int(ts), side, sha, Path(mac_path).name)
+    return latest, sorted(set(missing))
+
+
 def collect():
     reg = json.loads((ROOT / "workspace-registry.json").read_text(encoding="utf-8"))
     out = []
@@ -143,6 +194,7 @@ def collect():
             mods = []
             master_mtime = plan.stat().st_mtime
             late = newer_files(plan.parent, master_mtime)
+            commits, missing = module_commits(proj, vdir.name, created_date(vdir))
             for r in rows:
                 d = dict(zip(header, r))
                 item = {"编号": d.get("编号", ""), "模块": d.get("模块", ""), "问题": [], "多写": False}
@@ -160,6 +212,14 @@ def collect():
                         item["多写"] = True           # 开头是规定的词，后面多写了说明
                 hit = late.get(item["编号"])
                 item["落后"] = f"{hit[1]} 在 {la_time(hit[0])} 改过，比清单晚" if hit else ""
+                c = commits.get(item["编号"])
+                item["提交"] = f"{la_time(c[0])} {c[1]} {c[2]}" if c else ""
+                if c:
+                    not_started = all(state_word(item[k], k) in ("待开始", "—", "-", "") for k in ("后端", "前端"))
+                    if not_started and item["编号"] != "M99":
+                        item["落后"] = (item["落后"] + "；" if item["落后"] else "") + f"{c[3]} 已有提交 {c[2]}（{la_time(c[0])}），清单还写着没开始"
+                    elif c[0] > master_mtime + 60 and not item["落后"]:
+                        item["落后"] = f"{c[3]} 在 {la_time(c[0])} 有新提交 {c[2]}，比清单晚"
                 mods.append(item)
             todo = sorted(p.name for p in (vdir / "04-开发计划" / "待执行").glob("*.md")) \
                 if (vdir / "04-开发计划" / "待执行").is_dir() else []
@@ -168,7 +228,7 @@ def collect():
             done = sum(1 for m in mods if state_word(m["状态"], "状态") == "通过")
             OVERVIEW.append((proj["name"], vdir.name, vstate, f"{done} / {len(mods)} 个模块通过"))
             out.append({"项目": proj["name"], "版本": vdir.name, "阶段": vstate, "模块": mods,
-                        "待执行": todo, "待检验": review, "清单时间": la_time(master_mtime),
+                        "待执行": todo, "待检验": review, "清单时间": la_time(master_mtime), "读不到": missing,
                         "路径": f"{MAC_ROOT}/projects/{proj['name']}/{vdir.name}/04-开发计划"})
     return out
 
@@ -216,16 +276,18 @@ def to_md(data):
             L.append("**Codex 做完、等你和 Claude 看的（待检验）**：" + "、".join(v["待检验"]))
             L.append("")
         L += [f"模块清单最后更新：{v['清单时间']}（洛杉矶时间）。", ""]
-        L += ["| 编号 | 模块 | 后端 | 前端 | 自审 | 检验 | 状态 | 分支 | 等谁 |", "|---|---|---|---|---|---|---|---|---|"]
+        if v["读不到"]:
+            L += [f"读不到这些代码仓库的提交记录（这台机器上没有，或没连上）：{'、'.join(v['读不到'])}。", ""]
+        L += ["| 编号 | 模块 | 后端 | 前端 | 自审 | 检验 | 状态 | 分支 | 等谁 | 最近提交 |", "|---|---|---|---|---|---|---|---|---|---|"]
         for m in v["模块"]:
             cells = [m["编号"], short(m["模块"], 20)] + [
-                (short(m[c]) + "⚠") if c in m["问题"] else (state_word(m[c], c) if c in ALLOWED else m[c]) for c in COLS]
+                (short(m[c]) + "⚠") if c in m["问题"] else (state_word(m[c], c) if c in ALLOWED else m[c]) for c in COLS] + [m["提交"]]
             L.append("| " + " | ".join(cells) + " |")
         if any(m["问题"] for m in v["模块"]):
             L += ["", "⚠ = 这一栏没用规定的词，已截短显示；原文见总计划。"]
         stale = [m for m in v["模块"] if m["落后"]]
         if stale:
-            L += ["", "**这几行可能落后了**（相关文件比模块清单改得晚，清单可能没跟着更新）："]
+            L += ["", "**这几行可能落后了**（相关文件或代码提交比模块清单晚，清单可能没跟着更新）："]
             L += [f"- {m['编号']}：{m['落后']}" for m in stale]
         L.append("")
     return "\n".join(L) + "\n"
@@ -312,18 +374,20 @@ def to_html(data):
             H.append("<div><b>Codex 做完、等你和 Claude 看的（待检验）</b><ul>")
             H += [f"<li>{html.escape(n)}</li>" for n in v["待检验"]]
             H.append("</ul></div>")
-        H.append(f'<div class="muted">模块清单最后更新：{v["清单时间"]}（洛杉矶时间）</div>')
-        H.append('<div class="wrap"><table><tr><th>编号</th><th>模块</th>' + "".join(f"<th>{c}</th>" for c in COLS) + "<th>提醒</th></tr>")
+        H.append(f'<div class="muted">模块清单最后更新：{v["清单时间"]}（洛杉矶时间）'
+                 + (f' · 读不到这些仓库的提交记录：{html.escape("、".join(v["读不到"]))}' if v["读不到"] else "") + "</div>")
+        H.append('<div class="wrap"><table><tr><th>编号</th><th>模块</th>' + "".join(f"<th>{c}</th>" for c in COLS) + "<th>最近提交</th><th>提醒</th></tr>")
         for m in v["模块"]:
             H.append(f"<tr><td>{html.escape(m['编号'])}</td><td class=\"name\">{html.escape(short(m['模块'], 28))}</td>"
                      + "".join(f"<td>{tag(m[c], c, c in m['问题'])}</td>" for c in COLS)
+                     + f'<td class="muted">{html.escape(m["提交"]) or "—"}</td>'
                      + (f'<td><span class="tag bad" title="{html.escape(m["落后"])}">可能落后</span></td>' if m["落后"] else "<td></td>") + "</tr>")
         H.append("</table></div>")
         if any(m["问题"] for m in v["模块"]):
             H.append('<div class="muted">⚠ = 这一栏没用规定的词，已截短；鼠标停在上面看原文。</div>')
         stale = [m for m in v["模块"] if m["落后"]]
         if stale:
-            H.append('<div><b>这几行可能落后了</b>（相关文件比模块清单改得晚）<ul>'
+            H.append('<div><b>这几行可能落后了</b>（相关文件或代码提交比模块清单晚）<ul>'
                      + "".join(f"<li>{html.escape(m['编号'])}：{html.escape(m['落后'])}</li>" for m in stale) + "</ul></div>")
     if not data:
         H.append("<p>没有开发中的版本。</p>")
