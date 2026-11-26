@@ -3,8 +3,8 @@
 .idea/
 
 # 进度页由 scripts/progress.py 生成，不进 git
-/进行中.md
-/进行中.html
+/进行中*.md
+/进行中*.html
 
 # Local test artifacts: keep written plans/reports, exclude generated evidence.
 projects/**/05-测试/**

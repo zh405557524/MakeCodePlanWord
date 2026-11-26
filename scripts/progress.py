@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """汇总各项目开发中版本的模块清单，生成工作台根目录的 进行中.md 和 进行中.html。
 
-用法：python3 scripts/progress.py
+用法：python3 scripts/progress.py            全部项目 → 进行中.md / 进行中.html
+      python3 scripts/progress.py 喵喵漫剧   只看名字或别名里带“喵喵漫剧”的项目 → 进行中-喵喵漫剧.md / .html
 读：workspace-registry.json 里 flow=v2 的项目 → 各版本 04-开发计划/开发计划.md 的“模块清单”表。
 规则见 workflow/05-开发.md 第 12 节、workflow/04-开发计划.md 第 2 节。
 """
@@ -283,10 +284,32 @@ def to_html(data):
 
 def main():
     data = collect()
-    (ROOT / "进行中.md").write_text(to_md(data), encoding="utf-8")
-    (ROOT / "进行中.html").write_text(to_html(data), encoding="utf-8")
+    key = " ".join(sys.argv[1:]).strip()
+    suffix = ""
+    if key:
+        reg = json.loads((ROOT / "workspace-registry.json").read_text(encoding="utf-8"))
+        hit = {p["name"] for p in reg.get("projects", [])
+               if any(key.lower() in n.lower() for n in [p["name"]] + p.get("aliases", []))}
+        if not hit:
+            names = "、".join(p["name"] for p in reg.get("projects", []))
+            print(f"没有名字或别名里带“{key}”的项目。登记的项目有：{names}")
+            return 1
+        legacy = sorted(p["name"] for p in reg.get("projects", []) if p["name"] in hit and p.get("flow") != "v2")
+        data = [v for v in data if v["项目"] in hit]
+        OVERVIEW[:] = [o for o in OVERVIEW if o[0] in hit]
+        QUEUES[:] = [q for q in QUEUES if q["项目"] in hit]
+        suffix = "-" + re.sub(r"[\\/\s]", "", key)
+        print("匹配到的项目：" + "、".join(sorted(hit)))
+        if legacy:
+            print("其中还是旧流程、进度页读不了的：" + "、".join(legacy))
+    md, page = to_md(data), to_html(data)
+    if key:
+        md = md.replace("# 进行中", f"# 进行中：{key}", 1)
+        page = page.replace("<h1>进行中</h1>", f"<h1>进行中：{html.escape(key)}</h1>", 1)
+    (ROOT / f"进行中{suffix}.md").write_text(md, encoding="utf-8")
+    (ROOT / f"进行中{suffix}.html").write_text(page, encoding="utf-8")
     n = sum(len(v["模块"]) for v in data)
-    print(f"已生成 进行中.md、进行中.html：开发中 {len(data)} 个版本、{n} 个模块；没归档的版本共 {len(OVERVIEW)} 个")
+    print(f"已生成 进行中{suffix}.md、进行中{suffix}.html：开发中 {len(data)} 个版本、{n} 个模块；没归档的版本共 {len(OVERVIEW)} 个")
     return 0
 
 
