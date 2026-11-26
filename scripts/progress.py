@@ -80,6 +80,40 @@ OVERVIEW = []   # 所有没归档的版本：项目、版本、阶段、模块�
 QUEUES = []     # 不按版本走的项目（如后端与后台）：三个文件夹里各有几份计划
 
 
+def la_time(ts):
+    try:
+        return datetime.fromtimestamp(ts, ZoneInfo("America/Los_Angeles")).strftime("%m-%d %H:%M")
+    except Exception:
+        return datetime.fromtimestamp(ts).strftime("%m-%d %H:%M")
+
+
+def ids_in_name(name):
+    """从文件名里找出它说的是哪些模块：M08、M01至M06、M02～M12 都认。"""
+    found = set()
+    for a, b in re.findall(r"M(\d{2})\s*(?:至|到|～|~|-)\s*M(\d{2})", name):
+        found |= {f"M{i:02d}" for i in range(int(a), int(b) + 1)}
+    found |= {f"M{n}" for n in re.findall(r"M(\d{2})", name)}
+    return found
+
+
+def newer_files(plan_dir, master_mtime):
+    """每个模块：比总计划改得晚的相关文件（模块计划、给 Codex 的计划）。"""
+    late = {}
+    files = list((plan_dir / "模块").glob("M*.md")) if (plan_dir / "模块").is_dir() else []
+    for folder in ("待执行", "待检验", "已执行"):
+        if (plan_dir / folder).is_dir():
+            files += list((plan_dir / folder).glob("*.md"))
+    for f in files:
+        mt = f.stat().st_mtime
+        if mt <= master_mtime + 60:
+            continue
+        label = f.name if f.parent.name == "模块" else f"{f.parent.name}/{f.name}"
+        for mid in ids_in_name(f.name):
+            if mid not in late or mt > late[mid][0]:
+                late[mid] = (mt, label)
+    return late
+
+
 def collect():
     reg = json.loads((ROOT / "workspace-registry.json").read_text(encoding="utf-8"))
     out = []
@@ -107,6 +141,8 @@ def collect():
                 OVERVIEW.append((proj["name"], vdir.name, vstate or "状态未写", ""))
                 continue
             mods = []
+            master_mtime = plan.stat().st_mtime
+            late = newer_files(plan.parent, master_mtime)
             for r in rows:
                 d = dict(zip(header, r))
                 item = {"编号": d.get("编号", ""), "模块": d.get("模块", ""), "问题": [], "多写": False}
@@ -122,6 +158,8 @@ def collect():
                         item["问题"].append(c)       # 开头不是规定的词
                     elif item[c] not in ok and c != "状态":
                         item["多写"] = True           # 开头是规定的词，后面多写了说明
+                hit = late.get(item["编号"])
+                item["落后"] = f"{hit[1]} 在 {la_time(hit[0])} 改过，比清单晚" if hit else ""
                 mods.append(item)
             todo = sorted(p.name for p in (vdir / "04-开发计划" / "待执行").glob("*.md")) \
                 if (vdir / "04-开发计划" / "待执行").is_dir() else []
@@ -130,7 +168,7 @@ def collect():
             done = sum(1 for m in mods if state_word(m["状态"], "状态") == "通过")
             OVERVIEW.append((proj["name"], vdir.name, vstate, f"{done} / {len(mods)} 个模块通过"))
             out.append({"项目": proj["name"], "版本": vdir.name, "阶段": vstate, "模块": mods,
-                        "待执行": todo, "待检验": review,
+                        "待执行": todo, "待检验": review, "清单时间": la_time(master_mtime),
                         "路径": f"{MAC_ROOT}/projects/{proj['name']}/{vdir.name}/04-开发计划"})
     return out
 
@@ -177,6 +215,7 @@ def to_md(data):
         if v["待检验"]:
             L.append("**Codex 做完、等你和 Claude 看的（待检验）**：" + "、".join(v["待检验"]))
             L.append("")
+        L += [f"模块清单最后更新：{v['清单时间']}（洛杉矶时间）。", ""]
         L += ["| 编号 | 模块 | 后端 | 前端 | 自审 | 检验 | 状态 | 分支 | 等谁 |", "|---|---|---|---|---|---|---|---|---|"]
         for m in v["模块"]:
             cells = [m["编号"], short(m["模块"], 20)] + [
@@ -184,6 +223,10 @@ def to_md(data):
             L.append("| " + " | ".join(cells) + " |")
         if any(m["问题"] for m in v["模块"]):
             L += ["", "⚠ = 这一栏没用规定的词，已截短显示；原文见总计划。"]
+        stale = [m for m in v["模块"] if m["落后"]]
+        if stale:
+            L += ["", "**这几行可能落后了**（相关文件比模块清单改得晚，清单可能没跟着更新）："]
+            L += [f"- {m['编号']}：{m['落后']}" for m in stale]
         L.append("")
     return "\n".join(L) + "\n"
 
@@ -269,13 +312,19 @@ def to_html(data):
             H.append("<div><b>Codex 做完、等你和 Claude 看的（待检验）</b><ul>")
             H += [f"<li>{html.escape(n)}</li>" for n in v["待检验"]]
             H.append("</ul></div>")
-        H.append('<div class="wrap"><table><tr><th>编号</th><th>模块</th>' + "".join(f"<th>{c}</th>" for c in COLS) + "</tr>")
+        H.append(f'<div class="muted">模块清单最后更新：{v["清单时间"]}（洛杉矶时间）</div>')
+        H.append('<div class="wrap"><table><tr><th>编号</th><th>模块</th>' + "".join(f"<th>{c}</th>" for c in COLS) + "<th>提醒</th></tr>")
         for m in v["模块"]:
             H.append(f"<tr><td>{html.escape(m['编号'])}</td><td class=\"name\">{html.escape(short(m['模块'], 28))}</td>"
-                     + "".join(f"<td>{tag(m[c], c, c in m['问题'])}</td>" for c in COLS) + "</tr>")
+                     + "".join(f"<td>{tag(m[c], c, c in m['问题'])}</td>" for c in COLS)
+                     + (f'<td><span class="tag bad" title="{html.escape(m["落后"])}">可能落后</span></td>' if m["落后"] else "<td></td>") + "</tr>")
         H.append("</table></div>")
         if any(m["问题"] for m in v["模块"]):
             H.append('<div class="muted">⚠ = 这一栏没用规定的词，已截短；鼠标停在上面看原文。</div>')
+        stale = [m for m in v["模块"] if m["落后"]]
+        if stale:
+            H.append('<div><b>这几行可能落后了</b>（相关文件比模块清单改得晚）<ul>'
+                     + "".join(f"<li>{html.escape(m['编号'])}：{html.escape(m['落后'])}</li>" for m in stale) + "</ul></div>")
     if not data:
         H.append("<p>没有开发中的版本。</p>")
     H.append("</body></html>")
